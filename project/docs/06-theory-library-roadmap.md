@@ -4,6 +4,13 @@ This is the working checklist for the "personal library" of theory/technical doc
 
 Suggested per-document template (for consistency across the library): short intro / scope → symbols used (referencing `SymbolsAndNomenclature`) → theory / derivation → algorithm or procedure → worked considerations (symbolic, per `03-assumptions.md`) → open questions / links to related documents.
 
+## Format convention
+
+- **Source format**: every document in this library is written in **Markdown** (`.md`), consistent with the specification files (`00`–`05`).
+- **Mathematical notation**: formulas and equations are written as **inline LaTeX syntax within the Markdown** (e.g. `$$\dot{x}(t) = \sum_{i=1}^{9} i \cdot a_i t^{i-1}$$`), not as images, not as Word equation objects. This keeps documents renderable in-editor (MathJax/KaTeX) and diffable in version control.
+- **Reading / archival output**: when a readable/printable version of the library is needed, it is generated from the Markdown sources via `pandoc` (LaTeX engine) into PDF — the Markdown+LaTeX-inline files remain the single source of truth; PDF is a generated artifact, never edited directly.
+- **Not used as a working/source format**: LaTeX (`.tex`) as primary source, Word (`.docx`), ODT, plain `.txt`. See discussion in chat for the rationale.
+
 | # | Document | Covers (requirements) | Status |
 |---|---|---|---|
 | 1 | `SymbolsAndNomenclature` | Req. 1 — symbology for 1D/2D/3D polynomial paths and solid orientation (Euler angles, quaternions, rotation matrices — notation reserved now, full treatment later per `04-future-topics.md`) | Not started |
