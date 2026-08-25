@@ -33,8 +33,8 @@ Not in the current scope, but tracked for later consideration.
 ## Implementation notes carried over from the original brief
 
 - Polynomial degrees other than three, five, seven and nine may be added if deemed useful during project development.
-- Application type still open: possible desktop application, possible web application (see `01-requirements.md`, item 16).
+- Application type decided: desktop application in C# with WPF (see `01-requirements.md`, item 16).
 - Readable documentation for learning is a hard requirement (the author's own stated need), not optional polish.
 - Open question: derivatives usefulness — up to which degree is it actually useful to compute/use them?
 - Orientation of a solid in three-dimensional space (see Orientation above).
-- Technical tools for app development: language and toolchain (C#, Python, C++, or other suggestions) — see `01-requirements.md`, item 16.
+- Technical tools for app development decided: C# for the calculation/application code, WPF for the UI, and a charting library chosen during implementation — see `01-requirements.md`, item 16.

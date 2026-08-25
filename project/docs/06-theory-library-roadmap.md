@@ -7,14 +7,23 @@ Suggested per-document template (for consistency across the library): short intr
 ## Format convention
 
 - **Source format**: every document in this library is written in **Markdown** (`.md`), consistent with the specification files (`00`–`05`).
-- **Mathematical notation**: formulas and equations are written as **inline LaTeX syntax within the Markdown** (e.g. `$$\dot{x}(t) = \sum_{i=1}^{9} i \cdot a_i t^{i-1}$$`), not as images, not as Word equation objects. This keeps documents renderable in-editor (MathJax/KaTeX) and diffable in version control.
+- **Mathematical notation**: formulas and equations are written as LaTeX syntax within the Markdown: inline math uses single delimiters like `$x(t)$`, while display equations on their own line use double delimiters like `$$x(t) = \sum_{i=0}^{9} a_i t^i$$`. Math delimiters are never wrapped in backticks. This keeps documents renderable in-editor (MathJax/KaTeX) and diffable in version control.
 - **Reading / archival output**: when a readable/printable version of the library is needed, it is generated from the Markdown sources via `pandoc` (LaTeX engine) into PDF — the Markdown+LaTeX-inline files remain the single source of truth; PDF is a generated artifact, never edited directly.
 - **Not used as a working/source format**: LaTeX (`.tex`) as primary source, Word (`.docx`), ODT, plain `.txt`. See discussion in chat for the rationale.
 
+## Pre-publication verification checklist
+
+Before considering any document in this library "finished", verify it with the following steps:
+
+1. Compile it: `pandoc <file>.md -o <file>.pdf --pdf-engine=xelatex -V mainfont="<a system font>" -V geometry:margin=2.5cm`
+2. **Check inline math specifically** (formulas embedded in running text, not standalone display equations on their own line) — this is where syntax errors are most likely to hide, since display-equation blocks tend to be visibly broken (and so get caught immediately) while inline math can silently render as literal text instead of a formula.
+3. Confirm backticks are only used around genuine code/filename references, never around `$...$` math delimiters — inline math must be single `$...$`, with no surrounding backticks (backtick-wrapped `$$...$$` renders as literal text instead of a formula).
+4. If the PDF build fails with a missing LaTeX package (e.g. `lmodern.sty` not found), install the missing package via the local TeX distribution (MiKTeX installs it automatically on Windows; `tlmgr install <package>` on TeX Live) — or work around it by forcing a system font with `--pdf-engine=xelatex -V mainfont="<font name>"`.
+
 | # | Document | Covers (requirements) | Status |
 |---|---|---|---|
-| 1 | `SymbolsAndNomenclature` | Req. 1 — symbology for 1D/2D/3D polynomial paths and solid orientation (Euler angles, quaternions, rotation matrices — notation reserved now, full treatment later per `04-future-topics.md`) | Not started |
-| 2 | `NinthDegreePolynomialTheory` | Req. 2 — canonical & Horner form, derivatives up to the 6th (velocity → pop), pros/cons discussion | Not started |
+| 1 | `SymbolsAndNomenclature` | Req. 1 — symbology for 1D/3D polynomial paths and solid orientation (Euler angles, quaternions, rotation matrices — notation reserved now, full treatment later per `04-future-topics.md`) | Draft v1 |
+| 2 | `NinthDegreePolynomialTheory` | Req. 2 — canonical & Horner form, derivatives up to the 6th (velocity → pop), pros/cons discussion | Draft v1 |
 | 3 | `BoundaryConditions` | Req. 3 (learning part) — full list of boundary conditions needed to determine the polynomial | Not started |
 | 4 | `PolynomialCoefficientDetermination` | Req. 3 (technical part) + Req. 4 — coefficient-calculation procedure; absolute vs. normalised period analysis | Not started |
 | 5 | `TrajectoryConstraints` | Req. 7–10 — max/min position/velocity/acceleration/jerk/snap analysis; imposing velocity/acceleration/jerk limits | Not started |

@@ -58,15 +58,13 @@ Polynomial {
 }
 
 BoundaryConditions {
-  startPosition;   endPosition;
-  startVelocity;   endVelocity;
-  startAcceleration; endAcceleration;
-  startJerk;       endJerk;
-  startSnap;       endSnap;
+  necessaryConditions[];
+  possibleConditions[];
+  redundantConditions[];
 }
 ```
 
-`BoundaryConditions` is crucial to the calculation of polynomial profiles of any degree — it must always be fully defined, without exceptions.
+`BoundaryConditions` is crucial to the calculation of polynomial profiles of any degree. Its content depends on the polynomial degree being treated: each degree has a set of necessary conditions to determine the polynomial, a set of possible conditions that may be useful in broader formulations, and a set of redundant conditions that exceed what is needed for that degree.
 
 ## Constraints and Blend
 
@@ -76,19 +74,23 @@ Constraints {
   constraintValue;               // value referred to the selected constraintType
   constantVelocitySelection;     // yes/no — activates the constant-velocity part of the segment
   constantVelocityValue;         // applied if constantVelocitySelection = yes
+  constantVelocityInitialPos1D;  // Point1D — start of the constant-velocity part of the segment in 1D
+  constantVelocityEndPos1D;      // Point1D — end of the constant-velocity part of the segment in 1D
   constantVelocityInitialPos;    // Point3D — start of the constant-velocity part of the segment
   constantVelocityEndPos;        // Point3D — end of the constant-velocity part of the segment
 }
 
 Blend {
+  nextSegmentBlendingPos1D;      // Point1D — where blending with the next segment starts in 1D
+  previousSegmentBlendingPos1D;  // Point1D — where blending with the previous segment ends in 1D
   nextSegmentBlendingPos;        // Point3D — where blending with the next segment starts
   previousSegmentBlendingPos;    // Point3D — where blending with the previous segment ends
 }
 ```
 
 > **Design note (confirmed distinction)**: `Constraints` and `Blend` are deliberately distinct concepts, kept separate:
-> - **`Constraints`** describes kinematic limits/settings applied *within* a single segment (velocity/acceleration/jerk/snap limits, and the optional constant-velocity sub-part of the segment, via `constantVelocityInitialPos`/`constantVelocityEndPos`).
-> - **`Blend`** describes the geometric continuity *between* adjacent segments — the raccordo (smoothing) at the junction points, via `nextSegmentBlendingPos`/`previousSegmentBlendingPos`.
+> - **`Constraints`** describes kinematic limits/settings applied *within* a single segment (velocity/acceleration/jerk/snap limits, and the optional constant-velocity sub-part of the segment, via the dedicated 1D or 3D positions).
+> - **`Blend`** describes the geometric continuity *between* adjacent segments — the raccordo (smoothing) at the junction points, via the dedicated 1D or 3D blending positions.
 >
 > Relevant to requirements 12–14 in `01-requirements.md`.
 

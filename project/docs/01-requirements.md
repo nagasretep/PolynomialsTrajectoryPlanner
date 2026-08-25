@@ -2,14 +2,14 @@
 
 Tags: `[Learning]`, `[Technical]`, `[Learning & Technical]` — see `00-vision.md` for definitions. Where a requirement's dimensionality progression (1D → 3D) or symbolic-vs-numeric preference is not restated, the general rules in `00-vision.md` apply.
 
-1. **`[Learning & Technical]`** Define the symbology to be adopted to clearly and correctly represent polynomial paths in one, two, and three dimensions, including symbols for orienting a solid in three-dimensional space (the latter to be detailed in a later step — see `04-future-topics.md` → Orientation). This is a starting point to be established before other points.
+1. **`[Learning & Technical]`** Define the symbology to be adopted to clearly and correctly represent polynomial paths in one and three dimensions, including symbols for orienting a solid in three-dimensional space (the latter to be detailed in a later step — see `04-future-topics.md` → Orientation). Two-dimensional notation is intentionally omitted because it is considered a conceptual subset of the three-dimensional case. This is a starting point to be established before other points.
 
 2. Regarding the polynomial of degree 9 (the first to be considered):
    - **`[Learning]`** Report the canonical form and the Horner form in the time domain; list pros and cons of the two forms.
    - **`[Learning]`** Consider the derivatives up to the sixth, starting from the position algorithm (velocity, acceleration, jerk, snap, crackle, pop); discuss the usefulness of using more or fewer derivatives for trajectory planning.
 
 3. - **`[Technical]`** Report the mathematical procedure to calculate the coefficients of the polynomial, assuming all necessary boundary data has been specified.
-   - **`[Learning]`** List all boundary conditions that must be specified to correctly determine the polynomial.
+   - **`[Learning]`** List the boundary conditions relevant to each polynomial degree considered in the project, distinguishing between necessary, possible, and redundant conditions for that degree.
 
 4. **`[Learning]`** Report the analysis (pros and cons) of using an absolute period vs. a normalised period.
 
