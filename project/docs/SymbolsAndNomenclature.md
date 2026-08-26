@@ -339,9 +339,9 @@ These examples are intentionally symbolic because the project prioritizes struct
 
 ## Open Questions
 
-- For each polynomial degree, what is the minimal boundary-condition set that determines the coefficients uniquely?
-- When discussing 3D constraints, should limits be imposed component-wise or on vector magnitude?
-- In future orientation work, should quaternion notation use $q$ or $\mathbf{q}$ once snap notation is already present?
+- **Resolved in `BoundaryConditions`**: for each polynomial degree, the minimal boundary-condition set is established there (necessary / possible / redundant classification, with a summary table for degrees 3, 5, 7, 9).
+- **Deferred to `TrajectoryConstraints`**: whether 3D constraints should be imposed component-wise or on vector magnitude. This question also recurs in `NinthDegreePolynomialTheory`; it is intentionally not decided here, in isolation, but once the max/min velocity/acceleration/jerk/snap analysis (Req. 7–10) is developed in that document, with enough technical grounding to decide properly.
+- **Open — to resolve during future orientation work** (see `04-future-topics.md`): should quaternion notation use $q$ or $\mathbf{q}$ once snap notation is already present? No urgency until orientation is actually developed.
 
 ## Related Documents
 

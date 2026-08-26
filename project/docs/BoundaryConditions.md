@@ -506,10 +506,9 @@ That exact structural match is one of the main reasons why the degree-nine case 
 
 ## Open Questions
 
-- In later implementation, should a boundary condition be stored primarily by derivative order or by a more descriptive enum-based type?
-- When alternative formulations are introduced, should the project keep the same necessary/possible/redundant naming or add a fourth category for "active in the current variant"?
-- For 3D trajectories, should the user interface expose boundary conditions axis by axis, or primarily in vector form?
-- Should `02-data-model.md`'s `BoundaryConditions` structure be revised to the degree-parametrized, classified form sketched in *Relation To The Data Model*, and if so, at which point in the roadmap should that revision happen?
+- **To be addressed together with `PolynomialCoefficientDetermination`**: how a boundary condition should be represented internally (by derivative order vs. a more descriptive enum-based type), and whether `02-data-model.md`'s `BoundaryConditions` structure should be revised to the degree-parametrized, classified form sketched in *Relation To The Data Model*. Both decisions belong together, since the coefficient-determination procedure is exactly what will consume that representation — to be resolved when authoring that document, then cross-referenced back here.
+- **Open — to resolve if/when alternative formulations are introduced** (interior points, optimization-based fitting): should the project keep the same necessary/possible/redundant naming, or add a fourth category for "active in the current variant"? No urgency yet, since the project still uses the fixed default formulation.
+- **Open — to resolve during the application/UI design phase** (Req. 15): for 3D trajectories, should the user interface expose boundary conditions axis by axis, or primarily in vector form?
 
 ## Related Documents
 
