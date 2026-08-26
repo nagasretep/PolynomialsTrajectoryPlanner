@@ -124,17 +124,17 @@ When it is useful to describe the motion condition at a single endpoint, the pro
 In 1D, a state can be written as:
 
 $$
-\mathrm{State}_{1D} = \left(x, v, a, j, s\right)
+\mathcal{S}_{1D} = \left(x, v, a, j, s\right)
 $$
 
 or, if endpoint notation is needed:
 
 $$
-\mathbf{s}_0 = \left(x_0, v_0, a_0, j_0, s_0\right), \qquad
-\mathbf{s}_f = \left(x_f, v_f, a_f, j_f, s_f\right)
+\mathcal{S}_0 = \left(x_0, v_0, a_0, j_0, s_0\right), \qquad
+\mathcal{S}_f = \left(x_f, v_f, a_f, j_f, s_f\right)
 $$
 
-The symbol $\mathbf{s}$ is used here as a compact state container, not as the snap function. To avoid confusion, whenever both appear in the same context, snap should be written explicitly as $x^{(4)}(t)$.
+The symbol $\mathcal{S}$ (calligraphic) is used here as a compact state container. It is deliberately distinct, both visually and semantically, from $s$ / $\mathbf{s}$, which remain reserved exclusively for snap (see *Derivatives In 1D*) — no disambiguation is required when both appear in the same context, since the two symbols no longer collide.
 
 ## Position And Trajectory In 3D
 

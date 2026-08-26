@@ -21,6 +21,7 @@ The notation follows `SymbolsAndNomenclature.md`. The main symbols used here are
 - $t_f$: final time;
 - $T = t_f - t_0$: motion duration;
 - $x(t)$: scalar position law in 1D;
+- $\mathcal{S}_0$, $\mathcal{S}_f$: initial and final state containers when endpoint data are grouped compactly;
 - $x_0$, $x_f$: initial and final position;
 - $v_0$, $v_f$: initial and final velocity;
 - $a_0$, $a_f$: initial and final acceleration;
@@ -171,6 +172,15 @@ These correspond to:
 - snap at start and end.
 
 For the degrees currently in scope, this catalogue is sufficient for the main endpoint-based theory.
+
+When a full endpoint condition set is treated as a compact object, the state notation from `SymbolsAndNomenclature.md` may also be used. For example, in the degree-9 case:
+
+$$
+\mathcal{S}_0 = \left(x_0, v_0, a_0, j_0, s_0\right), \qquad
+\mathcal{S}_f = \left(x_f, v_f, a_f, j_f, s_f\right)
+$$
+
+This notation is particularly useful when discussing complete endpoint data sets without overloading the snap symbol $s$.
 
 ## Degree 3
 
@@ -361,10 +371,10 @@ The degree-by-degree classification can be summarized as follows.
 
 | Degree | Coefficients | Necessary conditions in the default formulation | Examples of possible extra conditions in broader formulations | Redundant in the default fixed formulation |
 |---|---:|---|---|---|
-| 3 | 4 | $x_0, x_f, v_0, v_f$ | $a_0, a_f$, interior position, unknown duration | any fifth independent condition |
-| 5 | 6 | $x_0, x_f, v_0, v_f, a_0, a_f$ | $j_0, j_f$, interior conditions, unknown duration | any seventh independent condition |
-| 7 | 8 | $x_0, x_f, v_0, v_f, a_0, a_f, j_0, j_f$ | $s_0, s_f$, interior conditions, unknown duration | any ninth independent condition |
-| 9 | 10 | $x_0, x_f, v_0, v_f, a_0, a_f, j_0, j_f, s_0, s_f$ | crackle-related data, interior conditions, unknown duration | any eleventh independent condition |
+| 3 | 4 | $x_0$, $x_f$, $v_0$, $v_f$ | $a_0$, $a_f$, interior position, unknown duration | any fifth independent condition |
+| 5 | 6 | $x_0$, $x_f$, $v_0$, $v_f$, $a_0$, $a_f$ | $j_0$, $j_f$, interior conditions, unknown duration | any seventh independent condition |
+| 7 | 8 | $x_0$, $x_f$, $v_0$, $v_f$, $a_0$, $a_f$, $j_0$, $j_f$ | $s_0$, $s_f$, interior conditions, unknown duration | any ninth independent condition |
+| 9 | 10 | $x_0$, $x_f$, $v_0$, $v_f$, $a_0$, $a_f$, $j_0$, $j_f$, $s_0$, $s_f$ | crackle-related data, interior conditions, unknown duration | any eleventh independent condition |
 
 This table should be read carefully:
 
@@ -419,7 +429,9 @@ The main difference in 3D is therefore not the nature of the boundary conditions
 
 ## Relation To The Data Model
 
-The project data model already reflects the classification introduced here:
+The current data model in `02-data-model.md` defines `BoundaryConditions` as a fixed set of ten scalar fields (`startPosition`/`endPosition`, `startVelocity`/`endVelocity`, `startAcceleration`/`endAcceleration`, `startJerk`/`endJerk`, `startSnap`/`endSnap`), implicitly matching only the degree-9 default formulation. It does **not** yet generalize across degree 3/5/7, and it does **not** yet encode the necessary/possible/redundant classification introduced in this document.
+
+The classification introduced here is the theoretical basis for a future revision of that structure, for example along these lines:
 
 $$
 \mathrm{BoundaryConditions} = \{
@@ -429,11 +441,13 @@ $$
 \}
 $$
 
-This document provides the theoretical meaning of that structure:
+where such a revised structure would hold:
 
-- `necessaryConditions[]` holds the conditions required by the chosen degree and formulation;
-- `possibleConditions[]` holds conditions that may be used in alternative formulations;
-- `redundantConditions[]` identifies conditions that exceed the default fixed formulation.
+- `necessaryConditions[]`: the conditions required by the chosen degree and formulation;
+- `possibleConditions[]`: conditions usable in alternative formulations;
+- `redundantConditions[]`: conditions that exceed the default fixed formulation.
+
+Reconciling the current fixed-field structure with this degree-parametrized, classified structure is an open point, to be resolved during `PolynomialCoefficientDetermination` or the later software design phase — not something already implemented today.
 
 In later implementation, each condition will likely need a more explicit internal representation, for example:
 
@@ -482,8 +496,8 @@ This is why quintic polynomials are often associated with endpoint control up to
 For a ninth-degree segment, the natural symmetric endpoint set is:
 
 $$
-\left(x_0, v_0, a_0, j_0, s_0\right),\qquad
-\left(x_f, v_f, a_f, j_f, s_f\right)
+\mathcal{S}_0 = \left(x_0, v_0, a_0, j_0, s_0\right),\qquad
+\mathcal{S}_f = \left(x_f, v_f, a_f, j_f, s_f\right)
 $$
 
 This gives ten scalar conditions, matching the ten coefficients of the polynomial exactly.
@@ -495,6 +509,7 @@ That exact structural match is one of the main reasons why the degree-nine case 
 - In later implementation, should a boundary condition be stored primarily by derivative order or by a more descriptive enum-based type?
 - When alternative formulations are introduced, should the project keep the same necessary/possible/redundant naming or add a fourth category for "active in the current variant"?
 - For 3D trajectories, should the user interface expose boundary conditions axis by axis, or primarily in vector form?
+- Should `02-data-model.md`'s `BoundaryConditions` structure be revised to the degree-parametrized, classified form sketched in *Relation To The Data Model*, and if so, at which point in the roadmap should that revision happen?
 
 ## Related Documents
 

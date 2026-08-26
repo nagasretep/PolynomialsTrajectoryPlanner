@@ -19,6 +19,7 @@ Before considering any document in this library "finished", verify it with the f
 2. **Check inline math specifically** (formulas embedded in running text, not standalone display equations on their own line) — this is where syntax errors are most likely to hide, since display-equation blocks tend to be visibly broken (and so get caught immediately) while inline math can silently render as literal text instead of a formula.
 3. Confirm backticks are only used around genuine code/filename references, never around `$...$` math delimiters — inline math must be single `$...$`, with no surrounding backticks (backtick-wrapped `$$...$$` renders as literal text instead of a formula).
 4. If the PDF build fails with a missing LaTeX package (e.g. `lmodern.sty` not found), install the missing package via the local TeX distribution (MiKTeX installs it automatically on Windows; `tlmgr install <package>` on TeX Live) — or work around it by forcing a system font with `--pdf-engine=xelatex -V mainfont="<font name>"`.
+5. **In tables, never write a multi-symbol list as a single inline math block** (e.g. `$x_0, x_f, v_0, v_f$`) — LaTeX cannot line-wrap inside one math box, so it silently overflows into the next column instead of wrapping. Write each symbol as its own inline math, comma-separated in plain text (e.g. `$x_0$, $x_f$, $v_0$, $v_f$`), so the cell can wrap normally.
 
 | # | Document | Covers (requirements) | Status |
 |---|---|---|---|

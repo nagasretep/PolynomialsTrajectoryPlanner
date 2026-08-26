@@ -25,6 +25,7 @@ The notation follows `SymbolsAndNomenclature.md`. The main symbols used here are
 - $T = t_f - t_0$: motion duration;
 - $x(t)$: scalar position law in 1D;
 - $a_0, a_1, \dots, a_9$: polynomial coefficients;
+- $\mathcal{S}_0$, $\mathcal{S}_f$: initial and final state containers when endpoint data are grouped compactly;
 - $v(t), a(t), j(t)$: velocity, acceleration, and jerk;
 - $x^{(4)}(t), x^{(5)}(t), x^{(6)}(t)$: snap, crackle, and pop.
 
@@ -43,6 +44,15 @@ $$
 where $s$ denotes snap.
 
 This does not mean that every problem must always be posed this way. It means that degree nine is the first degree in this project that naturally accommodates endpoint information up to snap at both ends of a segment.
+
+Using the state notation introduced in `SymbolsAndNomenclature.md`, the same endpoint specification may also be grouped as:
+
+$$
+\mathcal{S}_0 = \left(x_0, v_0, a_0, j_0, s_0\right), \qquad
+\mathcal{S}_f = \left(x_f, v_f, a_f, j_f, s_f\right)
+$$
+
+This compact notation is useful when the full endpoint information is treated as a single conceptual object rather than as a list of separate scalar conditions.
 
 ## Canonical Form In The Time Domain
 
@@ -346,8 +356,8 @@ Among the higher derivatives, snap has a special status in this project.
 The reason is structural: a ninth-degree polynomial has ten coefficients, and the symmetric endpoint data set
 
 $$
-\left(x_0, v_0, a_0, j_0, s_0\right), \qquad
-\left(x_f, v_f, a_f, j_f, s_f\right)
+\mathcal{S}_0 = \left(x_0, v_0, a_0, j_0, s_0\right), \qquad
+\mathcal{S}_f = \left(x_f, v_f, a_f, j_f, s_f\right)
 $$
 
 provides exactly ten scalar conditions.
