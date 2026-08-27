@@ -429,9 +429,7 @@ The main difference in 3D is therefore not the nature of the boundary conditions
 
 ## Relation To The Data Model
 
-The current data model in `02-data-model.md` defines `BoundaryConditions` as a fixed set of ten scalar fields (`startPosition`/`endPosition`, `startVelocity`/`endVelocity`, `startAcceleration`/`endAcceleration`, `startJerk`/`endJerk`, `startSnap`/`endSnap`), implicitly matching only the degree-9 default formulation. It does **not** yet generalize across degree 3/5/7, and it does **not** yet encode the necessary/possible/redundant classification introduced in this document.
-
-The classification introduced here is the theoretical basis for a future revision of that structure, for example along these lines:
+`02-data-model.md` now defines `BoundaryConditions` as:
 
 $$
 \mathrm{BoundaryConditions} = \{
@@ -441,13 +439,15 @@ $$
 \}
 $$
 
-where such a revised structure would hold:
+This is the degree-parametrized, classified structure that this document's necessary/possible/redundant classification calls for — the revision has been carried out, replacing the earlier fixed set of ten scalar fields (`startPosition`/`endPosition`, etc.) that matched only the degree-9 default formulation.
+
+The three arrays hold:
 
 - `necessaryConditions[]`: the conditions required by the chosen degree and formulation;
 - `possibleConditions[]`: conditions usable in alternative formulations;
 - `redundantConditions[]`: conditions that exceed the default fixed formulation.
 
-Reconciling the current fixed-field structure with this degree-parametrized, classified structure is an open point, to be resolved during `PolynomialCoefficientDetermination` or the later software design phase — not something already implemented today.
+What remains open is not *whether* to revise the structure (done), but the internal representation of each individual condition within those arrays — see the corresponding open question below, to be resolved together with `PolynomialCoefficientDetermination`.
 
 In later implementation, each condition will likely need a more explicit internal representation, for example:
 
@@ -506,12 +506,13 @@ That exact structural match is one of the main reasons why the degree-nine case 
 
 ## Open Questions
 
-- **To be addressed together with `PolynomialCoefficientDetermination`**: how a boundary condition should be represented internally (by derivative order vs. a more descriptive enum-based type), and whether `02-data-model.md`'s `BoundaryConditions` structure should be revised to the degree-parametrized, classified form sketched in *Relation To The Data Model*. Both decisions belong together, since the coefficient-determination procedure is exactly what will consume that representation — to be resolved when authoring that document, then cross-referenced back here.
+- **Resolved**: whether `02-data-model.md`'s `BoundaryConditions` structure should be revised to the degree-parametrized, classified form — it has been, see *Relation To The Data Model*. **Still open, deferred to `PolynomialCoefficientDetermination`**: the internal representation of each individual condition within `necessaryConditions[]` / `possibleConditions[]` / `redundantConditions[]` (by derivative order vs. a more descriptive enum-based type) — this is `PolynomialCoefficientDetermination`'s own Open Question on the same topic, not yet decided there either.
 - **Open — to resolve if/when alternative formulations are introduced** (interior points, optimization-based fitting): should the project keep the same necessary/possible/redundant naming, or add a fourth category for "active in the current variant"? No urgency yet, since the project still uses the fixed default formulation.
 - **Open — to resolve during the application/UI design phase** (Req. 15): for 3D trajectories, should the user interface expose boundary conditions axis by axis, or primarily in vector form?
 
 ## Related Documents
 
+- `06-theory-library-roadmap.md`
 - `SymbolsAndNomenclature.md`
 - `NinthDegreePolynomialTheory.md`
 - `PolynomialCoefficientDetermination`

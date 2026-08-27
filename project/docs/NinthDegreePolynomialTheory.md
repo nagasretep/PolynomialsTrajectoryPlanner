@@ -432,6 +432,7 @@ then a ninth-degree 3D segment is simply three synchronized ninth-degree scalar 
 
 ## Related Documents
 
+- `06-theory-library-roadmap.md`
 - `SymbolsAndNomenclature.md`
 - `BoundaryConditions`
 - `PolynomialCoefficientDetermination`
