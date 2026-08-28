@@ -586,14 +586,12 @@ The following algorithm is the recommended baseline for the project.
 
 `02-data-model.md` already defines the following fields inside `Constraints`:
 
-$$
-\mathrm{constantVelocitySelection},\quad
-\mathrm{constantVelocityValue},\quad
-\mathrm{constantVelocityInitialPos1D},\quad
-\mathrm{constantVelocityEndPos1D},\quad
-\mathrm{constantVelocityInitialPos},\quad
-\mathrm{constantVelocityEndPos}
-$$
+- `constantVelocitySelection`,
+- `constantVelocityValue`,
+- `constantVelocityInitialPos1D`,
+- `constantVelocityEndPos1D`,
+- `constantVelocityInitialPos`,
+- `constantVelocityEndPos`.
 
 This document provides the theoretical meaning of those fields:
 
