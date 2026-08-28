@@ -27,8 +27,8 @@ Before considering any document in this library "finished", verify it with the f
 | 2 | `NinthDegreePolynomialTheory` | Req. 2 — canonical & Horner form, derivatives up to the 6th (velocity → pop), pros/cons discussion | Draft v1 |
 | 3 | `BoundaryConditions` | Req. 3 (learning part) — full list of boundary conditions needed to determine the polynomial | Draft v1 |
 | 4 | `PolynomialCoefficientDetermination` | Req. 3 (technical part) + Req. 4 — coefficient-calculation procedure; absolute vs. normalised period analysis | Draft v1 |
-| 5 | `TrajectoryConstraints` | Req. 7–10 — max/min position/velocity/acceleration/jerk/snap analysis; imposing velocity/acceleration/jerk limits | Not started |
-| 6 | `ConstantVelocitySegment` | **Req. 12** — constant-speed segment within a degree-9 path (start/end position, absolute or percentage) | Not started |
+| 5 | `TrajectoryConstraints` | Req. 7–10 — max/min position/velocity/acceleration/jerk/snap analysis; imposing velocity/acceleration/jerk limits | Draft v1 |
+| 6 | `ConstantVelocitySegment` | **Req. 12** — constant-speed segment within a degree-9 path (start/end position, absolute or percentage) | Draft v1 |
 | 7 | `BlendingSegments` | Req. 13 — connecting consecutive segments without a pass-through constraint at the join | Not started |
 | 8 | `TrajectoryPassingThroughConstraintPoints` | Req. 14 — smooth connection with precise transition points (zero velocity/acceleration/jerk/snap at path start/end) | Not started |
 
