@@ -29,7 +29,7 @@ Before considering any document in this library "finished", verify it with the f
 | 4 | `PolynomialCoefficientDetermination` | Req. 3 (technical part) + Req. 4 — coefficient-calculation procedure; absolute vs. normalised period analysis | Draft v1 |
 | 5 | `TrajectoryConstraints` | Req. 7–10 — max/min position/velocity/acceleration/jerk/snap analysis; imposing velocity/acceleration/jerk limits | Draft v1 |
 | 6 | `ConstantVelocitySegment` | **Req. 12** — constant-speed segment within a degree-9 path (start/end position, absolute or percentage) | Draft v1 |
-| 7 | `BlendingSegments` | Req. 13 — connecting consecutive segments without a pass-through constraint at the join | Not started |
+| 7 | `BlendingSegments` | Req. 13 — connecting consecutive segments without a pass-through constraint at the join | Draft v1 |
 | 8 | `TrajectoryPassingThroughConstraintPoints` | Req. 14 — smooth connection with precise transition points (zero velocity/acceleration/jerk/snap at path start/end) | Not started |
 
 > **Note on item 6**: this document was not in the original list of documents discussed — it covers requirement 12 (constant-velocity segment), which is distinct both from `TrajectoryConstraints` (general kinematic limits) and from `BlendingSegments`/`TrajectoryPassingThroughConstraintPoints` (continuity *between* segments, per the `Constraints` vs. `Blend` distinction in `02-data-model.md`). It is placed here because it logically follows the general constraints treatment and precedes the inter-segment blending topics.
