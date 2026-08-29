@@ -328,19 +328,26 @@ This preserves the path geometry, but the component velocities are no longer con
 
 These two meanings coincide only in the special case where the selected path portion is already a straight line.
 
-## Recommended 3D Interpretation For This Requirement
+## Decided 3D Interpretation For This Requirement
 
-For this specific requirement, the recommended primary interpretation is:
+**DECISION**: for this requirement, the project adopts arc-length reparameterization (path-preserving, constant speed magnitude) as the baseline 3D interpretation, not just as a recommendation.
 
 - preserve the selected geometric subpath of the original polynomial curve;
 - impose constant **speed magnitude** along that preserved subpath.
 
-This recommendation is appropriate because the requirement explicitly speaks about a segment "within a path" and locates it through start/end positions on that path.
+**Rationale**:
+
+- this interpretation offers the widest applicative range: it correctly handles a constant-speed requirement along a genuinely curved, multi-axis path, which the straight-chord alternative cannot do without deviating from the original path;
+- in the practical case where the constant-speed requirement applies to motion along a single Cartesian axis — the most common real-world case for this kind of process constraint (e.g. avoiding acceleration-induced stress on the transported/machined body along one direction) — the original path in that interval is already a straight line, and the general arc-length construction reduces exactly (not approximately) to the same affine law used in the 1D case. No separate code path is needed for that case;
+- the straight-chord alternative remains valid and simpler, but only coincides with path preservation when the selected subpath is already straight; for a genuinely curved multi-axis subpath it silently departs from the original geometry;
+- the straight-chord-on-a-genuinely-curved-multi-axis-path case is deliberately not adopted as the project baseline now — it is deferred and will be added only if a concrete need for it arises (see Open Questions).
+
+This decision was reached after clarifying two points: (a) only the straight-chord option keeps the velocity *vector* constant in both magnitude and direction — the arc-length option keeps only the magnitude constant, since direction varies continuously along a curve; (b) the two options coincide exactly, not just approximately, whenever the selected subpath is a straight line — which was verified algebraically by reducing the general arc-length construction to the 1D affine formula for that special case.
 
 So, unlike the component-wise baseline adopted in `TrajectoryConstraints.md` for general constraint analysis, this document is primarily path-oriented:
 
 - for general limits, component-wise treatment remains the default baseline;
-- for this specific requirement, the natural meaning is constant speed along the selected path portion.
+- for this specific requirement, the decided baseline is constant speed along the selected path portion, via arc-length reparameterization.
 
 ## 3D Path-Preserving Strategy: Arc-Length Reparameterization
 
@@ -418,6 +425,15 @@ So the 3D problem naturally separates into two layers:
 - time-law reformulation.
 
 This is not a defect. It is the mathematically natural outcome of the requirement.
+
+### Implementation Note: Where Numerical Methods Are Actually Needed
+
+This non-polynomial consequence only bites in the genuinely curved, multi-axis case:
+
+- **single-axis case** (the original subpath is already a straight line): as shown above, the arc-length construction reduces exactly to the closed-form affine law — evaluation stays polynomial, no numerical methods needed;
+- **genuinely curved multi-axis case**: $\ell(t)$ generally has no closed form for a degree-9 polynomial path and must be computed via **numerical integration**; recovering $\ell^{-1}(s)$ then requires **numerical root-finding**. This is the only point in the theory library so far where evaluation departs from direct coefficient/Horner-based computation.
+
+Implementation should branch on this distinction rather than always paying the numerical cost: detect the single-axis (straight-subpath) case and use the closed-form affine law directly, reserving numerical integration and root-finding for the genuinely curved multi-axis case.
 
 ## 3D Straight-Chord Alternative
 
@@ -586,12 +602,12 @@ The following algorithm is the recommended baseline for the project.
 
 `02-data-model.md` already defines the following fields inside `Constraints`:
 
-- `constantVelocitySelection`,
-- `constantVelocityValue`,
-- `constantVelocityInitialPos1D`,
-- `constantVelocityEndPos1D`,
-- `constantVelocityInitialPos`,
-- `constantVelocityEndPos`.
+- `constantVelocitySelection`
+- `constantVelocityValue`
+- `constantVelocityInitialPos1D`
+- `constantVelocityEndPos1D`
+- `constantVelocityInitialPos`
+- `constantVelocityEndPos`
 
 This document provides the theoretical meaning of those fields:
 
@@ -601,9 +617,10 @@ This document provides the theoretical meaning of those fields:
 
 What the data model does **not** yet decide explicitly is:
 
-- whether the 3D interpretation is path-preserving or straight-chord;
 - which percentage convention should be used when positions are not given absolutely;
 - how transition segments are represented as part of the higher-level trajectory structure.
+
+(Whether the 3D interpretation is path-preserving or straight-chord is no longer open — see *Decided 3D Interpretation For This Requirement* above.)
 
 Those are theory-to-design bridges, not contradictions.
 
@@ -674,7 +691,7 @@ This makes the trade-off explicit:
 
 ## Open Questions
 
-- **Open — to resolve during later software design**: in 3D, should the application expose the path-preserving arc-length option as the default, or also offer the straight-chord constant-velocity alternative explicitly?
+- **Open — to resolve if/when a concrete need arises**: the straight-chord alternative for a genuinely curved multi-axis subpath is deliberately not part of the current baseline (see *Decided 3D Interpretation*); should it be added later as an explicit user-facing option, and what would trigger that need?
 - **Open — to resolve during data-format design**: when users specify the interval in percentages, which convention should be standardized in 3D: parameter percentage, arc-length percentage, or both?
 - **Open — to resolve together with the later blending documents**: should the transition segments around the constant-speed part always enforce zero acceleration, jerk, and snap at the junctions, or should the continuity order be configurable?
 
