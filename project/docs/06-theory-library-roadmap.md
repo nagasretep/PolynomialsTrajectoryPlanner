@@ -20,6 +20,7 @@ Before considering any document in this library "finished", verify it with the f
 3. Confirm backticks are only used around genuine code/filename references, never around `$...$` math delimiters — inline math must be single `$...$`, with no surrounding backticks (backtick-wrapped `$$...$$` renders as literal text instead of a formula).
 4. If the PDF build fails with a missing LaTeX package (e.g. `lmodern.sty` not found), install the missing package via the local TeX distribution (MiKTeX installs it automatically on Windows; `tlmgr install <package>` on TeX Live) — or work around it by forcing a system font with `--pdf-engine=xelatex -V mainfont="<font name>"`.
 5. **In tables, never write a multi-symbol list as a single inline math block** (e.g. `$x_0, x_f, v_0, v_f$`) — LaTeX cannot line-wrap inside one math box, so it silently overflows into the next column instead of wrapping. Write each symbol as its own inline math, comma-separated in plain text (e.g. `$x_0$, $x_f$, $v_0$, $v_f$`), so the cell can wrap normally.
+6. **Respect heading hierarchy — never place two consecutive headings at the same level when the second is logically a subsection of the first** (e.g. a `##` "1D Blending Problem" section immediately followed by a `##` "Nominal Consecutive Segments" that is actually part of it). The second heading should be one level deeper (`###`).
 
 | # | Document | Covers (requirements) | Status |
 |---|---|---|---|
@@ -30,7 +31,7 @@ Before considering any document in this library "finished", verify it with the f
 | 5 | `TrajectoryConstraints` | Req. 7–10 — max/min position/velocity/acceleration/jerk/snap analysis; imposing velocity/acceleration/jerk limits | Draft v1 |
 | 6 | `ConstantVelocitySegment` | **Req. 12** — constant-speed segment within a degree-9 path (start/end position, absolute or percentage) | Draft v1 |
 | 7 | `BlendingSegments` | Req. 13 — connecting consecutive segments without a pass-through constraint at the join | Draft v1 |
-| 8 | `TrajectoryPassingThroughConstraintPoints` | Req. 14 — smooth connection with precise transition points (zero velocity/acceleration/jerk/snap at path start/end) | Not started |
+| 8 | `TrajectoryPassingThroughConstraintPoints` | Req. 14 — smooth connection with precise transition points (zero velocity/acceleration/jerk/snap at path start/end) | Draft v1 |
 
 > **Note on item 6**: this document was not in the original list of documents discussed — it covers requirement 12 (constant-velocity segment), which is distinct both from `TrajectoryConstraints` (general kinematic limits) and from `BlendingSegments`/`TrajectoryPassingThroughConstraintPoints` (continuity *between* segments, per the `Constraints` vs. `Blend` distinction in `02-data-model.md`). It is placed here because it logically follows the general constraints treatment and precedes the inter-segment blending topics.
 

@@ -104,7 +104,7 @@ This fact is foundational for the rest of the document.
 
 ## 1D Case: Exact Constant Velocity Segment
 
-## Geometric Interpretation
+### Geometric Interpretation
 
 In 1D, the path is simply a line on the scalar axis. So "constant speed along the path" and "constant velocity magnitude" are almost the same notion, apart from sign.
 

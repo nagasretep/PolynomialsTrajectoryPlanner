@@ -134,7 +134,7 @@ The blend segment must connect the two sampled states attached to those points.
 
 ## 1D Blending Problem
 
-## Nominal Consecutive Segments
+### Nominal Consecutive Segments
 
 In 1D, let:
 
@@ -383,7 +383,7 @@ This is exactly the behavior intended in Requirement 13.
 
 ## 3D Blending Problem
 
-## Geometric Meaning In 3D
+### Geometric Meaning In 3D
 
 In 3D, blending is first a geometric operation and only then a coefficient-determination problem.
 
