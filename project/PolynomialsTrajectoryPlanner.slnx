@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TrajectoryPlanner.App/TrajectoryPlanner.App.csproj" />
+    <Project Path="src/TrajectoryPlanner.Core.Tests/TrajectoryPlanner.Core.Tests.csproj" />
+    <Project Path="src/TrajectoryPlanner.Core/TrajectoryPlanner.Core.csproj" />
+  </Folder>
+</Solution>

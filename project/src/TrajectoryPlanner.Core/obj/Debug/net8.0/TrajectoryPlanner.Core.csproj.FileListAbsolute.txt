@@ -1,0 +1,13 @@
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.csproj.AssemblyReference.cache
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.AssemblyInfoInputs.cache
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.AssemblyInfo.cs
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.csproj.CoreCompileInputs.cache
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.sourcelink.json
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\bin\Debug\net8.0\TrajectoryPlanner.Core.deps.json
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\bin\Debug\net8.0\TrajectoryPlanner.Core.dll
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\bin\Debug\net8.0\TrajectoryPlanner.Core.pdb
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.dll
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\refint\TrajectoryPlanner.Core.dll
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.pdb
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\ref\TrajectoryPlanner.Core.dll
