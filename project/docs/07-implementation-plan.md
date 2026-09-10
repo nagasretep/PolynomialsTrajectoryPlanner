@@ -143,6 +143,74 @@ Following `03-assumptions.md` item 4 (single-axis analysis before multi-axis ana
 
 `02-data-model.md` remains the conceptual reference; this document adds the concrete representation decided in *Decision 2* for `BoundaryConditions`' array contents, and confirms `Constraints`/`Blend` map directly to the `Constraints/` and `Blending/` folders above. No further data-model revision is required to start M1.
 
+## Appendix — Stable Facts Emerged During Initial Implementation
+
+The following points were decided implicitly during the first implementation pass in `src/` and are now recorded here so they do not remain only in chat history or in code:
+
+### A1 — Decision 2 Was Refined Into Typed 1D/3D Boundary Conditions
+
+Decision 2 originally proposed one minimal, degree-agnostic `BoundaryCondition` sketch as a starting point.
+
+The implemented baseline refines that sketch into two typed records:
+
+- `BoundaryCondition1D`
+- `BoundaryCondition3D`
+
+Both carry:
+
+- `DerivativeOrder`
+- `BoundaryEndpoint` (`Start` / `End`)
+
+and then:
+
+- a scalar `double` value in `1D`;
+- a `Point3D` value in `3D`.
+
+This is a post-plan implementation refinement, not a theory change. Its purpose is to keep dimensional typing explicit while also making endpoint identity part of the condition itself rather than leaving it implicit.
+
+### A2 — The Duration Abstraction Was Concretized
+
+Decision 1 proposed a small shared abstraction for duration handling. The initial implementation has concretized that idea as:
+
+```
+DurationMode { UserSpecified, AutoDerivedProportional, AutoDerivedFromConstraints }
+```
+
+with strategy implementations behind `IDurationStrategy1D`.
+
+This makes one earlier chat-level idea explicit: the project does not use a single monolithic duration rule, but a small strategy family that already separates:
+
+- directly entered durations;
+- automatically distributed durations;
+- constraint-aware duration search.
+
+### A3 — Trajectory Construction Uses Builder-Style Services
+
+The initial implementation has adopted builder-style orchestration services as the main application-facing assembly layer:
+
+- `TrajectoryBuilder1D`
+- `TrajectoryBuilder3D`
+
+These builders centralize the composition steps that otherwise would be scattered across the UI layer:
+
+- add single segments;
+- create rest-to-rest segments;
+- build pass-through trajectories from waypoint arrays;
+- insert blends between adjacent segments.
+
+This is now a stable architectural fact of the implementation baseline.
+
+### A4 — The Test Stack Is xUnit And Remains Core-Only
+
+The testing project `TrajectoryPlanner.Core.Tests` has been implemented with **xUnit**.
+
+This records two practical implementation choices that were previously only implicit in `src/`:
+
+- **test framework**: xUnit;
+- **test scope**: tests target `TrajectoryPlanner.Core` only, not the WPF layer.
+
+This remains fully consistent with the original separation principle of keeping mathematical logic testable independently from the UI.
+
 ## Related Documents
 
 - `06-theory-library-roadmap.md`

@@ -11,3 +11,4 @@ C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug
 C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\refint\TrajectoryPlanner.Core.dll
 C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\TrajectoryPlanner.Core.pdb
 C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\ref\TrajectoryPlanner.Core.dll
+C:\Git\PolynomialsTrajectoryPlanner\project\src\TrajectoryPlanner.Core\obj\Debug\net8.0\Trajecto.2F1C79E4.Up2Date
