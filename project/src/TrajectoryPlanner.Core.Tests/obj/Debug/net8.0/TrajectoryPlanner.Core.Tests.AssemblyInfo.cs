@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TrajectoryPlanner.Core.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+41e22b6e4c438c859b38105fe896eb255af12240")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+23d0c4a6b460b41bb204694d078562f8fbf9ad24")]
 [assembly: System.Reflection.AssemblyProductAttribute("TrajectoryPlanner.Core.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TrajectoryPlanner.Core.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

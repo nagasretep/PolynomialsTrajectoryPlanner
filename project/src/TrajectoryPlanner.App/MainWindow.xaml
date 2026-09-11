@@ -1,12 +1,318 @@
-﻿<Window x:Class="TrajectoryPlanner.App.MainWindow"
+<Window x:Class="TrajectoryPlanner.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TrajectoryPlanner.App"
+        xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Polynomial Trajectory Planner - UI First Prototype"
+        Height="960"
+        Width="1600"
+        MinHeight="800"
+        MinWidth="1280">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </Window.Resources>
 
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="3*" />
+            <RowDefinition Height="2*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,12" LastChildFill="True">
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                <Button Width="130"
+                        Margin="0,0,8,0"
+                        Padding="10,6"
+                        Click="AddSegment_Click"
+                        Content="Add Segment" />
+                <Button Width="130"
+                        Padding="10,6"
+                        Click="Compute_Click"
+                        Content="Compute" />
+            </StackPanel>
+
+            <TextBlock Margin="16,0,0,0"
+                       VerticalAlignment="Center"
+                       FontWeight="SemiBold"
+                       Text="{Binding StatusMessage}" />
+        </DockPanel>
+
+        <Border Grid.Row="1"
+                BorderBrush="#D0D0D0"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="8">
+            <TabControl ItemsSource="{Binding Segments}"
+                        SelectedIndex="0">
+                <TabControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:SegmentInputModel}">
+                        <TextBlock Text="{Binding Header}" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+
+                <TabControl.ContentTemplate>
+                    <DataTemplate DataType="{x:Type local:SegmentInputModel}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <Grid Margin="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <GroupBox Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" Header="Segment Setup">
+                                    <Grid Margin="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Degree" />
+                                        <ComboBox Grid.Row="0"
+                                                  Grid.Column="1"
+                                                  Margin="0,0,0,8"
+                                                  ItemsSource="{Binding DataContext.SupportedDegrees, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  SelectedItem="{Binding Degree}" />
+
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" FontStyle="Italic" Text="Boundary conditions required by the selected degree" />
+
+                                        <Grid Grid.Row="2" Grid.ColumnSpan="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Margin="0,0,8,6" FontWeight="SemiBold" Text="Start" />
+                                            <TextBlock Grid.Row="0" Grid.Column="2" Margin="0,0,0,6" FontWeight="SemiBold" Text="End" />
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Position" />
+                                            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,6" Text="{Binding StartPosition, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Grid.Row="1" Grid.Column="2" Margin="0,0,0,6" Text="{Binding EndPosition, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Velocity" />
+                                            <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,8,6" Text="{Binding StartVelocity, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Grid.Row="2" Grid.Column="2" Margin="0,0,0,6" Text="{Binding EndVelocity, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Acceleration"
+                                                       Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,8,6" Text="{Binding StartAcceleration, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="3" Grid.Column="2" Margin="0,0,0,6" Text="{Binding EndAcceleration, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Jerk"
+                                                       Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,8,6" Text="{Binding StartJerk, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="4" Grid.Column="2" Margin="0,0,0,6" Text="{Binding EndJerk, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="Snap"
+                                                       Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="5" Grid.Column="1" Margin="0,0,8,0" Text="{Binding StartSnap, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="5" Grid.Column="2" Margin="0,0,0,0" Text="{Binding EndSnap, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        </Grid>
+                                    </Grid>
+                                </GroupBox>
+
+                                <GroupBox Grid.Row="0" Grid.Column="1" Margin="8,0,0,8" Header="Constraints">
+                                    <Grid Margin="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="220" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <CheckBox Grid.Row="0" Grid.Column="0" Margin="0,0,8,6" IsChecked="{Binding UseDuration}" Content="Duration / Period" />
+                                        <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
+
+                                        <CheckBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" IsChecked="{Binding UseMaxVelocity}" Content="Maximum Velocity" />
+                                        <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxVelocity, UpdateSourceTrigger=PropertyChanged}" />
+
+                                        <CheckBox Grid.Row="2" Grid.Column="0" Margin="0,0,8,6" IsChecked="{Binding UseMaxAcceleration}" Content="Maximum Acceleration"
+                                                  Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxAcceleration, UpdateSourceTrigger=PropertyChanged}"
+                                                 Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                        <CheckBox Grid.Row="3" Grid.Column="0" Margin="0,0,8,6" IsChecked="{Binding UseMaxJerk}" Content="Maximum Jerk"
+                                                  Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxJerk, UpdateSourceTrigger=PropertyChanged}"
+                                                 Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                        <CheckBox Grid.Row="4" Grid.Column="0" Margin="0,0,8,0" IsChecked="{Binding UseMaxSnap}" Content="Maximum Snap"
+                                                  Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,0" Text="{Binding MaxSnap, UpdateSourceTrigger=PropertyChanged}"
+                                                 Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    </Grid>
+                                </GroupBox>
+
+                                <GroupBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" Header="Constant-Velocity Stretch">
+                                    <StackPanel Margin="10">
+                                        <CheckBox Margin="0,0,0,8" IsChecked="{Binding UseConstantVelocity}" Content="Enable constant-velocity stretch" />
+                                        <Grid Visibility="{Binding UseConstantVelocity, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="170" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Stretch Start Value" />
+                                            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" Text="{Binding ConstantVelocityStart, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Stretch End Value" />
+                                            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" Text="{Binding ConstantVelocityEnd, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="Constant Speed" />
+                                            <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" Text="{Binding ConstantVelocitySpeed, UpdateSourceTrigger=PropertyChanged}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <GroupBox Grid.Row="1" Grid.Column="1" Margin="8,0,0,8" Header="Blend Values"
+                                          Visibility="{Binding DataContext.HasMultipleSegments, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel Margin="10">
+                                        <TextBlock Margin="0,0,0,8" FontStyle="Italic" Text="Leave empty to disable the connection on that side." />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="190" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Initial Blend Value" />
+                                            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" Text="{Binding BlendToPrevious, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="Final Blend Value" />
+                                            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,0" Text="{Binding BlendToNext, UpdateSourceTrigger=PropertyChanged}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <Border Grid.Row="2"
+                                        Grid.ColumnSpan="2"
+                                        Margin="0,0,0,4"
+                                        Padding="10"
+                                        Background="#F7F7F7"
+                                        CornerRadius="4">
+                                    <TextBlock Text="Prototype scope: 1D only, blending enabled, exact pass-through excluded, and chart output uses ScottPlot."
+                                               TextWrapping="Wrap" />
+                                </Border>
+                            </Grid>
+                        </ScrollViewer>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Grid.Column="0" Margin="0,0,8,0" Header="Numeric Report">
+                <TabControl Margin="8">
+                    <TabItem Header="Extrema">
+                        <DataGrid ItemsSource="{Binding ExtremaReportRows}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Segment}" Header="Segment" Width="*" />
+                                <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="110" />
+                                <DataGridTextColumn Binding="{Binding Minimum, StringFormat=F6}" Header="Minimum" Width="110" />
+                                <DataGridTextColumn Binding="{Binding Maximum, StringFormat=F6}" Header="Maximum" Width="110" />
+                                <DataGridTextColumn Binding="{Binding MinTime, StringFormat=F6}" Header="t(min)" Width="100" />
+                                <DataGridTextColumn Binding="{Binding MaxTime, StringFormat=F6}" Header="t(max)" Width="100" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Coefficients">
+                        <DataGrid ItemsSource="{Binding CoefficientReportRows}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Segment}" Header="Segment" Width="*" />
+                                <DataGridTextColumn Binding="{Binding Coefficient}" Header="Coefficient" Width="110" />
+                                <DataGridTextColumn Binding="{Binding Value, StringFormat=F8}" Header="Value" Width="140" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                </TabControl>
+            </GroupBox>
+
+            <Grid Grid.Column="1" Margin="8,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="3*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <GroupBox Grid.Row="0" Header="Trajectory Chart">
+                    <Grid Margin="8">
+                        <ScottPlot:WpfPlot x:Name="TrajectoryPlot" MouseMove="TrajectoryPlot_MouseMove" />
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="1" Margin="0,8,0,0" Header="Cursor Readout">
+                    <DockPanel Margin="8">
+                        <TextBlock DockPanel.Dock="Top"
+                                   Margin="0,0,0,8"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding CursorStatusText}" />
+                        <DataGrid ItemsSource="{Binding CursorReadoutRows}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
+                                <DataGridTextColumn Binding="{Binding Value, StringFormat=F6}" Header="Value" Width="160" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

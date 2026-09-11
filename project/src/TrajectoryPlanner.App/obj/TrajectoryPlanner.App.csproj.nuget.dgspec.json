@@ -51,6 +51,12 @@
         "net8.0-windows": {
           "framework": "net8.0-windows7.0",
           "targetAlias": "net8.0-windows",
+          "dependencies": {
+            "ScottPlot.WPF": {
+              "target": "Package",
+              "version": "[5.1.59, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
