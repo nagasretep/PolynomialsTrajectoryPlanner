@@ -3,17 +3,22 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ScottPlot;
 using ScottPlot.Plottables;
+using ScottPlot.WPF;
 
 namespace TrajectoryPlanner.App;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
     private readonly PrototypeTrajectoryService _trajectoryService = new();
+    private readonly List<WpfPlot> _plotControls = [];
+    private readonly List<Border> _plotHosts = [];
     private PrototypeComputationResult? _currentResult;
-    private VerticalLine? _cursorLine;
+    private readonly List<VerticalLine> _cursorLines = [];
+    private SegmentInputModel? _selectedSegment;
     private string _statusMessage = "Configure the prototype inputs, then click Compute.";
     private string _cursorStatusText = "Cursor time: n/a";
 
@@ -21,6 +26,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
+
+        _plotControls.AddRange([TrajectoryPlot1, TrajectoryPlot2, TrajectoryPlot3, TrajectoryPlot4, TrajectoryPlot5]);
+        _plotHosts.AddRange([PlotHost1, PlotHost2, PlotHost3, PlotHost4, PlotHost5]);
 
         Segments.CollectionChanged += OnSegmentsCollectionChanged;
         AddInitialSegment();
@@ -41,6 +49,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public bool HasMultipleSegments => Segments.Count > 1;
 
+    public bool CanRemoveSegment => Segments.Count > 1 && SelectedSegment is not null;
+
+    public SegmentInputModel? SelectedSegment
+    {
+        get => _selectedSegment;
+        set
+        {
+            if (SetProperty(ref _selectedSegment, value))
+                OnPropertyChanged(nameof(CanRemoveSegment));
+        }
+    }
+
     public string StatusMessage
     {
         get => _statusMessage;
@@ -57,11 +77,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         var segment = new SegmentInputModel(1);
         Segments.Add(segment);
+        SelectedSegment = segment;
     }
 
     private void OnSegmentsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(HasMultipleSegments));
+        OnPropertyChanged(nameof(CanRemoveSegment));
     }
 
     private void AddSegment_Click(object sender, RoutedEventArgs e)
@@ -78,7 +100,26 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         Segments.Add(segment);
+        SelectedSegment = segment;
         StatusMessage = $"Added segment {segmentNumber}.";
+    }
+
+    private void RemoveSelectedSegment_Click(object sender, RoutedEventArgs e)
+    {
+        if (!CanRemoveSegment || SelectedSegment is null)
+            return;
+
+        int removedIndex = Segments.IndexOf(SelectedSegment);
+        Segments.Remove(SelectedSegment);
+        RenumberSegments();
+
+        if (Segments.Count > 0)
+        {
+            int nextIndex = Math.Clamp(removedIndex, 0, Segments.Count - 1);
+            SelectedSegment = Segments[nextIndex];
+        }
+
+        StatusMessage = $"Removed segment {removedIndex + 1}.";
     }
 
     private void Compute_Click(object sender, RoutedEventArgs e)
@@ -104,36 +145,49 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void BuildPlot(PrototypeComputationResult result)
     {
-        var plot = TrajectoryPlot.Plot;
-        plot.Clear();
+        _cursorLines.Clear();
 
-        foreach (SeriesData series in result.Series)
+        for (int i = 0; i < _plotControls.Count; i++)
         {
-            var scatter = plot.Add.Scatter(series.Times, series.Values);
+            WpfPlot plotControl = _plotControls[i];
+            plotControl.Plot.Clear();
+
+            bool hasSeries = i < result.Series.Count;
+            _plotHosts[i].Visibility = hasSeries ? Visibility.Visible : Visibility.Collapsed;
+            if (!hasSeries)
+                continue;
+
+            SeriesData series = result.Series[i];
+            var scatter = plotControl.Plot.Add.Scatter(series.Times, series.Values);
             scatter.LegendText = series.Name;
             scatter.LineWidth = 2;
+            plotControl.Plot.Title(series.Name);
+            plotControl.Plot.YLabel(series.Name);
+            plotControl.Plot.XLabel("Time");
+            plotControl.Plot.Axes.AutoScale();
+
+            var cursorLine = plotControl.Plot.Add.VerticalLine(0);
+            cursorLine.LineWidth = 2;
+            _cursorLines.Add(cursorLine);
+
+            plotControl.Refresh();
         }
-
-        plot.Title("1D Trajectory Prototype");
-        plot.XLabel("Time");
-        plot.YLabel("Value");
-        plot.ShowLegend(Alignment.UpperRight);
-
-        _cursorLine = plot.Add.VerticalLine(0);
-        _cursorLine.LineWidth = 2;
-
-        TrajectoryPlot.Refresh();
     }
 
     private void ResetPlot()
     {
-        var plot = TrajectoryPlot.Plot;
-        plot.Clear();
-        plot.Title("1D Trajectory Prototype");
-        plot.XLabel("Time");
-        plot.YLabel("Value");
-        plot.ShowLegend(Alignment.UpperRight);
-        TrajectoryPlot.Refresh();
+        _cursorLines.Clear();
+
+        for (int i = 0; i < _plotControls.Count; i++)
+        {
+            WpfPlot plotControl = _plotControls[i];
+            plotControl.Plot.Clear();
+            plotControl.Plot.Title(i == 0 ? "Compute to populate the stacked plots" : string.Empty);
+            plotControl.Plot.XLabel("Time");
+            plotControl.Plot.YLabel("Value");
+            _plotHosts[i].Visibility = i == 0 ? Visibility.Visible : Visibility.Collapsed;
+            plotControl.Refresh();
+        }
     }
 
     private void TrajectoryPlot_MouseMove(object sender, MouseEventArgs e)
@@ -141,12 +195,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (_currentResult is null)
             return;
 
-        Point position = e.GetPosition(TrajectoryPlot);
-        Pixel pixel = new(
-            (float)(position.X * TrajectoryPlot.DisplayScale),
-            (float)(position.Y * TrajectoryPlot.DisplayScale));
+        if (sender is not WpfPlot activePlot)
+            return;
 
-        Coordinates coordinates = TrajectoryPlot.Plot.GetCoordinates(pixel);
+        Point position = e.GetPosition(activePlot);
+        Pixel pixel = new(
+            (float)(position.X * activePlot.DisplayScale),
+            (float)(position.Y * activePlot.DisplayScale));
+
+        Coordinates coordinates = activePlot.Plot.GetCoordinates(pixel);
         double time = Math.Clamp(coordinates.X, 0.0, _currentResult.TotalDuration);
         UpdateCursorReadout(time);
     }
@@ -156,8 +213,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (_currentResult is null)
             return;
 
-        if (_cursorLine is not null)
-            _cursorLine.X = time;
+        foreach (VerticalLine cursorLine in _cursorLines)
+            cursorLine.X = time;
 
         CursorStatusText = $"Cursor time: {time:F6}";
 
@@ -182,7 +239,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             CursorReadoutRows.RemoveAt(CursorReadoutRows.Count - 1);
         }
 
-        TrajectoryPlot.Refresh();
+        foreach (WpfPlot plotControl in _plotControls.Where((_, index) => index < _currentResult.Series.Count))
+            plotControl.Refresh();
     }
 
     private static void ReplaceRows<T>(ObservableCollection<T> target, IReadOnlyList<T> source)
@@ -190,6 +248,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         target.Clear();
         foreach (T item in source)
             target.Add(item);
+    }
+
+    private void RenumberSegments()
+    {
+        for (int i = 0; i < Segments.Count; i++)
+            Segments[i].SegmentNumber = i + 1;
     }
 
     private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)

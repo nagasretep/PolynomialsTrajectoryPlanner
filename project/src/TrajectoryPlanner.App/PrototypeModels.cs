@@ -26,6 +26,7 @@ public abstract class ObservableObject : INotifyPropertyChanged
 
 public sealed class SegmentInputModel : ObservableObject
 {
+    private int _segmentNumber;
     private int _degree = 9;
     private string _startPosition = "0";
     private string _endPosition = "10";
@@ -56,10 +57,18 @@ public sealed class SegmentInputModel : ObservableObject
 
     public SegmentInputModel(int segmentNumber)
     {
-        SegmentNumber = segmentNumber;
+        _segmentNumber = segmentNumber;
     }
 
-    public int SegmentNumber { get; }
+    public int SegmentNumber
+    {
+        get => _segmentNumber;
+        set
+        {
+            if (SetProperty(ref _segmentNumber, value))
+                OnPropertyChanged(nameof(Header));
+        }
+    }
 
     public string Header => $"Segment {SegmentNumber}";
 

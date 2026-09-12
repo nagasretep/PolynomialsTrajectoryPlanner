@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TrajectoryPlanner.App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+23d0c4a6b460b41bb204694d078562f8fbf9ad24")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+37945acab1acbf9bd770495dce70e855e02f9994")]
 [assembly: System.Reflection.AssemblyProductAttribute("TrajectoryPlanner.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TrajectoryPlanner.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

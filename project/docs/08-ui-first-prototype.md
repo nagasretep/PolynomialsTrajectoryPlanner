@@ -12,7 +12,7 @@ This is a **validation testbed**, not the final application UI. Its only purpose
 
 ## Operational Flow
 
-1. Create a segment (segment count starts at one, increments via a button once the current segment's data is complete).
+1. Create a segment (segment count starts at one, increments via a button once the current segment's data is complete, and the currently selected segment tab can be removed through a dedicated button).
 2. For the active segment, choose the polynomial degree and enter the boundary conditions required for that degree.
 3. Optionally select one or more active constraints and enter their values.
 4. Optionally enable a constant-velocity stretch within the segment.
@@ -22,7 +22,7 @@ This is a **validation testbed**, not the final application UI. Its only purpose
 
 ## Input Requirements
 
-A single tab-based panel per segment, with a segment-number indicator and a button to advance to the next segment once the current one is complete. Each segment tab contains:
+A single tab-based panel per segment, with a segment-number indicator, a button to add a new segment, and a button to remove the currently selected segment. The remove button is disabled when only one segment exists, so the prototype always keeps at least one editable segment. After a removal, segment tabs are renumbered sequentially. Each segment tab contains:
 
 - **Degree**: dropdown, values 3 / 5 / 7 / 9.
 - **Boundary conditions**: the necessary conditions for the selected degree (per `BoundaryConditions.md`'s classification table), each with its value field. The set of fields shown updates when the degree changes.
@@ -33,6 +33,7 @@ A single tab-based panel per segment, with a segment-number indicator and a butt
   - maximum jerk (shown only if the selected degree supports it);
   - maximum snap (shown only if the selected degree supports it).
 - **Constant-velocity stretch**: a toggle, and when enabled, the start and end of the stretch, expressed relative to the whole segment (the interval between the segment's start and end position from its boundary conditions) — absolute values, per Decision 3 in `07-implementation-plan.md`.
+- **Constant speed value**: when the constant-velocity stretch is enabled, the user also enters the speed value for that stretch explicitly.
 - **Blend values**: shown only when at least two segments are defined — initial blend value (toward the previous segment) and final blend value (toward the next segment), relative to the whole segment.
 
 ## Output Requirements
@@ -40,8 +41,9 @@ A single tab-based panel per segment, with a segment-number indicator and a butt
 Two distinct outputs, produced after Compute:
 
 - **Numeric report**: a table containing the polynomial coefficients and the maximum/minimum values of position, velocity, acceleration, jerk, and snap — limited to the quantities actually computable for the chosen degree.
-- **Chart**: a single chart showing the overall polynomial trajectory across all defined segments — position and every applicable derivative overlaid on the same plot, distinguished by color, with a legend.
-- **Cursor readout**: a horizontal (time-axis) cursor over the chart, with a small numeric table next to the legend showing the value of each plotted quantity at the cursor's current position.
+- **Chart area**: a large visualization area occupying the dominant portion of the application window.
+- **Per-quantity plots**: instead of compressing all curves into a single shared Y-axis plot, each computable quantity (position, velocity, acceleration, jerk, snap) is shown in its own vertically stacked plot with an independent Y scale, so each plot fully represents its own minimum and maximum values.
+- **Cursor readout**: a shared time cursor across the stacked plots, with a numeric table beside the plots showing the value of each visible quantity at the cursor's current position.
 
 ## Explicitly Out Of Scope For Now
 
@@ -53,19 +55,34 @@ Two distinct outputs, produced after Compute:
 
 ## Resolution Of Open Points From 07-implementation-plan.md
 
-- **Default derivatives shown in charts**: **RESOLVED** — all derivatives applicable to the chosen degree are shown, overlaid on the same chart, color-coded, with a legend (see *Output Requirements*).
+- **Default derivatives shown in charts**: **RESOLVED** — all derivatives applicable to the chosen degree are shown. The implemented prototype presents them as stacked plots with shared time inspection rather than compressing them into one shared Y-axis plot (see *Output Requirements*).
 - **3D boundary condition input (axis-by-axis vs. vector)**: **remains open**, deferred to when 3D UI work begins (Milestone M8) — out of scope for this 1D-only prototype.
 - **Unified vs. separate tool for Blending (Req. 13) and Exact Pass-Through (Req. 14)**: **remains open**, and for a reason beyond UI design: the current pass-through solver (`PassThroughSolver1D.cs`) is still a provisional finite-difference-style heuristic, not the exact global minimum-snap formulation promised by `TrajectoryPassingThroughConstraintPoints.md`. Designing UI for that requirement now would risk having to redesign it once the solver reaches its final form. This prototype therefore covers Blending only; Exact Pass-Through is added to the UI once the underlying solver is completed.
 
 ## Charting Library
 
-**Proposed**: **ScottPlot** — its built-in interactive crosshair/cursor support directly covers the *Cursor Readout* requirement above without custom implementation, its API for multiple overlaid line series with a legend is simple, and it is free and lightweight, consistent with the project's constraint (`01-requirements.md` item 16) against introducing complexity unrelated to the project's actual educational goal.
+**DECISION**: **ScottPlot**.
 
-This decision is proposed here, not yet final — to be confirmed before implementation begins.
+ScottPlot was confirmed and adopted for the prototype because:
+
+- it supports interactive time inspection cleanly;
+- it is lightweight and free;
+- it allows a large stacked-plot layout without additional framework complexity.
+
+This decision is no longer provisional.
+
+## Implemented Clarifications
+
+The following UI details were decided during the prototype implementation and are now fixed in this document:
+
+- **Layout priority**: the chart area is the primary workspace. Inputs and reports are placed in a narrower left-side control/report column so visualization keeps most of the window width and height.
+- **Optional controls**: constant-velocity and blend inputs are grouped as optional shape controls and may be collapsed when not needed, reducing wasted space.
+- **Segment management**: the prototype exposes both add and remove actions at window level; removal always applies to the currently selected tab and is disabled when only one segment remains.
+- **Window icon**: the application window uses `IconsAndGraphics/calculus.png`.
 
 ## Relation To 07-implementation-plan.md
 
-This document is the concrete specification for Milestone M2. It resolves one of the two items under *Deferred — UI Exposure Choices* (default derivatives shown) and narrows the other two to an explicit scope boundary (3D deferred to M8; Exact Pass-Through deferred to when its solver is complete) rather than leaving them open-ended. It also makes the *Deferred — Charting Library* decision concrete, pending confirmation.
+This document is the concrete specification for Milestone M2. It resolves one of the two items under *Deferred — UI Exposure Choices* (default derivatives shown) and narrows the other two to an explicit scope boundary (3D deferred to M8; Exact Pass-Through deferred to when its solver is complete) rather than leaving them open-ended. It also records that the *Deferred — Charting Library* decision has now been finalized as ScottPlot.
 
 ## Related Documents
 

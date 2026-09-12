@@ -99,7 +99,9 @@ Deferred to the UI design phase itself:
 
 *Carried over from* `01-requirements.md` item 16, which explicitly left this choice for implementation time.
 
-Candidates already identified: LiveCharts2, OxyPlot, ScottPlot. Decision deferred to the point where the first chart is actually needed (Milestone M2 below), when a short practical comparison will be made against the concrete requirement at hand rather than in the abstract.
+Candidates identified at planning time were: LiveCharts2, OxyPlot, ScottPlot.
+
+**Status update after M2 implementation**: this decision has now been resolved by `08-ui-first-prototype.md` and the implemented WPF prototype. The chosen charting library is **ScottPlot**.
 
 ## Open Points Carried Forward
 
@@ -210,6 +212,20 @@ This records two practical implementation choices that were previously only impl
 - **test scope**: tests target `TrajectoryPlanner.Core` only, not the WPF layer.
 
 This remains fully consistent with the original separation principle of keeping mathematical logic testable independently from the UI.
+
+### A5 — Milestone M2 Evolved Into A Chart-First Prototype Layout
+
+The original milestone sketch described a minimal shell with boundary-condition input and a single-segment plot.
+
+The implemented and now stabilized M2 baseline is more specific:
+
+- the application uses a **chart-first layout**, with inputs and reports in a left control rail;
+- the visualization area is the dominant region of the window;
+- the plotted quantities are displayed as **stacked plots with independent Y scaling** rather than one compressed shared-axis plot;
+- the window uses the project icon `IconsAndGraphics/calculus.png`;
+- segment management includes both **add** and **remove selected segment**, while preserving at least one segment at all times.
+
+These are implementation-level refinements of M2, not changes to the underlying theory scope.
 
 ## Related Documents
 

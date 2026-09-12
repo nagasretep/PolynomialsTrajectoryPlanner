@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\TrajectoryPlanner.Core\TrajectoryPlanner.Core.csproj" />
@@ -6,6 +6,12 @@
 
   <ItemGroup>
     <PackageReference Include="ScottPlot.WPF" Version="5.1.59" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="..\..\..\IconsAndGraphics\calculus.png">
+      <Link>Assets\calculus.png</Link>
+    </Resource>
   </ItemGroup>
 
   <PropertyGroup>
