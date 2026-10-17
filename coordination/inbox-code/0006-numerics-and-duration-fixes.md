@@ -1,6 +1,6 @@
 # 0006 — Numerical conditioning and two duration fixes
 
-Status: open · From: Cowork · To: Code · Date: 2026-10-17
+Status: closed · From: Cowork · To: Code · Date: 2026-10-17
 
 ## Goal
 
