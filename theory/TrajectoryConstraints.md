@@ -359,6 +359,9 @@ Possible numerical strategies include:
 
 The choice of numerical solver belongs to implementation, not to the theory baseline. The theory only requires that all real interval roots be found reliably enough for extrema detection.
 
+
+**Implementation note (register D4).** The software does not rely on the candidate roots alone: it scans the interval for sign changes of $f'(t)$ and refines each by bisection, and it also evaluates $f$ at a fixed set of $201$ equally spaced points, adding them to the candidate set. The candidate set is therefore a superset of the one above, so a maximum missed by a root-finding failure is still bounded closely by the sampling; the extra cost is negligible. The result is the maximum of $f$ over all candidates, as in the generic algorithm.
+
 ## Imposing A Velocity Limit In 1D
 
 ### Problem Form
@@ -563,7 +566,7 @@ With non-zero prescribed boundary derivatives the profile is not a pure time sca
 3. refine $T^{\star}$ by bisection between the last infeasible and the first feasible duration;
 4. stop with an explicit failure if no feasible duration is found up to a maximum duration.
 
-Caveat: a feasible window narrower than the geometric step could be skipped; with a modest $\rho$ (for example $1.05$) this is a remote case and is accepted. The failure of step 4 must always be reported to the caller.
+Caveat: a feasible window narrower than the geometric step could be skipped; with a modest $\rho$ (for example $1.05$) this is a remote case and is accepted. A concrete non-monotone case exists (degree 3, acceleration limit, rest start, arrival at a non-zero velocity): the feasible window can be only about $5\,\%$ wide, comparable to the step, and the search may then return a later feasible duration that is not the shortest. The returned duration is always feasible; only its minimality is not guaranteed there (register D18). The failure of step 4 must always be reported to the caller.
 
 If no limit is active, the limits do not determine a duration, which must then be prescribed or defaulted by the application. The same holds for a rest-to-rest segment of zero length ($\Delta = 0$): mathematically every duration is feasible and $T^{\star} = 0$ would be unusable, so the limits again determine nothing and the prescribed or default duration applies.
 

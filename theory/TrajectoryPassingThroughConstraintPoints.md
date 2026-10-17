@@ -431,6 +431,75 @@ Computed independently by Cowork with a small NumPy prototype (not the applicati
   - cost $J \approx 10977.31$.
 - **Optimality**: at $\mathbf{y}^{\star}$ the gradient $\mathbf{H}\mathbf{y} + \mathbf{f}$ vanishes, and any small perturbation of $\mathbf{y}^{\star}$ increases $J$.
 
+## Pass-Through With Kinematic Limits
+
+Exact pass-through does not bound the velocity, acceleration, jerk or snap between the waypoints, so active limits must be handled. The project decision for ordinary segments (*Shortest Feasible Duration* in `TrajectoryConstraints.md`) is extended here to a whole waypoint sequence.
+
+### What Is Free And What Is Fixed
+
+The waypoint positions are fixed by the user. The smoothness order $m$ and the polynomial degree are fixed. The durations are $T_k = \lambda\,\bar T_k$, where the **reference durations** $\bar T_k$ fix the proportions (user-specified durations, or the proportional rule of `design/07-implementation-plan.md` A8 with any reference total) and the single scalar $\lambda > 0$ is the only free parameter. The shortest feasible duration of the sequence is therefore the smallest $\lambda$ for which the globally optimal trajectory respects every active limit. Choosing the proportions themselves under limits is a different, nonlinear problem and is not part of the baseline (see Open Questions).
+
+### Scaling Law
+
+Let $x_{\bar T}(t)$ be the optimal trajectory for the reference durations, with all prescribed boundary derivatives (orders $1,\dots,p-1$ at the two global ends) equal to zero. For durations $\lambda \bar T_k$, the trajectory
+
+$$
+x_\lambda(t) = x_{\bar T}(t/\lambda)
+$$
+
+satisfies the same waypoints and the same (zero) boundary derivatives, and its cost is
+
+$$
+J_\lambda = \sum_k \int \left(x_\lambda^{(m)}\right)^2 dt = \lambda^{\,1-2m}\, J_{\bar T}.
+$$
+
+Since $J_\lambda$ is a constant multiple of $J_{\bar T}$ for every admissible trajectory of the scaled problem, $x_\lambda$ is the optimum of the scaled problem. By uniqueness (*Existence And Uniqueness*) it is **the** solution. The derivative of order $k$ scales as
+
+$$
+x_\lambda^{(k)}(t) = \lambda^{-k}\, x_{\bar T}^{(k)}(t/\lambda),
+\qquad
+P_k(\lambda) = \lambda^{-k} P_k(1),
+$$
+
+where $P_k(\lambda)$ is the peak of $\lvert x^{(k)} \rvert$ over the whole trajectory. No new solve is needed when $\lambda$ changes. (Numerical check by Cowork: for the data of *Reference Values*, the peaks at $\lambda = 0.5$ and $\lambda = 2$ equal $\lambda^{-k} P_k(1)$ to nine digits.)
+
+### Closed Form For Zero Boundary Derivatives
+
+With limits $L_k$ on the orders $k = 1,\dots,4$ (velocity, acceleration, jerk, snap; only the active ones), the feasibility condition $P_k(1)\,\lambda^{-k} \le L_k$ gives
+
+$$
+\lambda^{\star} = \max_{k\ \text{active}} \left( \frac{P_k(1)}{L_k} \right)^{1/k},
+\qquad
+T_k^{\star} = \lambda^{\star}\,\bar T_k .
+$$
+
+It is the same structure as the rest-to-rest closed form for a single segment, with the peaks $P_k(1)$ of the reference solution in place of $\lvert\Delta\rvert\,c_k$. Notes:
+
+- Orders with $P_k(1) = 0$ (for example snap for a cubic) impose nothing.
+- If no limit is active, or all $P_k(1)$ are zero (all waypoints equal), the limits determine nothing: the prescribed or default durations are used.
+- $\lambda^{\star}$ may be smaller than $1$: the reference durations were too slow, and the sequence is sped up.
+- The peaks are found with the extrema machinery of `TrajectoryConstraints.md`; the same routine that verifies limits supplies $P_k(1)$.
+
+### Non-Zero Boundary Derivatives
+
+Prescribed non-zero boundary derivatives are physical values that do not scale with $\lambda$, so the scaling law is lost and $F(\lambda) = \max_k P_k(\lambda)/L_k - 1$ is not necessarily monotone. The general duration search of `TrajectoryConstraints.md` (geometric growth from a lower bound, bisection, explicit failure, the caveat on narrow windows) applies with $\lambda$ in place of $T$; each evaluation of $F$ is one global solve, which is cheap because $\mathbf{H}$ is block-tridiagonal. A reasonable start of the search is the value $\lambda^{\star}$ of the closed form computed with the boundary derivatives set to zero; the lower bound from the necessary conditions of *General Case: Duration Search* applies to the boundary derivatives of the first and last segment.
+
+### Prescribed Durations
+
+If the user prescribes all durations, they are kept and only verified (extrema of every segment against every active limit); a violation is reported, never repaired.
+
+### Reference Values For The Closed Form
+
+Computed by Cowork with the NumPy prototype of *Reference Values For Verification* (rest ends, $d = 9$, $m = 4$).
+
+- Waypoints $(0, 1, 2)$, reference durations $(1, 1)$: peaks $P_1 = 2.275$, $P_2 = 4.094571$, $P_3 = 15.4$, $P_4 = 74.005522$. With limits $v \le 2$, $a \le 3$, $j \le 10$, $s \le 50$: the ratios $(P_k/L_k)^{1/k}$ are $1.1375,\ 1.168271,\ 1.1548,\ 1.102995$, so the acceleration limit binds, $\lambda^{\star} = 1.168271$, durations $(1.168271, 1.168271)$, total $2.336542$. At $\lambda^{\star}$ the peaks are $1.947322,\ 3.0,\ 9.658063,\ 39.727378$.
+- Waypoints $(0, 1, 3, 2)$, reference durations $(0.7, 1.3, 0.9)$: peaks $P_1 = 4.47151$, $P_2 = 9.626191$, $P_3 = 33.013296$, $P_4 = 255.962162$. With limits $v \le 3$, $a \le 6$: $\lambda^{\star} = 1.490503$ (velocity binds), durations $(1.043352, 1.937654, 1.341453)$, total $4.32246$; the peaks at $\lambda^{\star}$ are $v = 3.0$, $a = 4.332999$.
+- Same waypoints, durations $(1, 1, 1)$: $P_1 = 3.490773$, $P_2 = 8.369728$, $P_3 = 24.329164$, $P_4 = 129.585159$.
+
+Peaks are maxima over fine sampling (4001 points per segment), which slightly underestimates them; the exact value of the first snap peak at $\lambda^{\star}$ is $39.727413$ (the sampled $39.727378$). Verify to about $10^{-6}$ relative.
+
+- **Non-zero boundary velocity** (waypoints $(0, 1, 3, 2)$, reference durations $(0.7, 1.3, 0.9)$, limits $v \le 3$, $a \le 6$, initial velocity $b$, other boundary derivatives zero): $\lambda^{\star} = 1.4905$ for $b = 0$, $1.1908$ for $b = +1.5$ (along the motion), $5.9005$ for $b = -1.5$ (against it, the total time almost quadruples). Confirmed by an independent grid scan of the feasibility function (first feasible $\lambda$ at $1.195$ and $5.905$ on a step of $0.005$).
+
 ## Exact Pass-Through Versus Blending
 
 The difference from Requirement 13 can now be stated sharply.
@@ -468,7 +537,7 @@ Possible strategies are:
 
 - user-specified durations;
 - durations derived from nominal geometric spacing;
-- durations refined later to satisfy active constraints.
+- durations scaled by a common factor to satisfy active constraints (*Pass-Through With Kinematic Limits*).
 
 This keeps Requirement 14 naturally connected to `TrajectoryConstraints.md`.
 
@@ -732,7 +801,8 @@ Once that interior state and the segment durations are fixed, both segments are 
 
 - **Resolved**: the default exact-pass-through rule is a minimum-snap global solve (Decision 5 of `07-implementation-plan.md`), formulated in *Global Minimum-Snap Formulation In 1D*; the criterion order $m$ is a parameter, so alternatives can be exposed without restructuring.
 - **Resolved (author, 2026-10-17)**: for degree $9$ the default is snap ($m = 4$: derivatives continuous up to snap, crackle may jump at the waypoints). The natural order crackle ($m = 5$, derivatives continuous up to the 8th) remains available as a parameter.
-- **Open — to resolve together with duration handling**: should segment durations in exact-pass-through mode be specified directly by the user, derived automatically from waypoint spacing, or refined through a joint duration-and-state search?
+- **Resolved (2026-10-17)**: durations in exact-pass-through mode are user-specified or derived by the proportional rule; with active limits a common scale factor $\lambda$ gives the shortest feasible sequence (*Pass-Through With Kinematic Limits*).
+- **Open — later, non-blocking**: allocating the durations unequally to reduce the total time under limits (a nonlinear joint search over the individual $T_k$) is not part of the baseline; is it worth the complexity?
 - **Open — to resolve during data-structure design**: should shared interior waypoint derivatives be represented explicitly as trajectory-level state objects, or should they remain implicit variables reconstructed only during computation?
 
 ## Related Documents

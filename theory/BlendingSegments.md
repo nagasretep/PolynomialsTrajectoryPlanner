@@ -306,6 +306,13 @@ The most important theoretical point is that changing $T_b$ changes the blend co
 
 So, exactly as in `TrajectoryConstraints.md`, duration and profile shape are coupled through coefficient recomputation.
 
+### Decisions For The 1D Baseline (2026-10-17)
+
+- **Duration with limits (decided by the author).** The blend takes the **inherited** duration (the time of the removed portions, with a small floor). If that blend respects the active limits it is kept; only if it violates them is its duration replaced by the shortest feasible one (*Shortest Feasible Duration* in `TrajectoryConstraints.md`). The total duration of the trajectory is therefore changed only when a limit forces it. A user-specified blend duration is only verified.
+- **Limits of a blend.** Without dedicated blend limits in the user interface, a blend uses the most restrictive limit of each kind among its two neighbours.
+- **Degree.** The blend has the degree of its two neighbours when they agree, and degree $9$ otherwise (a blend between two cubics needs no higher derivatives).
+- **Position to parameter.** An absolute blend position must lie in the range actually covered by the segment; otherwise the request is rejected. If a segment that overshoots reaches the position more than once, the first crossing is used (a convention; it can be revisited if a case shows a different reading is more natural). An empty blend window is rejected.
+
 ## Recommended 1D Baseline
 
 The recommended baseline for this project is:
@@ -686,7 +693,7 @@ This is the cleanest way to combine 3D geometry with scalar polynomial theory.
 
 ## Open Questions
 
-- **Open — to resolve during later software design**: should the blend duration $T_b$ be user-specified, inherited automatically from the removed original portions, or optimized under active constraints?
+- **Resolved (2026-10-17)**: the blend duration is user-specified (only verified), or inherited from the removed portions; with active limits and a violation, the shortest feasible duration replaces it (see *Decisions For The 1D Baseline*).
 - **Open — to resolve during data-format design**: should blend points be stored primarily as absolute points, as local percentages, or as both representations?
 - **Open — to resolve together with `TrajectoryPassingThroughConstraintPoints`**: should the application expose Requirement 13 and Requirement 14 as two clearly separated modes, or as one continuity tool with a mandatory pass-through toggle?
 
