@@ -417,7 +417,7 @@ For degree $9$ the project default is nevertheless **snap** ($m = 4$, Decision 5
 
 - **Global coupling**: moving one waypoint, or changing one duration, changes all interior states. $\mathbf{H}$ is block-tridiagonal (a node is coupled only with its neighbours), so the cost of the solve grows only linearly with $N$; for the project's sizes (up to a few dozen segments) a dense solve is entirely adequate.
 - **Overshoot**: minimizing a smoothness cost does not bound the position between waypoints. Kinematic limits must still be verified afterwards (recompute-and-verify of `TrajectoryConstraints.md`).
-- **Conditioning**: $\mathbf{H}$ can be ill-conditioned (about $5 \cdot 10^{6}$ in the numerical example below); this is harmless in double precision with a Cholesky solve, but it is a reason to avoid explicit inversion.
+- **Conditioning**: $\mathbf{H}$ can be ill-conditioned: about $5 \cdot 10^{6}$ in the small example below, but up to $5 \cdot 10^{15}$ for degree $9$ with $m = 5$ and $30$ segments whose durations differ by a factor $100$ (measured by Code, request 0004). The cause is mostly the different physical scales of the unknowns (velocity, acceleration, jerk, snap and segments of very different durations). A symmetric diagonal scaling $\mathbf{S} = \mathrm{diag}(1/\sqrt{H_{ii}})$, solving $(\mathbf{S}\mathbf{H}\mathbf{S})\,\mathbf{z} = -\mathbf{S}\mathbf{f}$ and $\mathbf{y} = \mathbf{S}\mathbf{z}$, brought the condition number of a comparable test case from $3 \cdot 10^{15}$ down to $2 \cdot 10^{9}$ (and from $4 \cdot 10^{13}$ to $1 \cdot 10^{6}$ for $m = 4$) in Cowork's prototype. Use a Cholesky solve on the scaled matrix, never an explicit inverse. Evaluate the cost of a solution from the segment coefficients, not from the quadratic form $\mathbf{y}^{\top}\mathbf{H}\mathbf{y} + 2\mathbf{f}^{\top}\mathbf{y} + \text{const}$, whose large constant term cancels badly.
 
 ### Reference Values For Verification
 
@@ -731,7 +731,7 @@ Once that interior state and the segment durations are fixed, both segments are 
 ## Open Questions
 
 - **Resolved**: the default exact-pass-through rule is a minimum-snap global solve (Decision 5 of `07-implementation-plan.md`), formulated in *Global Minimum-Snap Formulation In 1D*; the criterion order $m$ is a parameter, so alternatives can be exposed without restructuring.
-- **Open — to decide (author)**: for degree $9$, keep snap ($m = 4$, continuous up to snap, crackle may jump at waypoints) as the default, or adopt the natural order crackle ($m = 5$, derivatives continuous up to the 8th at the waypoints)?
+- **Resolved (author, 2026-10-17)**: for degree $9$ the default is snap ($m = 4$: derivatives continuous up to snap, crackle may jump at the waypoints). The natural order crackle ($m = 5$, derivatives continuous up to the 8th) remains available as a parameter.
 - **Open — to resolve together with duration handling**: should segment durations in exact-pass-through mode be specified directly by the user, derived automatically from waypoint spacing, or refined through a joint duration-and-state search?
 - **Open — to resolve during data-structure design**: should shared interior waypoint derivatives be represented explicitly as trajectory-level state objects, or should they remain implicit variables reconstructed only during computation?
 

@@ -419,7 +419,7 @@ $$
 
 3. if $F_v(T) \le 0$, the duration is feasible;
 4. otherwise enlarge $T$ and test again;
-5. once a feasible interval is bracketed, optionally refine the smallest acceptable duration by bisection or another one-dimensional search method.
+5. once a feasible interval is bracketed, refine the smallest acceptable duration by bisection or another one-dimensional search method (mandatory under the project decision of *Shortest Feasible Duration*).
 
 This turns velocity-limit imposition into a duration-search problem.
 
@@ -529,6 +529,43 @@ $$
 This explains why increasing duration often helps reduce peak derivatives.
 
 But in the baseline formulation of this project, the more general recompute-and-verify strategy is the safer one to adopt for requirements 8, 9, and 10.
+
+## Shortest Feasible Duration
+
+**Project decision (author, 2026-10-17).** When the duration of a segment is *not* prescribed and one or more limits are active, the application computes the **shortest duration that satisfies all active limits**. When the duration is prescribed, it is only verified against the limits (and a violation is reported, not repaired).
+
+### Feasibility Function
+
+For the active limits $L_k$ (velocity $k=1$, acceleration $k=2$, jerk $k=3$, snap $k=4$) let $P_k(T)$ be the peak of $\lvert x^{(k)}(t) \rvert$ over the segment of duration $T$, computed from the coefficients recomputed for that $T$. Define
+
+$$
+F(T) = \max_{k\ \text{active}} \frac{P_k(T)}{L_k} - 1
+$$
+
+A duration is feasible if $F(T) \le 0$, and the goal is $T^{\star} = \min\{\, T > 0 : F(T) \le 0 \,\}$. Several simultaneous limits are handled by the maximum: the most restrictive one decides. This also settles the open question about multiple limits: only the duration is searched.
+
+### Closed Form For Rest-To-Rest Segments
+
+If all prescribed boundary derivatives of order $1, \dots, p-1$ are zero, the profile is a fixed shape scaled by the distance $\Delta = x_f - x_0$: $x(t) = x_0 + \Delta\, \varphi(t/T)$. Then $P_k(T) = \lvert \Delta \rvert\, c_k\, T^{-k}$ with $c_k = \max \lvert \varphi^{(k)} \rvert$ independent of $T$, and the feasibility condition becomes $T^{k} \ge \lvert \Delta \rvert\, c_k / L_k$ for every active limit:
+
+$$
+T^{\star} = \max_{k\ \text{active}} \left( \frac{\lvert \Delta \rvert\, c_k}{L_k} \right)^{1/k}
+$$
+
+The constants $c_k$ come from the unit profile ($\Delta = 1$, $T = 1$). For velocity: $c_1 = 3/2,\ 15/8,\ 35/16,\ 315/128$ for degrees $3, 5, 7, 9$ (the velocity of the rest-to-rest profile is a constant times $\tau^{p-1}(1-\tau)^{p-1}$, largest at the midpoint). The same scaling argument applies to exact pass-through with rest ends when all segment durations are scaled by a common factor $\lambda$, since the optimal profile for the scaled durations is the same shape in stretched time.
+
+### General Case: Duration Search
+
+With non-zero prescribed boundary derivatives the profile is not a pure time scaling, because those derivatives are physical values that do not scale. $F(T)$ is then not necessarily monotone: a very short duration violates the limits, but a very long one may also violate them (reaching a prescribed end velocity over a long time can require large accelerations), and the feasible set can be a bounded interval or even empty. The search is therefore:
+
+1. choose a lower starting duration $T_{lo} > 0$ from necessary conditions: for every active limit $L_k$ with prescribed boundary derivatives $b_0, b_f$ of order $k-1$ (for $k = 1$ these are the positions, $b_f - b_0 = \Delta$), the mean of $x^{(k)}$ over the segment is $(b_f - b_0)/T$ and cannot exceed the peak, so $T \ge \lvert b_f - b_0 \rvert / L_k$; take the largest of these bounds and a small positive minimum;
+2. increase $T$ geometrically ($T \leftarrow \rho\, T$, $\rho > 1$) until $F(T) \le 0$ for the first time;
+3. refine $T^{\star}$ by bisection between the last infeasible and the first feasible duration;
+4. stop with an explicit failure if no feasible duration is found up to a maximum duration.
+
+Caveat: a feasible window narrower than the geometric step could be skipped; with a modest $\rho$ (for example $1.05$) this is a remote case and is accepted. The failure of step 4 must always be reported to the caller.
+
+If no limit is active, the limits do not determine a duration, which must then be prescribed or defaulted by the application. The same holds for a rest-to-rest segment of zero length ($\Delta = 0$): mathematically every duration is feasible and $T^{\star} = 0$ would be unusable, so the limits again determine nothing and the prescribed or default duration applies.
 
 ## Position, Velocity, Acceleration, Jerk, And Snap In Normalized Time
 
@@ -685,12 +722,12 @@ This algorithm is the verification core shared by requirements 8, 9, and 10.
 The baseline limit-imposition strategy for the current project is:
 
 1. choose the segment degree and boundary conditions;
-2. choose an initial duration;
+2. if the duration is prescribed, verify the limits and report any violation; otherwise compute the shortest feasible duration (*Shortest Feasible Duration*): closed form for rest-to-rest segments, recompute-and-verify search otherwise;
 3. determine the polynomial coefficients;
 4. verify the selected constraint;
-5. if violated, increase duration and recompute;
+5. if violated and the duration is not prescribed, increase duration and recompute;
 6. repeat until the constraint is satisfied;
-7. if desired, refine the smallest feasible duration.
+7. refine to the smallest feasible duration.
 
 This is conceptually simple, consistent with the current theory baseline, and directly compatible with the future desktop application.
 
@@ -762,7 +799,7 @@ to understand the total 3D kinematic demand.
 ## Open Questions
 
 - **Open — to resolve during software implementation** (`src/`): which numerical root solver should be adopted for interval root extraction of the stationarity polynomials?
-- **Open — to resolve during software design**: when several limits are imposed simultaneously on the same segment, should the application search duration only, or also allow reformulations that change additional parameters?
+- **Resolved**: when several limits are imposed simultaneously on the same segment, only the duration is searched (see *Shortest Feasible Duration*, feasibility function with the maximum over the active limits).
 - **Open — to resolve during later project phases**: should snap also receive an explicit limit-imposition requirement, beyond the extrema analysis already covered here?
 
 ## Related Documents

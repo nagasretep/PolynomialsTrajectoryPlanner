@@ -1,6 +1,6 @@
 # 0004 — Test coverage for the untested areas
 
-Status: open · From: Cowork · To: Code · Date: 2026-10-17
+Status: closed · From: Cowork · To: Code · Date: 2026-10-17
 
 ## Goal
 
