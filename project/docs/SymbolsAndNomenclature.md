@@ -44,24 +44,26 @@ $$
 For a polynomial of degree $n$, the canonical form is:
 
 $$
-x(t) = \sum_{i=0}^{n} a_i t^i
+x(t) = \sum_{i=0}^{n} c_i t^i
 $$
 
 where:
 
-- $a_i$ are the polynomial coefficients;
+- $c_i$ are the polynomial coefficients;
 - $n$ is the polynomial degree.
+
+**Coefficient notation vs. acceleration notation**: the polynomial coefficients are denoted $c_i$ rather than $a_i$. This is a deliberate departure from the more common textbook choice, made specifically for this project: `Boundary Conditions In 1D` below reserves $a_0$, $a_f$ for the initial and final *acceleration*, and `NinthDegreePolynomialTheory` writes the acceleration profile itself as $a(t)$. Using $a_i$ for the coefficients as well would make expressions such as $a(t) = 2a_2 + 6a_3 t + \dots$ ambiguous at a glance — the same letter would denote both the function and its own coefficients in the same line. Normalized-time coefficients keep their existing symbol $\alpha_i$ (already distinct, see `PolynomialCoefficientDetermination`). This convention applies to every document in the library from this point on.
 
 When the project specifically refers to the ninth-degree polynomial, the notation becomes:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + \dots + a_9 t^9
+x(t) = c_0 + c_1 t + c_2 t^2 + \dots + c_9 t^9
 $$
 
 The corresponding Horner form is written as:
 
 $$
-x(t) = (((((((((a_9 t + a_8)t + a_7)t + a_6)t + a_5)t + a_4)t + a_3)t + a_2)t + a_1)t + a_0)
+x(t) = (((((((((c_9 t + c_8)t + c_7)t + c_6)t + c_5)t + c_4)t + c_3)t + c_2)t + c_1)t + c_0)
 $$
 
 This document only fixes the notation. The analytical comparison between canonical and Horner form belongs to `NinthDegreePolynomialTheory`.
@@ -342,6 +344,7 @@ These examples are intentionally symbolic because the project prioritizes struct
 - **Resolved in `BoundaryConditions`**: for each polynomial degree, the minimal boundary-condition set is established there (necessary / possible / redundant classification, with a summary table for degrees 3, 5, 7, 9).
 - **Resolved in `TrajectoryConstraints`**: whether 3D constraints should be imposed component-wise or on vector magnitude. This question also recurs in `NinthDegreePolynomialTheory`; it is intentionally not decided here, in isolation, but once the max/min velocity/acceleration/jerk/snap analysis (Req. 7–10) is developed in that document, with enough technical grounding to decide properly.
 - **Open — to resolve during future orientation work** (see `04-future-topics.md`): should quaternion notation use $q$ or $\mathbf{q}$ once snap notation is already present? No urgency until orientation is actually developed.
+- **Resolved**: the polynomial coefficients collided with the acceleration symbol ($a_i$ vs. $a(t)$, $a_0$, $a_f$) in `NinthDegreePolynomialTheory`, `BoundaryConditions`, and `PolynomialCoefficientDetermination`. Coefficients are now denoted $c_i$ throughout the library; see *Coefficient Notation Vs. Acceleration Notation* above.
 
 ## Related Documents
 

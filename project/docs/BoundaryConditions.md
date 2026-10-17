@@ -61,13 +61,13 @@ This is the key idea behind the whole document.
 A polynomial of degree $n$ has $n+1$ coefficients:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + \dots + a_n t^n
+x(t) = c_0 + c_1 t + c_2 t^2 + \dots + c_n t^n
 $$
 
 The unknowns are therefore:
 
 $$
-a_0, a_1, a_2, \dots, a_n
+c_0, c_1, c_2, \dots, c_n
 $$
 
 which are $n+1$ scalar unknowns.
@@ -189,7 +189,7 @@ This notation is particularly useful when discussing complete endpoint data sets
 A cubic polynomial has four coefficients:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3
+x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3
 $$
 
 Therefore it needs four independent scalar conditions in the default formulation.
@@ -236,7 +236,7 @@ So the basic educational message is simple: a cubic segment naturally controls p
 A quintic polynomial has six coefficients:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
+x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3 + c_4 t^4 + c_5 t^5
 $$
 
 Therefore it needs six independent scalar conditions in the default formulation.
@@ -289,7 +289,7 @@ The quintic therefore extends the cubic case by naturally controlling accelerati
 A seventh-degree polynomial has eight coefficients:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5 + a_6 t^6 + a_7 t^7
+x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3 + c_4 t^4 + c_5 t^5 + c_6 t^6 + c_7 t^7
 $$
 
 Therefore it needs eight independent scalar conditions in the default formulation.
@@ -330,7 +330,7 @@ The educational interpretation is that the seventh-degree polynomial is the firs
 A ninth-degree polynomial has ten coefficients:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5 + a_6 t^6 + a_7 t^7 + a_8 t^8 + a_9 t^9
+x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3 + c_4 t^4 + c_5 t^5 + c_6 t^6 + c_7 t^7 + c_8 t^8 + c_9 t^9
 $$
 
 Therefore it needs ten independent scalar conditions in the default formulation.
@@ -462,7 +462,7 @@ In later implementation, each condition will likely need a more explicit interna
 For a cubic segment with fixed duration, the unknown coefficients are:
 
 $$
-a_0,\; a_1,\; a_2,\; a_3
+c_0,\; c_1,\; c_2,\; c_3
 $$
 
 The natural endpoint conditions are:
@@ -480,7 +480,7 @@ If one now adds $a_0$ and $a_f$ as prescribed endpoint accelerations without cha
 For a quintic segment, the unknown coefficients are:
 
 $$
-a_0,\; a_1,\; a_2,\; a_3,\; a_4,\; a_5
+c_0,\; c_1,\; c_2,\; c_3,\; c_4,\; c_5
 $$
 
 The natural endpoint conditions are:

@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.nupkg
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vsidx
+*.dtbcache*
+
+# Generated documents (sources are the Markdown files; PDFs are built artifacts)
+build/
+
+# OS / editor noise
+Thumbs.db
+.DS_Store
+*.tmp
+
+# Claude Code local settings (personal, not shared)
+.claude/settings.local.json

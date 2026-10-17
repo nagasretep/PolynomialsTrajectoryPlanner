@@ -35,7 +35,11 @@ The notation follows `SymbolsAndNomenclature.md`. The main symbols used here are
 - $x_{cv}^{start}$, $x_{cv}^{end}$: start and end positions of the constant-velocity subsegment in 1D;
 - $\mathbf{p}_{cv}^{start}$, $\mathbf{p}_{cv}^{end}$: start and end positions of the constant-velocity subsegment in 3D;
 - $t_{cv}^{start}$, $t_{cv}^{end}$: start and end times of the constant-velocity subsegment;
-- $T_{cv} = t_{cv}^{end} - t_{cv}^{start}$: duration of the constant-velocity subsegment.
+- $T_{cv} = t_{cv}^{end} - t_{cv}^{start}$: duration of the constant-velocity subsegment;
+- $\sigma \in \{+1,-1\}$: 1D travel-direction sign;
+- $\ell(t)$: arc-length function along the original 3D path, measured from the start of the selected interval;
+- $\tau_{cv} \in [0,1]$: local normalized time within the 3D constant-speed part (distinct from the direction sign $\sigma$ above — see the notation note where it is introduced);
+- $\ell_{cv}(\tau_{cv})$: arc length traveled within the constant-speed part, as a function of $\tau_{cv}$.
 
 When the constant-velocity segment is embedded between transition segments, the endpoint states of that middle segment are written as:
 
@@ -391,20 +395,24 @@ $$
 Now define a new local time variable over the constant-speed part:
 
 $$
-\sigma = \frac{t - t_{cv}^{start}}{T_{cv}} \in [0,1]
+\tau_{cv} = \frac{t - t_{cv}^{start}}{T_{cv}} \in [0,1]
 $$
 
-and the corresponding traveled arc length:
+**Notation note**: this local normalized time is called $\tau_{cv}$, not $\sigma$, even though $\sigma$ was already used earlier in this document. That earlier $\sigma \in \{+1,-1\}$ is the 1D travel-direction sign (see *1D Case: Exact Constant Velocity Segment*) — an unrelated quantity that happens to share the same letter. Keeping both as $\sigma$ would make this section read as if the direction sign were somehow becoming a normalized time variable. $\tau_{cv}$ also matches the project-wide convention that normalized time is written $\tau$ (see `SymbolsAndNomenclature`).
+
+The corresponding traveled arc length is:
 
 $$
-s(\sigma) = \sigma L_{cv}
+\ell_{cv}(\tau_{cv}) = \tau_{cv} L_{cv}
 $$
+
+(named $\ell_{cv}$, not $s$, to avoid colliding with $s$/$\mathbf{s}$, which are reserved exclusively for snap).
 
 The path-preserving constant-speed motion is then obtained by:
 
 $$
 \mathbf{p}_{cv}(t) =
-\mathbf{p}_{orig}\!\left(\ell^{-1}(s(\sigma))\right)
+\mathbf{p}_{orig}\!\left(\ell^{-1}\!\left(\ell_{cv}(\tau_{cv})\right)\right)
 $$
 
 This construction preserves the original curve and enforces constant speed magnitude along it.
@@ -431,7 +439,7 @@ This is not a defect. It is the mathematically natural outcome of the requiremen
 This non-polynomial consequence only bites in the genuinely curved, multi-axis case:
 
 - **single-axis case** (the original subpath is already a straight line): as shown above, the arc-length construction reduces exactly to the closed-form affine law — evaluation stays polynomial, no numerical methods needed;
-- **genuinely curved multi-axis case**: $\ell(t)$ generally has no closed form for a degree-9 polynomial path and must be computed via **numerical integration**; recovering $\ell^{-1}(s)$ then requires **numerical root-finding**. This is the only point in the theory library so far where evaluation departs from direct coefficient/Horner-based computation.
+- **genuinely curved multi-axis case**: $\ell(t)$ generally has no closed form for a degree-9 polynomial path and must be computed via **numerical integration**; recovering $\ell^{-1}(\ell_{cv})$ then requires **numerical root-finding**. This is the only point in the theory library so far where evaluation departs from direct coefficient/Horner-based computation.
 
 Implementation should branch on this distinction rather than always paying the numerical cost: detect the single-axis (straight-subpath) case and use the closed-form affine law directly, reserving numerical integration and root-finding for the genuinely curved multi-axis case.
 
@@ -664,7 +672,7 @@ The geometric subpath between them is preserved, but the time law is replaced by
 
 $$
 \mathbf{p}_{cv}(t) =
-\mathbf{p}_{orig}\!\left(\ell^{-1}(s(\sigma))\right)
+\mathbf{p}_{orig}\!\left(\ell^{-1}\!\left(\ell_{cv}(\tau_{cv})\right)\right)
 $$
 
 This preserves the original curve while enforcing constant speed magnitude.
@@ -694,6 +702,7 @@ This makes the trade-off explicit:
 - **Open — to resolve if/when a concrete need arises**: the straight-chord alternative for a genuinely curved multi-axis subpath is deliberately not part of the current baseline (see *Decided 3D Interpretation*); should it be added later as an explicit user-facing option, and what would trigger that need?
 - **Open — to resolve during data-format design**: when users specify the interval in percentages, which convention should be standardized in 3D: parameter percentage, arc-length percentage, or both?
 - **Open — to resolve together with the later blending documents**: should the transition segments around the constant-speed part always enforce zero acceleration, jerk, and snap at the junctions, or should the continuity order be configurable?
+- **Resolved**: the 3D arc-length section reused $\sigma$ for the local normalized time, colliding with the 1D travel-direction sign $\sigma$ defined earlier in this same document, and named the traveled-arc-length function $s(\cdot)$, colliding with $s$/$\mathbf{s}$ (reserved for snap). The local normalized time is now $\tau_{cv}$ and the traveled-arc-length function is now $\ell_{cv}(\cdot)$; see *3D Path-Preserving Strategy: Arc-Length Reparameterization*.
 
 ## Related Documents
 

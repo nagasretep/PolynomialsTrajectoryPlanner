@@ -24,7 +24,7 @@ The notation follows `SymbolsAndNomenclature.md`. The main symbols used here are
 - $t_f$: final time;
 - $T = t_f - t_0$: motion duration;
 - $x(t)$: scalar position law in 1D;
-- $a_0, a_1, \dots, a_9$: polynomial coefficients;
+- $c_0, c_1, \dots, c_9$: polynomial coefficients;
 - $\mathcal{S}_0$, $\mathcal{S}_f$: initial and final state containers when endpoint data are grouped compactly;
 - $v(t), a(t), j(t)$: velocity, acceleration, and jerk;
 - $x^{(4)}(t), x^{(5)}(t), x^{(6)}(t)$: snap, crackle, and pop.
@@ -59,13 +59,13 @@ This compact notation is useful when the full endpoint information is treated as
 The canonical form is the direct polynomial expansion in powers of time:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5 + a_6 t^6 + a_7 t^7 + a_8 t^8 + a_9 t^9
+x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3 + c_4 t^4 + c_5 t^5 + c_6 t^6 + c_7 t^7 + c_8 t^8 + c_9 t^9
 $$
 
 The same expression can be written compactly as:
 
 $$
-x(t) = \sum_{i=0}^{9} a_i t^i
+x(t) = \sum_{i=0}^{9} c_i t^i
 $$
 
 This form is the most transparent one for theoretical work because every coefficient is visibly attached to its corresponding power of time.
@@ -74,10 +74,10 @@ This form is the most transparent one for theoretical work because every coeffic
 
 The canonical form is useful to read the structure of the motion law step by step:
 
-1. the constant term $a_0$ is the value present even at $t = 0$;
-2. the linear term $a_1 t$ contributes directly to initial slope;
+1. the constant term $c_0$ is the value present even at $t = 0$;
+2. the linear term $c_1 t$ contributes directly to initial slope;
 3. higher powers progressively shape curvature and higher-order changes;
-4. the highest-degree term $a_9 t^9$ gives the polynomial its ninth-degree character.
+4. the highest-degree term $c_9 t^9$ gives the polynomial its ninth-degree character.
 
 This reading is qualitative, but it is educationally useful because it connects algebraic structure to motion behavior.
 
@@ -86,13 +86,13 @@ This reading is qualitative, but it is educationally useful because it connects 
 The same polynomial can be rewritten in nested form:
 
 $$
-x(t) = a_0 + t\Bigl(a_1 + t\bigl(a_2 + t(a_3 + t(a_4 + t(a_5 + t(a_6 + t(a_7 + t(a_8 + t a_9))))))\bigr)\Bigr)
+x(t) = c_0 + t\Bigl(c_1 + t\bigl(c_2 + t(c_3 + t(c_4 + t(c_5 + t(c_6 + t(c_7 + t(c_8 + t c_9))))))\bigr)\Bigr)
 $$
 
 Equivalent right-nested notation is:
 
 $$
-x(t) = (((((((((a_9 t + a_8)t + a_7)t + a_6)t + a_5)t + a_4)t + a_3)t + a_2)t + a_1)t + a_0)
+x(t) = (((((((((c_9 t + c_8)t + c_7)t + c_6)t + c_5)t + c_4)t + c_3)t + c_2)t + c_1)t + c_0)
 $$
 
 These two expressions are algebraically identical. The difference is only in how the polynomial is organized for reading and evaluation.
@@ -102,19 +102,19 @@ These two expressions are algebraically identical. The difference is only in how
 Starting from the canonical form:
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + \dots + a_9 t^9
+x(t) = c_0 + c_1 t + c_2 t^2 + \dots + c_9 t^9
 $$
 
 factor $t$ progressively:
 
 $$
-x(t) = a_0 + t\left(a_1 + a_2 t + a_3 t^2 + \dots + a_9 t^8\right)
+x(t) = c_0 + t\left(c_1 + c_2 t + c_3 t^2 + \dots + c_9 t^8\right)
 $$
 
 then factor $t$ again inside the parentheses:
 
 $$
-x(t) = a_0 + t\left(a_1 + t\left(a_2 + a_3 t + a_4 t^2 + \dots + a_9 t^7\right)\right)
+x(t) = c_0 + t\left(c_1 + t\left(c_2 + c_3 t + c_4 t^2 + \dots + c_9 t^7\right)\right)
 $$
 
 and continue until the fully nested structure is obtained.
@@ -169,13 +169,13 @@ This is an important educational point: different mathematical forms of the same
 If
 
 $$
-x(t) = \sum_{i=0}^{9} a_i t^i
+x(t) = \sum_{i=0}^{9} c_i t^i
 $$
 
 then the $k$-th derivative is:
 
 $$
-x^{(k)}(t) = \sum_{i=k}^{9} \frac{i!}{(i-k)!} a_i t^{\,i-k}
+x^{(k)}(t) = \sum_{i=k}^{9} \frac{i!}{(i-k)!} c_i t^{\,i-k}
 $$
 
 This compact formula is useful because it shows the pattern behind all derivative expressions:
@@ -189,7 +189,7 @@ This compact formula is useful because it shows the pattern behind all derivativ
 Starting from
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5 + a_6 t^6 + a_7 t^7 + a_8 t^8 + a_9 t^9
+x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3 + c_4 t^4 + c_5 t^5 + c_6 t^6 + c_7 t^7 + c_8 t^8 + c_9 t^9
 $$
 
 the derivatives up to the sixth are the following.
@@ -197,7 +197,7 @@ the derivatives up to the sixth are the following.
 ### First Derivative: Velocity
 
 $$
-v(t) = \dot{x}(t) = a_1 + 2a_2 t + 3a_3 t^2 + 4a_4 t^3 + 5a_5 t^4 + 6a_6 t^5 + 7a_7 t^6 + 8a_8 t^7 + 9a_9 t^8
+v(t) = \dot{x}(t) = c_1 + 2c_2 t + 3c_3 t^2 + 4c_4 t^3 + 5c_5 t^4 + 6c_6 t^5 + 7c_7 t^6 + 8c_8 t^7 + 9c_9 t^8
 $$
 
 Velocity is the first quantity that describes how position changes in time. It is also the most immediate kinematic limit in many planning problems.
@@ -205,7 +205,7 @@ Velocity is the first quantity that describes how position changes in time. It i
 ### Second Derivative: Acceleration
 
 $$
-a(t) = \ddot{x}(t) = 2a_2 + 6a_3 t + 12a_4 t^2 + 20a_5 t^3 + 30a_6 t^4 + 42a_7 t^5 + 56a_8 t^6 + 72a_9 t^7
+a(t) = \ddot{x}(t) = 2c_2 + 6c_3 t + 12c_4 t^2 + 20c_5 t^3 + 30c_6 t^4 + 42c_7 t^5 + 56c_8 t^6 + 72c_9 t^7
 $$
 
 Acceleration measures how velocity changes. It is central whenever smooth dynamic evolution is more important than position alone.
@@ -213,7 +213,7 @@ Acceleration measures how velocity changes. It is central whenever smooth dynami
 ### Third Derivative: Jerk
 
 $$
-j(t) = x^{(3)}(t) = 6a_3 + 24a_4 t + 60a_5 t^2 + 120a_6 t^3 + 210a_7 t^4 + 336a_8 t^5 + 504a_9 t^6
+j(t) = x^{(3)}(t) = 6c_3 + 24c_4 t + 60c_5 t^2 + 120c_6 t^3 + 210c_7 t^4 + 336c_8 t^5 + 504c_9 t^6
 $$
 
 Jerk is often introduced when acceleration continuity is not sufficient and sharper changes need to be controlled.
@@ -221,7 +221,7 @@ Jerk is often introduced when acceleration continuity is not sufficient and shar
 ### Fourth Derivative: Snap
 
 $$
-x^{(4)}(t) = 24a_4 + 120a_5 t + 360a_6 t^2 + 840a_7 t^3 + 1680a_8 t^4 + 3024a_9 t^5
+x^{(4)}(t) = 24c_4 + 120c_5 t + 360c_6 t^2 + 840c_7 t^3 + 1680c_8 t^4 + 3024c_9 t^5
 $$
 
 Snap is especially relevant in a ninth-degree formulation because endpoint snap values can be included naturally among the ten scalar conditions.
@@ -229,7 +229,7 @@ Snap is especially relevant in a ninth-degree formulation because endpoint snap 
 ### Fifth Derivative: Crackle
 
 $$
-x^{(5)}(t) = 120a_5 + 720a_6 t + 2520a_7 t^2 + 6720a_8 t^3 + 15120a_9 t^4
+x^{(5)}(t) = 120c_5 + 720c_6 t + 2520c_7 t^2 + 6720c_8 t^3 + 15120c_9 t^4
 $$
 
 Crackle is less commonly used as a physical planning quantity, but it remains analytically useful because it is the derivative of snap.
@@ -237,7 +237,7 @@ Crackle is less commonly used as a physical planning quantity, but it remains an
 ### Sixth Derivative: Pop
 
 $$
-x^{(6)}(t) = 720a_6 + 5040a_7 t + 20160a_8 t^2 + 60480a_9 t^3
+x^{(6)}(t) = 720c_6 + 5040c_7 t + 20160c_8 t^2 + 60480c_9 t^3
 $$
 
 Pop is the derivative of crackle. It is rarely a primary planning constraint, but it is part of the natural derivative chain of a ninth-degree polynomial and can help understand higher-order variation.
@@ -258,9 +258,9 @@ $$
 with
 
 $$
-x(t) = \sum_{i=0}^{9} a_i^{(x)} t^i,\qquad
-y(t) = \sum_{i=0}^{9} a_i^{(y)} t^i,\qquad
-z(t) = \sum_{i=0}^{9} a_i^{(z)} t^i
+x(t) = \sum_{i=0}^{9} c_i^{(x)} t^i,\qquad
+y(t) = \sum_{i=0}^{9} c_i^{(y)} t^i,\qquad
+z(t) = \sum_{i=0}^{9} c_i^{(z)} t^i
 $$
 
 The same derivative chain applies component-wise:
@@ -387,14 +387,14 @@ This workflow matches the educational goal of the project:
 Consider the symbolic segment
 
 $$
-x(t) = \sum_{i=0}^{9} a_i t^i
+x(t) = \sum_{i=0}^{9} c_i t^i
 $$
 
 with endpoint data prescribed up to snap at both ends.
 
 The key observation is not yet the solution for the coefficients, but the structural match:
 
-- unknowns: $a_0, a_1, \dots, a_9$;
+- unknowns: $c_0, c_1, \dots, c_9$;
 - scalar equations: initial and final values of position, velocity, acceleration, jerk, and snap.
 
 This is why the ninth-degree polynomial is a natural theoretical anchor for the rest of the project.

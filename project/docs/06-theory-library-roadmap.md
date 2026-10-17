@@ -1,13 +1,13 @@
 # Theory Library Roadmap
 
-This is the working checklist for the "personal library" of theory/technical documents to be produced with the AI IDE, one requirement-cluster at a time. Each entry maps to the requirement(s) it covers in `01-requirements.md`, so coverage can be checked off as documents are produced.
+This is the working checklist for the "personal library" of theory/technical documents to be produced together with Claude, one requirement-cluster at a time. Each entry maps to the requirement(s) it covers in `01-requirements.md`, so coverage can be checked off as documents are produced.
 
 Suggested per-document template (for consistency across the library): short intro / scope → symbols used (referencing `SymbolsAndNomenclature`) → theory / derivation → algorithm or procedure → worked considerations (symbolic, per `03-assumptions.md`) → open questions / links to related documents.
 
 ## Format convention
 
-- **Source format**: every document in this library is written in **Markdown** (`.md`), consistent with the specification files (`00`–`05`).
-- **Mathematical notation**: formulas and equations are written as LaTeX syntax within the Markdown: inline math uses single delimiters like `$x(t)$`, while display equations on their own line use double delimiters like `$$x(t) = \sum_{i=0}^{9} a_i t^i$$`. Math delimiters are never wrapped in backticks. This keeps documents renderable in-editor (MathJax/KaTeX) and diffable in version control.
+- **Source format**: every document in this library is written in **Markdown** (`.md`), consistent with the specification files (`00`–`07`). `08-ui-first-prototype.md` was added later, once the theory library reached M2, as the concrete specification for the first GUI milestone — see `07-implementation-plan.md`.
+- **Mathematical notation**: formulas and equations are written as LaTeX syntax within the Markdown: inline math uses single delimiters like `$x(t)$`, while display equations on their own line use double delimiters like `$$x(t) = \sum_{i=0}^{9} c_i t^i$$`. Math delimiters are never wrapped in backticks. This keeps documents renderable in-editor (MathJax/KaTeX) and diffable in version control. Polynomial coefficients are denoted $c_i$, not $a_i$, to avoid colliding with acceleration ($a(t)$, $a_0$, $a_f$) — see `SymbolsAndNomenclature.md`.
 - **Reading / archival output**: when a readable/printable version of the library is needed, it is generated from the Markdown sources via `pandoc` (LaTeX engine) into PDF — the Markdown+LaTeX-inline files remain the single source of truth; PDF is a generated artifact, never edited directly.
 - **Not used as a working/source format**: LaTeX (`.tex`) as primary source, Word (`.docx`), ODT, plain `.txt`. See discussion in chat for the rationale.
 
@@ -37,6 +37,6 @@ Before considering any document in this library "finished", verify it with the f
 
 ## Out of scope for this roadmap (tracked elsewhere)
 
-- Requirement 15 (the application itself, graphical interface, extension to degrees 3/5/7) is not a theory document — it is the implementation phase in `src/`, to start once the library above (or at least items 1–5) is in reasonably solid shape.
+- Requirement 15 (the application itself, graphical interface, extension to degrees 3/5/7) is not a theory document — it is the implementation phase in `src/`. This has since been formalized in `07-implementation-plan.md` (consolidated implementation decisions) and `08-ui-first-prototype.md` (the M2 UI specification), and `src/` now implements the degree-9 core engine (M1), degrees 3/5/7 (M3), constraint verification and duration search (M4), the constant-velocity segment (M5, 1D only), blending (M6, 1D only), a provisional pass-through solver (M7 — see `08-ui-first-prototype.md`'s note that it is not yet the exact minimum-snap formulation), and a partial 3D extension (M8 — component-wise wrapping only; 3D constant velocity and blending are not yet implemented).
 - Requirements 6 and 11 (1D → 3D progression) are not separate documents — per the general rule in `00-vision.md`, each document above covers 1D first and notes 3D differences inline.
 - Future Topics (orientation in full, time scaling, multi-axis sync, numerical stability) remain in `04-future-topics.md` until promoted to their own roadmap entries.

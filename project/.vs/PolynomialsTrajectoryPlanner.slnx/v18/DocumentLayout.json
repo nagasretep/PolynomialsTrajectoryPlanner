@@ -3,8 +3,12 @@
   "WorkspaceRootPath": "C:\\Git\\PolynomialsTrajectoryPlanner\\project\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{802C61E7-9EBC-CDB6-33C5-BEB0A7440011}|src\\TrajectoryPlanner.App\\TrajectoryPlanner.App.csproj|c:\\git\\polynomialstrajectoryplanner\\project\\src\\trajectoryplanner.app\\prototypemodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{802C61E7-9EBC-CDB6-33C5-BEB0A7440011}|src\\TrajectoryPlanner.App\\TrajectoryPlanner.App.csproj|solutionrelative:src\\trajectoryplanner.app\\prototypemodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{802C61E7-9EBC-CDB6-33C5-BEB0A7440011}|src\\TrajectoryPlanner.App\\TrajectoryPlanner.App.csproj|c:\\git\\polynomialstrajectoryplanner\\project\\src\\trajectoryplanner.app\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{802C61E7-9EBC-CDB6-33C5-BEB0A7440011}|src\\TrajectoryPlanner.App\\TrajectoryPlanner.App.csproj|solutionrelative:src\\trajectoryplanner.app\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{802C61E7-9EBC-CDB6-33C5-BEB0A7440011}|src\\TrajectoryPlanner.App\\TrajectoryPlanner.App.csproj|c:\\git\\polynomialstrajectoryplanner\\project\\src\\trajectoryplanner.app\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{802C61E7-9EBC-CDB6-33C5-BEB0A7440011}|src\\TrajectoryPlanner.App\\TrajectoryPlanner.App.csproj|solutionrelative:src\\trajectoryplanner.app\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,14 +23,25 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "PrototypeModels.cs",
-              "DocumentMoniker": "C:\\Git\\PolynomialsTrajectoryPlanner\\project\\src\\TrajectoryPlanner.App\\PrototypeModels.cs",
-              "RelativeDocumentMoniker": "src\\TrajectoryPlanner.App\\PrototypeModels.cs",
-              "ToolTip": "C:\\Git\\PolynomialsTrajectoryPlanner\\project\\src\\TrajectoryPlanner.App\\PrototypeModels.cs",
-              "RelativeToolTip": "src\\TrajectoryPlanner.App\\PrototypeModels.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAAAIwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-12T07:01:16.416Z",
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Git\\PolynomialsTrajectoryPlanner\\project\\src\\TrajectoryPlanner.App\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "src\\TrajectoryPlanner.App\\MainWindow.xaml",
+              "ToolTip": "C:\\Git\\PolynomialsTrajectoryPlanner\\project\\src\\TrajectoryPlanner.App\\MainWindow.xaml",
+              "RelativeToolTip": "src\\TrajectoryPlanner.App\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-17T11:35:19.129Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "App.xaml",
+              "DocumentMoniker": "C:\\Git\\PolynomialsTrajectoryPlanner\\project\\src\\TrajectoryPlanner.App\\App.xaml",
+              "RelativeDocumentMoniker": "src\\TrajectoryPlanner.App\\App.xaml",
+              "ToolTip": "C:\\Git\\PolynomialsTrajectoryPlanner\\project\\src\\TrajectoryPlanner.App\\App.xaml",
+              "RelativeToolTip": "src\\TrajectoryPlanner.App\\App.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-17T11:34:52.27Z",
               "EditorCaption": ""
             }
           ]

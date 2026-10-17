@@ -25,7 +25,7 @@ The notation follows `SymbolsAndNomenclature.md`. The main symbols used here are
 - $x(t)$: scalar position law in 1D written in absolute time;
 - $x(\tau)$: scalar position law in normalized time;
 - $n$: polynomial degree;
-- $a_i$: coefficients of the polynomial when written in absolute time;
+- $c_i$: coefficients of the polynomial when written in absolute time;
 - $\alpha_i$: coefficients of the polynomial when written in normalized time;
 - $\mathcal{S}_0$, $\mathcal{S}_f$: endpoint state containers when compact notation is useful.
 
@@ -85,15 +85,15 @@ The mathematical heart of the method is therefore not a special trick, but a str
 In absolute time, the polynomial is written as:
 
 $$
-x(t) = \sum_{i=0}^{n} a_i t^i
+x(t) = \sum_{i=0}^{n} c_i t^i
 $$
 
 with unknown coefficient vector:
 
 $$
-\mathbf{a} =
+\mathbf{c} =
 \begin{bmatrix}
-a_0 & a_1 & \dots & a_n
+c_0 & c_1 & \dots & c_n
 \end{bmatrix}^{T}
 $$
 
@@ -102,17 +102,17 @@ $$
 The $k$-th derivative is:
 
 $$
-x^{(k)}(t) = \sum_{i=k}^{n} \frac{i!}{(i-k)!} a_i t^{\,i-k}
+x^{(k)}(t) = \sum_{i=k}^{n} \frac{i!}{(i-k)!} c_i t^{\,i-k}
 $$
 
 This formula is enough to generate every row of the coefficient-determination system.
 
 ### Derivative Row Operators
 
-For compact notation, define the row vector $\mathbf{D}_k(t)$ as the coefficient row that maps $\mathbf{a}$ to the $k$-th derivative value at time $t$:
+For compact notation, define the row vector $\mathbf{D}_k(t)$ as the coefficient row that maps $\mathbf{c}$ to the $k$-th derivative value at time $t$:
 
 $$
-x^{(k)}(t) = \mathbf{D}_k(t)\,\mathbf{a}
+x^{(k)}(t) = \mathbf{D}_k(t)\,\mathbf{c}
 $$
 
 For degree $9$, the first five rows are:
@@ -163,15 +163,15 @@ The default square systems for the degrees in scope are obtained by stacking the
 For
 
 $$
-x(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3
+x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3
 $$
 
 use:
 
 $$
-\mathbf{a}_3 =
+\mathbf{c}_3 =
 \begin{bmatrix}
-a_0 & a_1 & a_2 & a_3
+c_0 & c_1 & c_2 & c_3
 \end{bmatrix}^{T}
 $$
 
@@ -187,7 +187,7 @@ $$
 The system is:
 
 $$
-\mathbf{A}_3^{abs}\,\mathbf{a}_3 = \mathbf{b}_3
+\mathbf{A}_3^{abs}\,\mathbf{c}_3 = \mathbf{b}_3
 $$
 
 with:
@@ -281,7 +281,7 @@ $$
 Then:
 
 $$
-\mathbf{A}_9^{abs}\,\mathbf{a}_9 = \mathbf{b}_9
+\mathbf{A}_9^{abs}\,\mathbf{c}_9 = \mathbf{b}_9
 $$
 
 with:
@@ -313,7 +313,7 @@ The practical procedure in absolute time is the same for every supported degree.
 3. Compute the derivatives needed by that degree.
 4. Evaluate those derivatives at $t_0$ and $t_f$.
 5. Assemble the matrix $\mathbf{A}^{abs}$ and the right-hand side vector $\mathbf{b}$.
-6. Solve the linear system for the coefficient vector $\mathbf{a}$.
+6. Solve the linear system for the coefficient vector $\mathbf{c}$.
 7. Substitute the solution back into the polynomial and verify all endpoint conditions.
 
 Conceptually, this is simple. In practice, the algebra becomes longer as the degree increases.
@@ -340,7 +340,7 @@ The important idea is that:
 - $\tau$ belongs to a normalized local segment axis;
 - the two descriptions represent the same trajectory segment, but with different coefficients.
 
-If $t_0 \neq 0$, the sets $\{a_i\}$ and $\{\alpha_i\}$ are not related by a simple one-to-one scaling. The normalized representation is centered on the local interval $[0,1]$, whereas the absolute-time representation is written directly in powers of the global variable $t$.
+If $t_0 \neq 0$, the sets $\{c_i\}$ and $\{\alpha_i\}$ are not related by a simple one-to-one scaling. The normalized representation is centered on the local interval $[0,1]$, whereas the absolute-time representation is written directly in powers of the global variable $t$.
 
 ## Derivative Scaling Between $t$ And $\tau$
 
@@ -553,7 +553,7 @@ The two formulations represent the same trajectory, but they are useful in diffe
 ### Normalized Time: Main Limitations
 
 - Physical derivatives must be rescaled by powers of $T$.
-- The coefficients $\alpha_i$ are not the same as the absolute-time coefficients $a_i$.
+- The coefficients $\alpha_i$ are not the same as the absolute-time coefficients $c_i$.
 - If a final expression explicitly in powers of $t$ is required, an extra conversion step is needed.
 - The method introduces one extra conceptual layer for beginners.
 
@@ -668,7 +668,7 @@ This is one of the strongest reasons for keeping the 1D theory as the base case:
 For a cubic segment with fixed duration, the unknown coefficients are:
 
 $$
-a_0,\; a_1,\; a_2,\; a_3
+c_0,\; c_1,\; c_2,\; c_3
 $$
 
 The natural endpoint data are:
