@@ -16,6 +16,20 @@ public class KinematicLimits
 
     public static KinematicLimits None => new();
 
+    public bool HasAnyLimit => HasVelocityLimit || HasAccelerationLimit || HasJerkLimit || HasSnapLimit;
+
+    /// <summary>For each kind, the smaller of the two limits if both are set, otherwise the one that is set.</summary>
+    public static KinematicLimits MostRestrictive(KinematicLimits a, KinematicLimits b)
+    {
+        static double? Min(double? x, double? y) => x is null ? y : y is null ? x : Math.Min(x.Value, y.Value);
+
+        return FromValues(
+            Min(a.MaxVelocity, b.MaxVelocity),
+            Min(a.MaxAcceleration, b.MaxAcceleration),
+            Min(a.MaxJerk, b.MaxJerk),
+            Min(a.MaxSnap, b.MaxSnap));
+    }
+
     public static KinematicLimits FromValues(double? vMax = null, double? aMax = null, double? jMax = null, double? sMax = null)
     {
         return new KinematicLimits

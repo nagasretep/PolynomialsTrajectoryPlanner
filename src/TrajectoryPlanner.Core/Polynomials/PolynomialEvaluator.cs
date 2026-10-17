@@ -100,9 +100,4 @@ public static class PolynomialEvaluator
 
         return (pos, vel, acc, jerk, snap);
     }
-
-    public static DerivativeOrder[] DerivativeOrdersFromIndex(int[] indices)
-    {
-        return indices.Select(i => (DerivativeOrder)i).ToArray();
-    }
 }

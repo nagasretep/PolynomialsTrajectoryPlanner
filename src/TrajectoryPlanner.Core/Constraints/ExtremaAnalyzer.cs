@@ -124,6 +124,16 @@ public static class ExtremaAnalyzer
         return (a + b) / 2.0;
     }
 
+    /// <summary>Largest |x^(k)| over all given segments (the peak of a whole trajectory for derivative order k).</summary>
+    public static double PeakAbsolute(IEnumerable<PolynomialSegment1D> segments, int derivativeOrder)
+    {
+        double peak = 0;
+        foreach (var segment in segments)
+            peak = Math.Max(peak, FindExtrema(segment, derivativeOrder).MaxAbsolute);
+
+        return peak;
+    }
+
     public static ExtremaResult PositionExtrema(PolynomialSegment1D segment)
     {
         return FindExtrema(segment, 0);

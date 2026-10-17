@@ -11,7 +11,6 @@ public class Trajectory1D
 
     public IReadOnlyList<PolynomialSegment1D> Segments => _segments;
     public double TotalDuration { get; private set; }
-    public bool RespectEndpointsExactly { get; set; } = true;
 
     public Trajectory1D(IEnumerable<PolynomialSegment1D> segments)
     {
@@ -73,6 +72,32 @@ public class Trajectory1D
     }
 
     public Point1D EvaluatePoint(double t) => new(EvaluatePosition(t));
+
+    /// <summary>
+    /// Uniform samples over [0, TotalDuration] (first and last included) of position and its derivatives
+    /// up to <paramref name="maxDerivativeOrder"/>.
+    /// </summary>
+    public TrajectorySamples Sample(int sampleCount, int maxDerivativeOrder)
+    {
+        if (sampleCount < 2)
+            throw new ArgumentOutOfRangeException(nameof(sampleCount), "At least 2 samples are required (start and end).");
+        if (maxDerivativeOrder < 0)
+            throw new ArgumentOutOfRangeException(nameof(maxDerivativeOrder));
+
+        var times = new double[sampleCount];
+        for (int i = 0; i < sampleCount; i++)
+            times[i] = TotalDuration * i / (sampleCount - 1);
+
+        var values = new double[maxDerivativeOrder + 1][];
+        for (int order = 0; order <= maxDerivativeOrder; order++)
+        {
+            values[order] = times
+                .Select(t => order == 0 ? EvaluatePosition(t) : EvaluateDerivative(t, order))
+                .ToArray();
+        }
+
+        return new TrajectorySamples(times, values);
+    }
 
     public IEnumerable<double> SampleTimes(int samplesPerSegment = 50)
     {

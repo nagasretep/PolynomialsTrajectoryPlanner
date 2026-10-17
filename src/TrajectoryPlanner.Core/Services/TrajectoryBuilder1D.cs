@@ -54,23 +54,40 @@ public class TrajectoryBuilder1D
         return AddSegment(start, end, duration, degree);
     }
 
+    /// <summary>Outcome of the last pass-through call: final durations and the scale λ chosen by the limits.</summary>
+    public PassThroughResult? LastPassThroughResult { get; private set; }
+
+    /// <summary>
+    /// Exact pass-through of the waypoints.
+    /// Durations are <b>prescribed</b> when <paramref name="durations"/> is given, when a duration strategy was set, or
+    /// when <paramref name="totalDuration"/> is given (proportional rule): they are kept and, if limits are active,
+    /// verified (<see cref="KinematicLimitsViolatedException"/> naming the segment). Otherwise they are <b>automatic</b>:
+    /// with active limits the shortest feasible sequence (one common scale λ on the proportional reference durations,
+    /// see <see cref="PassThroughPlanner1D"/>), without limits the reference durations (total 1 s).
+    /// </summary>
+    /// <param name="startBoundary">Prescribed derivatives (orders 1 .. p-1) at the start; null: rest.</param>
+    /// <param name="endBoundary">Same at the end.</param>
     public TrajectoryBuilder1D AddSegmentsFromWaypointsPassThrough(
         double[] waypoints,
         double[]? durations = null,
-        double totalDuration = 1.0,
-        int? degree = null)
+        double? totalDuration = null,
+        int? degree = null,
+        KinematicLimits? limits = null,
+        State1D? startBoundary = null,
+        State1D? endBoundary = null)
     {
         int d = degree ?? _defaultDegree;
 
-        // One duration mechanism: explicit durations win, then the configured strategy, then Decision 1's default.
-        IDurationStrategy1D strategy = durations is not null
+        // One duration mechanism: explicit durations win, then the configured strategy, then a prescribed total.
+        IDurationStrategy1D? strategy = durations is not null
             ? new UserSpecifiedDuration(durations)
-            : _durationStrategy ?? new AutoDerivedProportionalDuration(totalDuration);
-        double[] segDurations = strategy.ComputeDurations(waypoints, d);
+            : _durationStrategy ?? (totalDuration is not null ? new AutoDerivedProportionalDuration(totalDuration.Value) : null);
+        double[]? prescribed = strategy?.ComputeDurations(waypoints, d);
 
-        var solver = new PassThroughSolver1D(_criterion);
-        var segments = solver.Solve(waypoints, segDurations, d);
-        _segments.AddRange(segments);
+        var result = PassThroughPlanner1D.Plan(
+            waypoints, d, _criterion, limits, prescribed, startBoundary: startBoundary, endBoundary: endBoundary);
+        LastPassThroughResult = result;
+        _segments.AddRange(result.Segments);
 
         return this;
     }
@@ -80,7 +97,9 @@ public class TrajectoryBuilder1D
         int followingIndex,
         double blendStartTau,
         double blendEndTau,
-        int blendDegree = 9)
+        int? blendDegree = null,
+        double? blendDuration = null,
+        KinematicLimits? limits = null)
     {
         if (precedingIndex < 0 || followingIndex != precedingIndex + 1)
             throw new ArgumentException("Blend can only be between consecutive segments");
@@ -89,7 +108,7 @@ public class TrajectoryBuilder1D
         var following = _segments[followingIndex];
 
         var (truncatedPre, blendSeg, truncatedPost) =
-            BlendBuilder1D.BuildBlendedSegmentPair(preceding, following, blendStartTau, blendEndTau, blendDegree);
+            BlendBuilder1D.BuildBlendedSegmentPair(preceding, following, blendStartTau, blendEndTau, blendDegree, blendDuration, limits);
 
         _segments.RemoveAt(followingIndex);
         _segments.RemoveAt(precedingIndex);

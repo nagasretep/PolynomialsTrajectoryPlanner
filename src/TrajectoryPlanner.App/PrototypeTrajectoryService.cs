@@ -4,15 +4,23 @@ using TrajectoryPlanner.Core.ConstantVelocity;
 using TrajectoryPlanner.Core.Constraints;
 using TrajectoryPlanner.Core.Points;
 using TrajectoryPlanner.Core.Segments;
+using TrajectoryPlanner.Core.Services;
 using TrajectoryPlanner.Core.States;
 using TrajectoryPlanner.Core.Trajectories;
 
 namespace TrajectoryPlanner.App;
 
+/// <summary>
+/// Thin layer between the UI input rows and the Core: parses the text fields, calls the Core builders (segment
+/// factory, blending, constant velocity), and formats the results for the report tables and the plots.
+/// Durations, limit checks, blend point search, evaluation and sampling are all done by the Core.
+/// </summary>
 public sealed class PrototypeTrajectoryService
 {
-    /// <summary>Duration used when it is neither prescribed nor determined by active limits.</summary>
-    private const double DefaultDuration = 1.0;
+    /// <summary>Samples per plotted curve: at least this many, or this many per segment, whichever is larger.</summary>
+    private const int MinimumSamples = 300;
+
+    private const int SamplesPerSegment = 120;
 
     public PrototypeComputationResult Compute(IReadOnlyList<SegmentInputModel> inputs)
     {
@@ -20,7 +28,8 @@ public sealed class PrototypeTrajectoryService
             throw new InvalidOperationException("At least one segment is required.");
 
         var representations = inputs.Select(BuildRepresentation).ToList();
-        ApplyBlends(inputs, representations);
+        var notices = new List<string>();
+        ApplyBlends(inputs, representations, notices);
 
         var flattenedSegments = new List<LabeledSegment>();
         foreach (var representation in representations)
@@ -39,15 +48,11 @@ public sealed class PrototypeTrajectoryService
             .DefaultIfEmpty(0)
             .Max();
 
-        double[] sampleTimes = SampleGlobalTimes(trajectory.TotalDuration, Math.Max(300, flattenedSegments.Count * 120));
+        TrajectorySamples samples = trajectory.Sample(
+            Math.Max(MinimumSamples, flattenedSegments.Count * SamplesPerSegment), maxDerivativeOrder);
         var series = new List<SeriesData>();
         for (int order = 0; order <= maxDerivativeOrder; order++)
-        {
-            double[] values = sampleTimes
-                .Select(t => order == 0 ? trajectory.EvaluatePosition(t) : trajectory.EvaluateDerivative(t, order))
-                .ToArray();
-            series.Add(new SeriesData(GetQuantityName(order), order, sampleTimes, values));
-        }
+            series.Add(new SeriesData(GetQuantityName(order), order, samples.Times, samples.Values[order]));
 
         var extremaRows = new List<ExtremaReportRow>();
         var coefficientRows = new List<CoefficientReportRow>();
@@ -57,22 +62,11 @@ public sealed class PrototypeTrajectoryService
             // Duration of every piece (prescribed, or the shortest feasible one when limits are active).
             coefficientRows.Add(new CoefficientReportRow(labeled.Label, "T [s]", labeled.Segment.Duration));
             for (int i = 0; i <= labeled.Segment.Degree; i++)
-            {
                 coefficientRows.Add(new CoefficientReportRow(labeled.Label, $"c{i}", labeled.Segment.Coefficients[i]));
-            }
 
             for (int order = 0; order <= supportedOrder; order++)
             {
-                ExtremaResult extrema = order switch
-                {
-                    0 => ExtremaAnalyzer.PositionExtrema(labeled.Segment),
-                    1 => ExtremaAnalyzer.VelocityExtrema(labeled.Segment),
-                    2 => ExtremaAnalyzer.AccelerationExtrema(labeled.Segment),
-                    3 => ExtremaAnalyzer.JerkExtrema(labeled.Segment),
-                    4 => ExtremaAnalyzer.SnapExtrema(labeled.Segment),
-                    _ => throw new InvalidOperationException("Unsupported derivative order.")
-                };
-
+                ExtremaResult extrema = ExtremaAnalyzer.FindExtrema(labeled.Segment, order);
                 extremaRows.Add(new ExtremaReportRow(
                     labeled.Label,
                     GetQuantityName(order),
@@ -89,11 +83,13 @@ public sealed class PrototypeTrajectoryService
             coefficientRows,
             trajectory.EvaluatePosition,
             trajectory.EvaluateDerivative,
-            trajectory.TotalDuration);
+            trajectory.TotalDuration,
+            notices);
     }
 
     private static SegmentRepresentation BuildRepresentation(SegmentInputModel input)
     {
+        string label = $"Segment {input.SegmentNumber}";
         State1D startState = BuildState(input, isStart: true);
         State1D endState = BuildState(input, isStart: false);
         KinematicLimits limits = BuildLimits(input);
@@ -101,17 +97,21 @@ public sealed class PrototypeTrajectoryService
         if (input.UseConstantVelocity)
         {
             var segments = BuildConstantVelocitySegments(input, startState, endState, limits);
-            return new SegmentRepresentation(input.SegmentNumber, supportsBlending: false, segments);
+            return new SegmentRepresentation(limits, supportsBlending: false, segments);
         }
 
-        PolynomialSegment1D segment = BuildPolynomialSegment(input, startState, endState, limits);
+        double? duration = input.UseDuration ? ParsePositiveDouble(input.Duration, $"{label} duration") : null;
+        PolynomialSegment1D segment = CallCore(label, () =>
+            SegmentFactory1D.Build(input.Degree, startState, endState, limits, duration));
+
         return new SegmentRepresentation(
-            input.SegmentNumber,
+            limits,
             supportsBlending: true,
-            new List<LabeledSegment> { new($"Segment {input.SegmentNumber}", segment) });
+            new List<LabeledSegment> { new(label, segment) });
     }
 
-    private static void ApplyBlends(IReadOnlyList<SegmentInputModel> inputs, IList<SegmentRepresentation> representations)
+    private static void ApplyBlends(
+        IReadOnlyList<SegmentInputModel> inputs, IList<SegmentRepresentation> representations, List<string> notices)
     {
         for (int i = 0; i < inputs.Count - 1; i++)
         {
@@ -142,17 +142,25 @@ public sealed class PrototypeTrajectoryService
             double precedingBlendPosition = ParseRequiredDouble(outgoingBlend, $"Segment {inputs[i].SegmentNumber} final blend value");
             double followingBlendPosition = ParseRequiredDouble(incomingBlend, $"Segment {inputs[i + 1].SegmentNumber} initial blend value");
 
-            double blendStartTau = FindTauForPosition(preceding, precedingBlendPosition);
-            double blendEndTau = FindTauForPosition(following, followingBlendPosition);
+            // The blend must respect the limits of both neighbours: the more restrictive one for each kind.
+            KinematicLimits blendLimits = KinematicLimits.MostRestrictive(representations[i].Limits, representations[i + 1].Limits);
+            string blendLabel = $"Blend {inputs[i].SegmentNumber}-{inputs[i + 1].SegmentNumber}";
 
-            var (truncatedPreceding, blendSegment, truncatedFollowing) =
-                BlendBuilder1D.BuildBlendedSegmentPair(preceding, following, blendStartTau, blendEndTau, 9);
+            var (truncatedPreceding, blendSegment, truncatedFollowing) = CallCore(blendLabel, () =>
+                BlendBuilder1D.BuildBlendedSegmentPair(
+                    preceding, following, new Point1D(precedingBlendPosition), new Point1D(followingBlendPosition),
+                    limits: blendLimits));
 
             representations[i].Segments[0] = new LabeledSegment($"Segment {inputs[i].SegmentNumber}", truncatedPreceding);
             representations[i + 1].Segments[0] = new LabeledSegment($"Segment {inputs[i + 1].SegmentNumber}", truncatedFollowing);
-            representations[i].BlendAfter = new LabeledSegment(
-                $"Blend {inputs[i].SegmentNumber}-{inputs[i + 1].SegmentNumber}",
-                blendSegment);
+            representations[i].BlendAfter = new LabeledSegment(blendLabel, blendSegment);
+
+            // Tell the user when the limits forced a blend duration other than the inherited one (numbers in the current culture).
+            if (blendSegment.AdjustedByLimits)
+            {
+                notices.Add(
+                    $"{blendLabel}: duration adjusted from {blendSegment.InheritedDuration:F4} s to {blendSegment.Duration:F4} s to respect the limits.");
+            }
         }
     }
 
@@ -192,38 +200,6 @@ public sealed class PrototypeTrajectoryService
         return KinematicLimits.FromValues(maxVelocity, maxAcceleration, maxJerk, maxSnap);
     }
 
-    private static PolynomialSegment1D BuildPolynomialSegment(
-        SegmentInputModel input,
-        State1D startState,
-        State1D endState,
-        KinematicLimits limits)
-    {
-        bool hasLimits = HasAnyKinematicLimit(limits);
-        double duration;
-
-        if (input.UseDuration)
-        {
-            duration = ParsePositiveDouble(input.Duration, $"Segment {input.SegmentNumber} duration");
-        }
-        else if (hasLimits)
-        {
-            duration = ShortestDurationOrExplain(input.Degree, startState, endState, limits, $"Segment {input.SegmentNumber}") ?? DefaultDuration;
-        }
-        else
-        {
-            duration = DefaultDuration;
-        }
-
-        var segment = new PolynomialSegment1D(input.Degree, startState, endState, duration);
-
-        if (input.UseDuration && hasLimits)
-        {
-            ValidateSegmentAgainstLimits(segment, limits, $"Segment {input.SegmentNumber}");
-        }
-
-        return segment;
-    }
-
     private static List<LabeledSegment> BuildConstantVelocitySegments(
         SegmentInputModel input,
         State1D startState,
@@ -244,17 +220,10 @@ public sealed class PrototypeTrajectoryService
             ? ParsePositiveDouble(input.Duration, $"{segmentLabel} duration")
             : null;
 
-        ConstantVelocityTrajectory1D trajectory;
-        try
-        {
-            trajectory = new ConstantVelocityTrajectory1D(
+        ConstantVelocityTrajectory1D trajectory = CallCore(segmentLabel, () =>
+            new ConstantVelocityTrajectory1D(
                 startState, endState, xCvStart, xCvEnd, speed, input.Degree,
-                HasAnyKinematicLimit(limits) ? limits : null, totalDuration: totalDuration);
-        }
-        catch (Exception ex) when (ex is DurationSearchFailedException or KinematicLimitsViolatedException or ArgumentException)
-        {
-            throw new InvalidOperationException($"{segmentLabel}: {ex.Message}", ex);
-        }
+                limits.HasAnyLimit ? limits : null, totalDuration: totalDuration));
 
         return
         [
@@ -264,47 +233,26 @@ public sealed class PrototypeTrajectoryService
         ];
     }
 
-    private static double? ShortestDurationOrExplain(int degree, State1D start, State1D end, KinematicLimits limits, string label)
+    /// <summary>
+    /// Runs a Core call and turns the Core's explicit failures (limits, impossible searches, invalid arguments)
+    /// into one exception type whose message names the segment or blend, for the status bar and the message box.
+    /// </summary>
+    private static T CallCore<T>(string label, Func<T> call)
     {
         try
         {
-            return ShortestFeasibleDuration.Find(degree, start, end, limits);
+            return call();
         }
-        catch (DurationSearchFailedException ex)
+        catch (Exception ex) when (ex is DurationSearchFailedException or KinematicLimitsViolatedException or ArgumentException)
         {
             throw new InvalidOperationException($"{label}: {ex.Message}", ex);
         }
     }
 
-    private static void ValidateSegmentAgainstLimits(PolynomialSegment1D segment, KinematicLimits limits, string label)
-    {
-        if (!ExtremaAnalyzer.VerifyLimits(segment, limits))
-            throw new InvalidOperationException($"{label} violates the active kinematic limits at the specified duration.");
-    }
-
-    private static bool HasAnyKinematicLimit(KinematicLimits limits)
-    {
-        return limits.HasVelocityLimit || limits.HasAccelerationLimit || limits.HasJerkLimit || limits.HasSnapLimit;
-    }
-
-    private static double[] SampleGlobalTimes(double totalDuration, int sampleCount)
-    {
-        if (sampleCount < 2)
-            sampleCount = 2;
-
-        double[] times = new double[sampleCount];
-        for (int i = 0; i < sampleCount; i++)
-        {
-            times[i] = totalDuration * i / (sampleCount - 1);
-        }
-
-        return times;
-    }
-
     private static double ParseRequiredDouble(string value, string label)
     {
-        if (!double.TryParse(value, out double parsed))
-            throw new InvalidOperationException($"{label} must be a valid number.");
+        if (!InputNumber.TryParse(value, out double parsed))
+            throw new InvalidOperationException($"{label} must be a valid number (decimal point or comma, no thousands separators): \"{value}\".");
 
         return parsed;
     }
@@ -315,38 +263,6 @@ public sealed class PrototypeTrajectoryService
         if (parsed <= 0)
             throw new InvalidOperationException($"{label} must be greater than zero.");
         return parsed;
-    }
-
-    private static double FindTauForPosition(PolynomialSegment1D segment, double targetPosition)
-    {
-        double startPos = segment.StartState.Position;
-        double endPos = segment.EndState.Position;
-        double range = endPos - startPos;
-
-        if (Math.Abs(range) < 1e-12)
-            return 0.5;
-
-        double tauEstimate = (targetPosition - startPos) / range;
-        tauEstimate = Math.Clamp(tauEstimate, 0.01, 0.99);
-
-        for (int iter = 0; iter < 50; iter++)
-        {
-            double time = tauEstimate * segment.Duration;
-            double currentPos = segment.EvaluatePosition(time);
-            double currentVel = segment.EvaluateDerivative(time, 1);
-
-            if (Math.Abs(currentVel) < 1e-12)
-                break;
-
-            double error = targetPosition - currentPos;
-            double deltaTau = error / (currentVel * segment.Duration);
-            tauEstimate = Math.Clamp(tauEstimate + deltaTau, 0.001, 0.999);
-
-            if (Math.Abs(error) < 1e-8)
-                break;
-        }
-
-        return tauEstimate;
     }
 
     private static string GetQuantityName(int order) => order switch
@@ -361,14 +277,14 @@ public sealed class PrototypeTrajectoryService
 
     private sealed class SegmentRepresentation
     {
-        public SegmentRepresentation(int segmentNumber, bool supportsBlending, List<LabeledSegment> segments)
+        public SegmentRepresentation(KinematicLimits limits, bool supportsBlending, List<LabeledSegment> segments)
         {
-            SegmentNumber = segmentNumber;
+            Limits = limits;
             SupportsBlending = supportsBlending;
             Segments = segments;
         }
 
-        public int SegmentNumber { get; }
+        public KinematicLimits Limits { get; }
 
         public bool SupportsBlending { get; }
 

@@ -1,5 +1,6 @@
 using MathNet.Numerics.LinearAlgebra;
 using TrajectoryPlanner.Core.Polynomials;
+using TrajectoryPlanner.Core.States;
 using TrajectoryPlanner.Core.Symbols;
 
 namespace TrajectoryPlanner.Core.PassThrough;
@@ -14,6 +15,8 @@ public sealed class PassThroughProblem1D
 {
     private readonly int _nodeCount;
     private readonly int _sharedCount;
+    private readonly double[] _startDerivatives;
+    private readonly double[] _endDerivatives;
 
     public int Degree { get; }
     public int DerivativeOrder { get; }
@@ -30,7 +33,8 @@ public sealed class PassThroughProblem1D
     /// <summary>Number of unknowns, (p - 1)(N - 1).</summary>
     public int UnknownCount => H.RowCount;
 
-    private PassThroughProblem1D(int degree, int order, int nodeCount, Matrix<double> h, Vector<double> f, double constant)
+    private PassThroughProblem1D(int degree, int order, int nodeCount, Matrix<double> h, Vector<double> f, double constant,
+        double[] startDerivatives, double[] endDerivatives)
     {
         Degree = degree;
         DerivativeOrder = order;
@@ -39,13 +43,17 @@ public sealed class PassThroughProblem1D
         H = h;
         F = f;
         Constant = constant;
+        _startDerivatives = startDerivatives;
+        _endDerivatives = endDerivatives;
     }
 
     public static PassThroughProblem1D Build(
         IReadOnlyList<double> waypoints,
         IReadOnlyList<double> durations,
         int degree,
-        SmoothnessCriterion criterion)
+        SmoothnessCriterion criterion,
+        State1D? startBoundary = null,
+        State1D? endBoundary = null)
     {
         if (!TrajectoryConstants.SupportedDegrees.Contains(degree))
             throw new ArgumentException($"Unsupported polynomial degree: {degree}", nameof(degree));
@@ -65,6 +73,10 @@ public sealed class PassThroughProblem1D
         int p = SmoothnessCriterion.SharedStateCount(degree);
         int segmentCount = waypoints.Count - 1;
         int unknownCount = (p - 1) * (segmentCount - 1);
+
+        // Prescribed derivatives of order 1 .. p-1 at the two global ends (zero: rest). Positions come from the waypoints.
+        double[] startDerivatives = BoundaryDerivatives(startBoundary, p);
+        double[] endDerivatives = BoundaryDerivatives(endBoundary, p);
 
         // B = inverse of the normalized-time matrix (depends on the degree only); the right-hand side
         // of that system is ordered [start orders 0..p-1, end orders 0..p-1], which is the order of z_k.
@@ -109,7 +121,7 @@ public sealed class PassThroughProblem1D
                 else if (globalEnd)
                 {
                     unknownIndex[s] = -1;
-                    knownValue[s] = 0.0;
+                    knownValue[s] = node == 0 ? startDerivatives[order] : endDerivatives[order];
                 }
                 else
                 {
@@ -136,7 +148,7 @@ public sealed class PassThroughProblem1D
             }
         }
 
-        return new PassThroughProblem1D(degree, m, waypoints.Count, h, f, constant);
+        return new PassThroughProblem1D(degree, m, waypoints.Count, h, f, constant, startDerivatives, endDerivatives);
     }
 
     /// <summary>
@@ -189,7 +201,8 @@ public sealed class PassThroughProblem1D
 
     /// <summary>
     /// Derivatives of order 0 .. p-1 at every waypoint: [node][order]. Position is taken from
-    /// <paramref name="waypoints"/>, global ends are zero, interior values come from y.
+    /// <paramref name="waypoints"/>, the global ends carry the prescribed boundary derivatives (zero by default),
+    /// interior values come from y.
     /// </summary>
     public double[][] NodeDerivatives(IReadOnlyList<double> waypoints, Vector<double> y)
     {
@@ -200,12 +213,30 @@ public sealed class PassThroughProblem1D
             nodes[i][0] = waypoints[i];
 
             if (i == 0 || i == _nodeCount - 1)
+            {
+                double[] boundary = i == 0 ? _startDerivatives : _endDerivatives;
+                for (int order = 1; order < _sharedCount; order++)
+                    nodes[i][order] = boundary[order];
+
                 continue;
+            }
 
             for (int order = 1; order < _sharedCount; order++)
                 nodes[i][order] = y[(i - 1) * (_sharedCount - 1) + (order - 1)];
         }
 
         return nodes;
+    }
+
+    private static double[] BoundaryDerivatives(State1D? boundary, int sharedCount)
+    {
+        var result = new double[sharedCount];
+        if (boundary is null)
+            return result;
+
+        for (int order = 1; order < sharedCount; order++)
+            result[order] = boundary.Value.GetDerivative(order);
+
+        return result;
     }
 }

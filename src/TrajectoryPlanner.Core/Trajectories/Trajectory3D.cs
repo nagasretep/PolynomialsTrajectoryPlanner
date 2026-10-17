@@ -11,7 +11,6 @@ public class Trajectory3D
 
     public IReadOnlyList<PolynomialSegment3D> Segments => _segments;
     public double TotalDuration { get; private set; }
-    public bool RespectEndpointsExactly { get; set; } = true;
 
     public Trajectory3D(IEnumerable<PolynomialSegment3D> segments)
     {

@@ -21,9 +21,16 @@ public class PassThroughSolver1D
 
     public SmoothnessCriterion CriterionFor(int degree) => _criterion ?? SmoothnessCriterion.DefaultForDegree(degree);
 
-    public PolynomialSegment1D[] Solve(double[] waypoints, double[] segmentDurations, int degree = 9)
+    /// <param name="startBoundary">Prescribed derivatives (orders 1 .. p-1) at the start; null: rest. Its position is ignored.</param>
+    /// <param name="endBoundary">Same at the end.</param>
+    public PolynomialSegment1D[] Solve(
+        double[] waypoints,
+        double[] segmentDurations,
+        int degree = 9,
+        State1D? startBoundary = null,
+        State1D? endBoundary = null)
     {
-        var problem = PassThroughProblem1D.Build(waypoints, segmentDurations, degree, CriterionFor(degree));
+        var problem = PassThroughProblem1D.Build(waypoints, segmentDurations, degree, CriterionFor(degree), startBoundary, endBoundary);
         var y = problem.Solve();
         double[][] nodes = problem.NodeDerivatives(waypoints, y);
 

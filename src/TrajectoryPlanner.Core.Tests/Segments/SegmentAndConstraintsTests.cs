@@ -65,18 +65,19 @@ public class PolynomialSegment1DTests
 public class ConstraintsTests
 {
     [Fact]
-    public void DurationSearcher_FindsValidDurationForDegree3()
+    public void ShortestFeasibleDuration_Degree3_RespectsBothLimits_AndIsTight()
     {
         var start = State1D.FromPositionOnly(0);
         var end = State1D.FromPositionOnly(10);
         var limits = KinematicLimits.FromValues(vMax: 4, aMax: 5);
 
-        double T = DurationSearcher.FindValidDuration(3, start, end, limits, 0.1);
+        double T = ShortestFeasibleDuration.Find(3, start, end, limits)!.Value;
 
         var seg = new PolynomialSegment1D(3, start, end, T);
         bool valid = ExtremaAnalyzer.VerifyLimits(seg, limits);
 
         Assert.True(T > 0);
+        Assert.False(ExtremaAnalyzer.VerifyLimits(new PolynomialSegment1D(3, start, end, T * (1 - 1e-4)), limits));
         Assert.True(valid);
     }
 }

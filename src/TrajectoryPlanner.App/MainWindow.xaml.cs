@@ -95,7 +95,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (previous is not null)
         {
             segment.StartPosition = previous.EndPosition;
-            if (double.TryParse(previous.EndPosition, out double previousEnd))
+            if (InputNumber.TryParse(previous.EndPosition, out double previousEnd))
                 segment.EndPosition = (previousEnd + 10.0).ToString("F0");
         }
 
@@ -134,7 +134,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             BuildPlot(_currentResult);
             UpdateCursorReadout(0.0);
 
-            StatusMessage = $"Computed {_currentResult.Series.Count} plotted quantities across {_currentResult.TotalDuration:F4} seconds.";
+            StatusMessage = $"Computed {_currentResult.Series.Count} plotted quantities across {_currentResult.TotalDuration:F4} seconds."
+                + (_currentResult.Notices.Count > 0 ? " " + string.Join(" ", _currentResult.Notices) : string.Empty);
         }
         catch (Exception ex)
         {

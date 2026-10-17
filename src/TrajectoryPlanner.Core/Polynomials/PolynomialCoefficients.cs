@@ -23,6 +23,4 @@ public readonly struct PolynomialCoefficients
             return NormalizedCoefficients[index];
         }
     }
-
-    public double[] GetCoefficientsCopy() => (double[])NormalizedCoefficients.Clone();
 }

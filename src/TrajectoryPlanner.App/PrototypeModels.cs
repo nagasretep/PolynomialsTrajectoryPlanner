@@ -289,4 +289,5 @@ public sealed record PrototypeComputationResult(
     IReadOnlyList<CoefficientReportRow> CoefficientRows,
     Func<double, double> PositionAt,
     Func<double, int, double> DerivativeAt,
-    double TotalDuration);
+    double TotalDuration,
+    IReadOnlyList<string> Notices);

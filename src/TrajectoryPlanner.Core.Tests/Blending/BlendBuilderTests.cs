@@ -101,7 +101,8 @@ public class BlendBuilderTests
     {
         var (pre, post) = Corner();
 
-        var blend = BlendBuilder1D.BuildBlendSegment(pre, post, 1.0, 0.0);
+        // A very small window: removed portions 0.0001 s + 0.00015 s, floored to 0.01 s.
+        var blend = BlendBuilder1D.BuildBlendSegment(pre, post, 0.9999, 0.0001);
 
         Assert.Equal(0.01, blend.Duration, 12);
     }
@@ -164,36 +165,38 @@ public class BlendBuilderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => BlendBuilder1D.BuildBlendSegment(pre, post, tauPre, tauPost));
     }
 
+    // Request 0009, Part A: these three used to pin the old behaviour (clamp, accept, always 9) and now change.
     [Fact]
-    public void Today_PositionOutsideTheSegmentIsClampedNotRejected()
+    public void PositionOutsideTheSegment_IsRejected()
     {
         var (pre, post) = Corner();
 
-        // x = 5 is beyond the end (2) of the preceding segment: no exception, the blend starts near its end.
-        var blend = BlendBuilder1D.BuildBlendSegment(pre, post, new Point1D(5.0), new Point1D(1.2));
+        // x = 5 is beyond the range [0, 2] covered by the preceding segment.
+        var ex = Assert.Throws<ArgumentException>(
+            () => BlendBuilder1D.BuildBlendSegment(pre, post, new Point1D(5.0), new Point1D(1.2)));
 
-        Assert.True(blend.StartState.Position <= 2.0 + 1e-9);
-        Assert.True(blend.StartState.Position > 1.9);
+        Assert.Contains("outside the segment", ex.Message);
+        Assert.Throws<ArgumentException>(() => BlendBuilder1D.BuildBlendSegment(pre, post, new Point1D(1.5), new Point1D(-3.0)));
     }
 
     [Fact]
-    public void Today_EmptyWindow_IsNotRejected()
+    public void EmptyWindow_IsRejected()
     {
         var (pre, post) = Corner();
 
         // tau = 1 on the preceding and tau = 0 on the following segment: nothing is removed.
-        var blend = BlendBuilder1D.BuildBlendSegment(pre, post, 1.0, 0.0);
+        var ex = Assert.Throws<ArgumentException>(() => BlendBuilder1D.BuildBlendSegment(pre, post, 1.0, 0.0));
 
-        Assert.True(blend.Duration > 0);
+        Assert.Contains("Empty blend window", ex.Message);
     }
 
     [Fact]
-    public void Today_BlendDegreeIsNineByDefault()
+    public void DefaultBlendDegree_IsTheDegreeOfTheNeighboursWhenTheyAgree()
     {
         var pre = PolynomialSegment1D.CreateDegree3(0, 2, 0, 1, 1.0);
         var post = PolynomialSegment1D.CreateDegree3(2, 4, 1, 0, 1.0);
 
-        Assert.Equal(9, BlendBuilder1D.BuildBlendSegment(pre, post, 0.5, 0.5).Degree);
+        Assert.Equal(3, BlendBuilder1D.BuildBlendSegment(pre, post, 0.5, 0.5).Degree);
     }
 
     [Fact]

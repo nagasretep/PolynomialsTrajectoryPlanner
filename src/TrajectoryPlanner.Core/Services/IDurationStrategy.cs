@@ -5,23 +5,11 @@ using TrajectoryPlanner.Core.States;
 
 namespace TrajectoryPlanner.Core.Services;
 
-public enum DurationMode
-{
-    UserSpecified,
-    AutoDerivedProportional,
-    AutoDerivedFromConstraints
-}
-
 /// <summary>
 /// The single duration mechanism (Decision 1 of <c>design/07-implementation-plan.md</c>).
 /// </summary>
 public interface IDurationStrategy1D
 {
-    DurationMode Mode { get; }
-
-    /// <summary>Duration of one segment whose two end states are known.</summary>
-    double ComputeDuration(int degree, State1D startState, State1D endState, int segmentIndex, int totalSegments);
-
     /// <summary>
     /// Durations of the N - 1 segments joining a sequence of N waypoints (exact pass-through, where
     /// the interior states are not known before the solve).
@@ -36,13 +24,6 @@ public class UserSpecifiedDuration : IDurationStrategy1D
     public UserSpecifiedDuration(double[] durations)
     {
         _durations = durations;
-    }
-
-    public DurationMode Mode => DurationMode.UserSpecified;
-
-    public double ComputeDuration(int degree, State1D startState, State1D endState, int segmentIndex, int totalSegments)
-    {
-        return _durations[segmentIndex];
     }
 
     public double[] ComputeDurations(IReadOnlyList<double> waypoints, int degree)
@@ -78,14 +59,6 @@ public class AutoDerivedProportionalDuration : IDurationStrategy1D
 
         _totalDuration = totalDuration;
         RelativeFloor = relativeFloor;
-    }
-
-    public DurationMode Mode => DurationMode.AutoDerivedProportional;
-
-    /// <summary>Per-segment form (unchanged legacy behaviour): equal split, since one segment alone knows no distances.</summary>
-    public double ComputeDuration(int degree, State1D startState, State1D endState, int segmentIndex, int totalSegments)
-    {
-        return _totalDuration / totalSegments;
     }
 
     public double[] ComputeDurations(IReadOnlyList<double> waypoints, int degree)
@@ -137,7 +110,11 @@ public class AutoDerivedProportionalDuration : IDurationStrategy1D
 /// When the limits determine no duration (no active limit, or a rest-to-rest segment of zero length) the
 /// fallback duration is used instead.
 /// </summary>
-public class ConstraintAwareDuration : IDurationStrategy1D
+/// <remarks>
+/// Not an <see cref="IDurationStrategy1D"/>: it needs the two end states of the segment, which exact pass-through
+/// determines only after the durations are fixed, so it cannot size a waypoint sequence.
+/// </remarks>
+public class ConstraintAwareDuration
 {
     private readonly KinematicLimits _limits;
 
@@ -152,16 +129,10 @@ public class ConstraintAwareDuration : IDurationStrategy1D
         FallbackDuration = fallbackDuration;
     }
 
-    public DurationMode Mode => DurationMode.AutoDerivedFromConstraints;
-
-    public double ComputeDuration(int degree, State1D startState, State1D endState, int segmentIndex, int totalSegments)
+    /// <summary>Shortest feasible duration of a segment with the given end states, or the fallback if the limits determine none.</summary>
+    /// <exception cref="DurationSearchFailedException">No duration satisfies the limits.</exception>
+    public double ComputeDuration(int degree, State1D startState, State1D endState)
     {
         return ShortestFeasibleDuration.Find(degree, startState, endState, _limits) ?? FallbackDuration;
-    }
-
-    public double[] ComputeDurations(IReadOnlyList<double> waypoints, int degree)
-    {
-        throw new NotSupportedException(
-            "Constraint-aware durations need the segment end states, which exact pass-through determines only after the durations are fixed.");
     }
 }

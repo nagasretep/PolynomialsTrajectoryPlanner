@@ -103,7 +103,6 @@ public class DurationStrategyTests
         result[0] = 99;
 
         Assert.Equal(1.0, strategy.ComputeDurations(new[] { 0.0, 1, 2 }, 9)[0]);
-        Assert.Equal(2.0, strategy.ComputeDuration(9, State1D.Zero, State1D.Zero, 1, 2));
     }
 
     [Theory]
@@ -118,18 +117,10 @@ public class DurationStrategyTests
         var start = State1D.FromPositionOnly(0);
         var end = State1D.FromPositionOnly(10);
 
-        double duration = strategy.ComputeDuration(degree, start, end, 0, 1);
+        double duration = strategy.ComputeDuration(degree, start, end);
 
         var segment = new PolynomialSegment1D(degree, start, end, duration);
         Assert.True(ExtremaAnalyzer.VerifyLimits(segment, limits));
-    }
-
-    [Fact]
-    public void ConstraintAware_ForWaypointSequences_IsNotSupported()
-    {
-        var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0));
-
-        Assert.Throws<NotSupportedException>(() => strategy.ComputeDurations(new[] { 0.0, 1, 2 }, 9));
     }
 
     [Fact]
@@ -138,7 +129,7 @@ public class DurationStrategyTests
         var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0));
 
         Assert.Throws<DurationSearchFailedException>(
-            () => strategy.ComputeDuration(9, new State1D(0, 5, 0, 0, 0), State1D.FromPositionOnly(1), 0, 1));
+            () => strategy.ComputeDuration(9, new State1D(0, 5, 0, 0, 0), State1D.FromPositionOnly(1)));
     }
 }
 
@@ -149,7 +140,7 @@ public class ConstraintAwareFallbackTests
     {
         var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0), fallbackDuration: 2.5);
 
-        double t = strategy.ComputeDuration(9, State1D.FromPositionOnly(3), State1D.FromPositionOnly(3), 0, 1);
+        double t = strategy.ComputeDuration(9, State1D.FromPositionOnly(3), State1D.FromPositionOnly(3));
 
         Assert.Equal(2.5, t, 12);
     }
@@ -159,7 +150,7 @@ public class ConstraintAwareFallbackTests
     {
         var strategy = new ConstraintAwareDuration(KinematicLimits.None);
 
-        Assert.Equal(1.0, strategy.ComputeDuration(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(5), 0, 1), 12);
+        Assert.Equal(1.0, strategy.ComputeDuration(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(5)), 12);
     }
 
     [Fact]
@@ -167,7 +158,7 @@ public class ConstraintAwareFallbackTests
     {
         var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0), fallbackDuration: 99);
 
-        double t = strategy.ComputeDuration(3, State1D.FromPositionOnly(0), State1D.FromPositionOnly(2), 0, 1);
+        double t = strategy.ComputeDuration(3, State1D.FromPositionOnly(0), State1D.FromPositionOnly(2));
 
         Assert.Equal(3.0, t, 1e-6); // 3/2 * 2 / 1
     }

@@ -7,7 +7,7 @@ using TrajectoryPlanner.Core.Trajectories;
 
 namespace TrajectoryPlanner.Core.Tests.Segments;
 
-/// <summary>Request 0003: SampleTimes (D12), DurationSearcher failure (D5, bug part), proportional durations (D14).</summary>
+/// <summary>Request 0003: SampleTimes (D12), duration search failure (D5, bug part), proportional durations (D14).</summary>
 public class SampleTimesTests
 {
     [Fact]
@@ -49,18 +49,17 @@ public class SampleTimesTests
 public class DurationSearchFailureTests
 {
     [Fact]
-    public void VelocityLimitFarTooSmallForTheDistance_ReportsFailure()
+    public void VelocityLimitFarTooSmallForTheDistance_HasAClosedFormAnswerNotAFailure()
     {
-        // Needs T of order 1.5e18 s; the search stops after 50 doublings (about 1e15 s).
+        // Rest-to-rest: T = 1.5 * 1e9 / 1e-9 = 1.5e18 s, no search and no cap involved.
         var start = State1D.FromPositionOnly(0);
         var end = State1D.FromPositionOnly(1e9);
         var limits = KinematicLimits.FromValues(vMax: 1e-9);
 
-        var ex = Assert.Throws<DurationSearchFailedException>(
-            () => DurationSearcher.FindValidDuration(3, start, end, limits));
+        double? t = ShortestFeasibleDuration.Find(3, start, end, limits);
 
-        Assert.True(ex.LastDurationTried > 1e14);
-        Assert.Contains("limits", ex.Message);
+        Assert.NotNull(t);
+        Assert.Equal(1.5e18, t!.Value, 1.5e18 * 1e-9);
     }
 
     [Fact]
@@ -71,8 +70,11 @@ public class DurationSearchFailureTests
         var end = new State1D(1, 0, 0, 0, 0);
         var limits = KinematicLimits.FromValues(vMax: 1.0);
 
-        Assert.Throws<DurationSearchFailedException>(
-            () => DurationSearcher.FindValidDuration(3, start, end, limits));
+        var ex = Assert.Throws<DurationSearchFailedException>(
+            () => ShortestFeasibleDuration.Find(3, start, end, limits));
+
+        Assert.True(ex.LastDurationTried > 0);
+        Assert.Contains("limits", ex.Message);
     }
 
     [Fact]
@@ -81,18 +83,18 @@ public class DurationSearchFailureTests
         var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0));
 
         Assert.Throws<DurationSearchFailedException>(
-            () => strategy.ComputeDuration(3, new State1D(0, 10, 0, 0, 0), State1D.FromPositionOnly(1), 0, 1));
+            () => strategy.ComputeDuration(3, new State1D(0, 10, 0, 0, 0), State1D.FromPositionOnly(1)));
     }
 
     [Fact]
-    public void AchievableLimits_StillReturnADuration()
+    public void AchievableLimits_ReturnTheDegree3ClosedFormDuration()
     {
         var limits = KinematicLimits.FromValues(vMax: 1.0);
 
-        double duration = DurationSearcher.FindValidDuration(
+        double? duration = ShortestFeasibleDuration.Find(
             3, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), limits);
 
-        Assert.True(duration >= 1.5 - 1e-6); // degree-3 peak velocity is 1.5 * distance / T
+        Assert.Equal(1.5, duration!.Value, 1e-9); // degree-3 peak velocity is 1.5 * distance / T
     }
 }
 

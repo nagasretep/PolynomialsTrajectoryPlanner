@@ -287,23 +287,24 @@ public class ShortestFeasibleDurationTests
         var limits = KinematicLimits.FromValues(vMax: 1.0);
         var strategy = new ConstraintAwareDuration(limits);
 
-        double t = strategy.ComputeDuration(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), 0, 1);
+        double t = strategy.ComputeDuration(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1));
 
         AssertRelative(315.0 / 128, t, 1e-6);
     }
 
     [Fact]
-    public void ShorterThanLegacy_WhenTheLegacyInitialGuessAlreadySatisfiesTheLimits()
+    public void LooseLimit_GivesAShortDurationNotTheDefaultSecond()
     {
-        // Legacy behaviour (D5): the first guess (1 s) is returned if it is feasible, even if much shorter works.
+        // A first guess of 1 s would be feasible here, but the shortest feasible duration is much shorter:
+        // closed form 315/128 * 1 / 10, with the limit binding (F = 0) and anything shorter infeasible.
         var start = State1D.FromPositionOnly(0);
         var end = State1D.FromPositionOnly(1);
         var limits = KinematicLimits.FromValues(vMax: 10.0);
 
-        double legacy = DurationSearcher.FindValidDuration(9, start, end, limits);
         double shortest = FindValue(9, start, end, limits);
 
-        Assert.Equal(1.0, legacy, 12);
         AssertRelative(315.0 / 128 / 10.0, shortest, 1e-6);
+        Assert.InRange(ShortestFeasibleDuration.Feasibility(9, start, end, limits, shortest), -1e-6, 0.0);
+        Assert.True(ShortestFeasibleDuration.Feasibility(9, start, end, limits, shortest * (1 - 1e-4)) > 0);
     }
 }
