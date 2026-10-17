@@ -227,6 +227,16 @@ The implemented and now stabilized M2 baseline is more specific:
 
 These are implementation-level refinements of M2, not changes to the underlying theory scope.
 
+### A6 — Math.NET Numerics: Actual Usage (as built, reviewed 2026-10-17)
+
+Decision 4 planned Math.NET for root-finding and numerical integration. The implemented code uses it **only for dense linear algebra** (the LU solve of the boundary-condition system in `PolynomialCoefficientSolver`). Root finding is hand-written (100-point sign-change scan plus bisection in `ExtremaAnalyzer`; a Newton iteration for the blend point), and no numerical integration exists yet (the case reserved for it, arc-length integration for 3D constant velocity, is not implemented).
+
+Status: accepted as is. The hand-written root finders work on the polynomials involved and keep the algorithm visible, which suits the educational goal; moving to `MathNet.Numerics.RootFinding` is deferred until robustness problems appear. The exact minimum-snap solve (A7) adds a second use of the dense linear algebra (Cholesky).
+
+### A7 — Decision 5 Made Concrete
+
+`theory/TrajectoryPassingThroughConstraintPoints.md` (section *Global Minimum-Snap Formulation In 1D*) now states the minimum-snap problem explicitly: interior derivatives as unknowns, quadratic cost, one linear system. Consequence for the architecture note of Decision 5: the "smoothness criterion" is fully described by its **derivative order $m$** (snap: $m = 4$), not by a pluggable cost function; the solver builds the quadratic form from $m$. The current finite-difference heuristic in `PassThroughSolver1D` is superseded (request 0002). The choice of $m$ for degree 9 (snap versus crackle) is an open decision of the author, see that document's Open Questions.
+
 ## Related Documents
 
 - `06-theory-library-roadmap.md`

@@ -326,6 +326,111 @@ So the practical baseline picture is:
 5. solve for the interior states through a smoothness criterion;
 6. reconstruct every segment using standard coefficient determination.
 
+## Global Minimum-Snap Formulation In 1D
+
+The previous sections say that the interior derivatives are "determined by a global smoothness criterion", without writing that criterion down. This section states it as an explicit optimization problem and shows that it reduces to **one linear system**. It is the formulation implemented by the software (milestone M7).
+
+### Data And Unknowns
+
+- The waypoints $x_0, x_1, \dots, x_N$ and the durations $T_0, \dots, T_{N-1}$ are given (durations are chosen as discussed in *Segment Durations In 1D*). Segment $k$ joins waypoint $k$ to waypoint $k+1$.
+- The segment degree is $d = 2p - 1$, so that each node carries a shared state of $p$ components: the derivatives of order $0, 1, \dots, p-1$ (for $d = 9$: $p = 5$, from position up to snap).
+- At the two global ends all derivatives of order $1, \dots, p-1$ are zero.
+- The **unknowns** are the derivatives of order $1, \dots, p-1$ at the $N-1$ interior waypoints, collected in a vector $\mathbf{y}$ with $(p-1)(N-1)$ components (for $d = 9$: $4(N-1)$).
+
+### Segment Coefficients From The Node States
+
+Let $\tau = (t - t_k)/T_k \in [0,1]$ be the normalized time of segment $k$, and $c_{k,0}, \dots, c_{k,d}$ its coefficients. Stack the physical states of its two end nodes in the vector $\mathbf{z}_k$ of $2p$ components. Since $\mathrm{d}^i x / \mathrm{d}\tau^i = T_k^{\,i}\, x^{(i)}$, the coefficients are
+
+$$
+\mathbf{c}_k = \mathbf{B}\,\boldsymbol{\Delta}_k\,\mathbf{z}_k,
+\qquad
+\boldsymbol{\Delta}_k = \mathrm{diag}\left(1, T_k, \dots, T_k^{p-1},\; 1, T_k, \dots, T_k^{p-1}\right)
+$$
+
+where $\mathbf{B}$ is the inverse of the normalized-time matrix of `PolynomialCoefficientDetermination.md` (it depends only on the degree $d$, not on the data).
+
+### The Cost
+
+The smoothness criterion of order $m$ is
+
+$$
+J = \sum_{k=0}^{N-1} \int_0^{T_k} \left( x_k^{(m)}(t) \right)^2 \mathrm{d}t
+$$
+
+with $m = 4$ for minimum snap. Changing variable to $\tau$ (with $x^{(m)} = T_k^{-m}\, \mathrm{d}^m x / \mathrm{d}\tau^m$ and $\mathrm{d}t = T_k \,\mathrm{d}\tau$) gives
+
+$$
+J_k = T_k^{\,1-2m}\; \mathbf{c}_k^{\top} \mathbf{Q}\, \mathbf{c}_k,
+\qquad
+Q_{ij} = \frac{i^{\underline{m}}\; j^{\underline{m}}}{i + j - 2m + 1} \quad (i, j \ge m),
+\qquad Q_{ij} = 0 \text{ otherwise}
+$$
+
+where $i^{\underline{m}} = i!/(i-m)!$ is the falling factorial. (The $m$-th derivative of $\tau^i$ is $i^{\underline{m}}\,\tau^{i-m}$, and the integral of $\tau^{i+j-2m}$ over $[0,1]$ is $1/(i+j-2m+1)$.) Combining with the previous formula:
+
+$$
+J_k = \mathbf{z}_k^{\top} \mathbf{R}_k\, \mathbf{z}_k,
+\qquad
+\mathbf{R}_k = T_k^{\,1-2m}\; \boldsymbol{\Delta}_k\, \mathbf{B}^{\top} \mathbf{Q}\, \mathbf{B}\, \boldsymbol{\Delta}_k
+$$
+
+$\mathbf{R}_k$ is symmetric positive semi-definite, of size $2p \times 2p$.
+
+### Reduction To One Linear System
+
+Every entry of $\mathbf{z}_k$ is either a known number (a waypoint position, or a zero at a global end) or a component of $\mathbf{y}$. Hence $\mathbf{z}_k = \mathbf{G}_k \mathbf{y} + \mathbf{g}_k$, where $\mathbf{G}_k$ is a 0/1 selection matrix and $\mathbf{g}_k$ holds the known entries. Then
+
+$$
+J(\mathbf{y}) = \mathbf{y}^{\top} \mathbf{H}\, \mathbf{y} + 2\, \mathbf{f}^{\top} \mathbf{y} + \text{const},
+\qquad
+\mathbf{H} = \sum_k \mathbf{G}_k^{\top} \mathbf{R}_k \mathbf{G}_k,
+\qquad
+\mathbf{f} = \sum_k \mathbf{G}_k^{\top} \mathbf{R}_k \mathbf{g}_k
+$$
+
+The exact passage through the waypoints, the continuity (shared states) and the zero end values are already built into this parametrization, so $J$ is minimized **without constraints**:
+
+$$
+\mathbf{H}\, \mathbf{y}^{\star} = -\mathbf{f}
+$$
+
+The segments are then reconstructed from the resulting node states with the formula for $\mathbf{c}_k$ above. This is the "global solve" of the Baseline Algorithm, step 6.
+
+### Existence And Uniqueness
+
+For $1 \le m \le p$ the matrix $\mathbf{H}$ is positive definite, so $\mathbf{y}^{\star}$ exists and is unique. Sketch: $\mathbf{y}^{\top}\mathbf{H}\,\mathbf{y}$ is the cost of the *homogeneous* problem (all positions zero, zero end values). If it vanishes, $x^{(m)} \equiv 0$ on every segment; since the derivatives up to order $p-1 \ge m-1$ are continuous at the nodes, $x$ is one polynomial of degree at most $m-1$ on the whole interval, and it has zero value and zero derivatives up to order $m-1$ at the start, so it is identically zero, that is $\mathbf{y} = \mathbf{0}$.
+
+### Which Order $m$
+
+| Degree | $p$ | Natural order $m = p$ | Resulting classical curve |
+|---|---|---|---|
+| $3$ | $2$ | acceleration | clamped cubic spline |
+| $5$ | $3$ | jerk | minimum-jerk spline |
+| $7$ | $4$ | snap | minimum-snap spline |
+| $9$ | $5$ | crackle | minimum-crackle spline |
+
+When $m = p$ the minimizer is the classical spline of degree $2p-1$, whose derivatives are continuous up to order $2p-2$ at the waypoints, far beyond the order $p-1$ imposed by the shared states. Numerical check (Cowork prototype, 2026-10-17): for $d = 9$ and $m = 5$ all derivative jumps at an interior waypoint vanish up to the 8th derivative.
+
+For degree $9$ the project default is nevertheless **snap** ($m = 4$, Decision 5 of `07-implementation-plan.md`): the snap is continuous (order $p-1 = 4$) but the crackle and higher derivatives may jump at the waypoints (same numerical check: the jumps for $m = 4$ are non-zero from the 5th derivative on). The formulation treats $m$ as a parameter, so the choice is a one-line change. For degrees $3$, $5$ and $7$ the natural order $m = p$ is used.
+
+### Properties Worth Knowing
+
+- **Global coupling**: moving one waypoint, or changing one duration, changes all interior states. $\mathbf{H}$ is block-tridiagonal (a node is coupled only with its neighbours), so the cost of the solve grows only linearly with $N$; for the project's sizes (up to a few dozen segments) a dense solve is entirely adequate.
+- **Overshoot**: minimizing a smoothness cost does not bound the position between waypoints. Kinematic limits must still be verified afterwards (recompute-and-verify of `TrajectoryConstraints.md`).
+- **Conditioning**: $\mathbf{H}$ can be ill-conditioned (about $5 \cdot 10^{6}$ in the numerical example below); this is harmless in double precision with a Cholesky solve, but it is a reason to avoid explicit inversion.
+
+### Reference Values For Verification
+
+Computed independently by Cowork with a small NumPy prototype (not the application code), for rest-to-rest ends, equal durations $T_k = 1$:
+
+- **Cubic case** ($d = 3$, $m = 2$): the interior velocities obey the clamped-spline relation $v_{i-1} + 4 v_i + v_{i+1} = 3 (x_{i+1} - x_{i-1}) / h$ for equal durations $h$.
+- **Waypoints** $(0, 1, 2)$, **two segments**: the interior velocity is $1.5$ ($d=3$, $m=2$), $1.875$ ($d=5$, $m=3$), $2.1875$ ($d=7$, $m=4$), $2.275$ ($d=9$, $m=4$). By symmetry the interior acceleration is $0$ in all cases and, for $d=9$, the interior snap is also $0$. For $d=9$, $m=4$ the interior jerk is $-15.4$ and the cost is $J = 4032$; for $d = 3$, $m = 2$ the cost is $J = 6$.
+- **Waypoints** $(0, 1, 3, 2)$, **three segments**, $d = 9$, $m = 4$ (derivatives $v, a, j, s$):
+  - node 1: $3.038429,\; 3.850718,\; -12.978544,\; -51.947904$
+  - node 2: $-1.142124,\; -5.848363,\; 20.390968,\; 86.148599$
+  - cost $J \approx 10977.31$.
+- **Optimality**: at $\mathbf{y}^{\star}$ the gradient $\mathbf{H}\mathbf{y} + \mathbf{f}$ vanishes, and any small perturbation of $\mathbf{y}^{\star}$ increases $J$.
+
 ## Exact Pass-Through Versus Blending
 
 The difference from Requirement 13 can now be stated sharply.
@@ -379,6 +484,8 @@ The same exact-pass-through logic applies to degrees lower than $9$, but with a 
 | $9$ | $x_i$, $v_i$, $a_i$, $j_i$, $s_i$ |
 
 So Requirement 14 is not conceptually specific to degree $9$, but degree $9$ is the richest reference case because it supports shared continuity up to snap.
+
+The criterion order $m$ to use for each degree is given in *Global Minimum-Snap Formulation In 1D* (table *Which Order $m$*).
 
 ## 3D Exact Pass-Through
 
@@ -623,7 +730,8 @@ Once that interior state and the segment durations are fixed, both segments are 
 
 ## Open Questions
 
-- **Open — to resolve during later software design**: should the project adopt one explicit global smoothness criterion as the default exact-pass-through rule, such as a minimum-snap cost, or should multiple selectable criteria be exposed?
+- **Resolved**: the default exact-pass-through rule is a minimum-snap global solve (Decision 5 of `07-implementation-plan.md`), formulated in *Global Minimum-Snap Formulation In 1D*; the criterion order $m$ is a parameter, so alternatives can be exposed without restructuring.
+- **Open — to decide (author)**: for degree $9$, keep snap ($m = 4$, continuous up to snap, crackle may jump at waypoints) as the default, or adopt the natural order crackle ($m = 5$, derivatives continuous up to the 8th at the waypoints)?
 - **Open — to resolve together with duration handling**: should segment durations in exact-pass-through mode be specified directly by the user, derived automatically from waypoint spacing, or refined through a joint duration-and-state search?
 - **Open — to resolve during data-structure design**: should shared interior waypoint derivatives be represented explicitly as trajectory-level state objects, or should they remain implicit variables reconstructed only during computation?
 
