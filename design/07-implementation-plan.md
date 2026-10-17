@@ -222,7 +222,7 @@ The implemented and now stabilized M2 baseline is more specific:
 - the application uses a **chart-first layout**, with inputs and reports in a left control rail;
 - the visualization area is the dominant region of the window;
 - the plotted quantities are displayed as **stacked plots with independent Y scaling** rather than one compressed shared-axis plot;
-- the window uses the project icon `IconsAndGraphics/calculus.png`;
+- the window uses the project icon `assets/calculus.png`;
 - segment management includes both **add** and **remove selected segment**, while preserving at least one segment at all times.
 
 These are implementation-level refinements of M2, not changes to the underlying theory scope.

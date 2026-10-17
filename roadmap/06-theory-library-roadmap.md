@@ -1,5 +1,7 @@
 # Theory Library Roadmap
 
+> **Repository layout (since 2026-10-17)**: the specification files `00`–`05` live in `spec/`, the theory documents listed below in `theory/`, `07` and `08` in `design/`, and this roadmap in `roadmap/`. Documents refer to each other by bare file name, so cross-references remain valid. See `README.md` and `roadmap/decisions/ADR-0001-repository-restructure.md`.
+
 This is the working checklist for the "personal library" of theory/technical documents to be produced together with Claude, one requirement-cluster at a time. Each entry maps to the requirement(s) it covers in `01-requirements.md`, so coverage can be checked off as documents are produced.
 
 Suggested per-document template (for consistency across the library): short intro / scope → symbols used (referencing `SymbolsAndNomenclature`) → theory / derivation → algorithm or procedure → worked considerations (symbolic, per `03-assumptions.md`) → open questions / links to related documents.
@@ -15,7 +17,7 @@ Suggested per-document template (for consistency across the library): short intr
 
 Before considering any document in this library "finished", verify it with the following steps:
 
-1. Compile it: `pandoc <file>.md -o <file>.pdf --pdf-engine=xelatex -V mainfont="<a system font>" -V geometry:margin=2.5cm`
+1. Compile it: `pandoc <file>.md -o build/<file>.pdf --pdf-engine=xelatex -V mainfont="<a system font>" -V geometry:margin=2.5cm`
 2. **Check inline math specifically** (formulas embedded in running text, not standalone display equations on their own line) — this is where syntax errors are most likely to hide, since display-equation blocks tend to be visibly broken (and so get caught immediately) while inline math can silently render as literal text instead of a formula.
 3. Confirm backticks are only used around genuine code/filename references, never around `$...$` math delimiters — inline math must be single `$...$`, with no surrounding backticks (backtick-wrapped `$$...$$` renders as literal text instead of a formula).
 4. If the PDF build fails with a missing LaTeX package (e.g. `lmodern.sty` not found), install the missing package via the local TeX distribution (MiKTeX installs it automatically on Windows; `tlmgr install <package>` on TeX Live) — or work around it by forcing a system font with `--pdf-engine=xelatex -V mainfont="<font name>"`.

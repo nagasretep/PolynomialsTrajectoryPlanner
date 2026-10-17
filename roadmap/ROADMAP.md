@@ -6,8 +6,8 @@ Owner: Cowork. Status of the milestones M1–M8 is tracked in `coordination/STAT
 
 | # | Item | Owner | Depends on | Output |
 |---|---|---|---|---|
-| R1 | Baseline hygiene: `.gitignore`, untrack build output, one baseline commit | author / Cowork | – | clean history point |
-| R2 | Verify baseline: `dotnet build` and `dotnet test` green | Code | R1 | note in `inbox-docs/` with results |
+| R1 ✅ | Baseline hygiene: `.gitignore`, untrack build output, restructure | author / Cowork | – | done 2026-10-17 |
+| R2 | Verify baseline: build and tests green (done by the author: 24/24); inventory and NU1701 assessment by Code | Code | R1 | request 0001 → note in `inbox-docs/` |
 | R3 | Review theory library Draft v1 against the code (find discrepancies) | Cowork | R2 | list of discrepancies, requests for Code |
 | R4 | Exact minimum-snap pass-through solver (M7), replacing the heuristic | Code (theory: Cowork) | R3 | updated `PassThrough/`, tests, update to `theory/TrajectoryPassingThroughConstraintPoints.md` |
 | R5 | 3D constant velocity and 3D blending (M5/M6 in 3D) | Code (theory: Cowork) | R3 | `Core` extension + tests |

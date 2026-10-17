@@ -78,7 +78,7 @@ The following UI details were decided during the prototype implementation and ar
 - **Layout priority**: the chart area is the primary workspace. Inputs and reports are placed in a narrower left-side control/report column so visualization keeps most of the window width and height.
 - **Optional controls**: constant-velocity and blend inputs are grouped as optional shape controls and may be collapsed when not needed, reducing wasted space.
 - **Segment management**: the prototype exposes both add and remove actions at window level; removal always applies to the currently selected tab and is disabled when only one segment remains.
-- **Window icon**: the application window uses `IconsAndGraphics/calculus.png`.
+- **Window icon**: the application window uses `assets/calculus.png`.
 
 ## Relation To 07-implementation-plan.md
 
