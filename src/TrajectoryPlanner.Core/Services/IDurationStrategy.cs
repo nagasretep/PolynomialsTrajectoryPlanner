@@ -134,22 +134,29 @@ public class AutoDerivedProportionalDuration : IDurationStrategy1D
 
 /// <summary>
 /// Shortest duration that satisfies all active limits (project decision of 2026-10-17, design/07 A9).
-/// Requires at least one active limit; with none the duration must be prescribed or defaulted by the caller.
+/// When the limits determine no duration (no active limit, or a rest-to-rest segment of zero length) the
+/// fallback duration is used instead.
 /// </summary>
 public class ConstraintAwareDuration : IDurationStrategy1D
 {
     private readonly KinematicLimits _limits;
 
-    public ConstraintAwareDuration(KinematicLimits limits)
+    public double FallbackDuration { get; }
+
+    public ConstraintAwareDuration(KinematicLimits limits, double fallbackDuration = 1.0)
     {
+        if (!(fallbackDuration > 0))
+            throw new ArgumentOutOfRangeException(nameof(fallbackDuration), "Fallback duration must be positive.");
+
         _limits = limits;
+        FallbackDuration = fallbackDuration;
     }
 
     public DurationMode Mode => DurationMode.AutoDerivedFromConstraints;
 
     public double ComputeDuration(int degree, State1D startState, State1D endState, int segmentIndex, int totalSegments)
     {
-        return ShortestFeasibleDuration.Find(degree, startState, endState, _limits);
+        return ShortestFeasibleDuration.Find(degree, startState, endState, _limits) ?? FallbackDuration;
     }
 
     public double[] ComputeDurations(IReadOnlyList<double> waypoints, int degree)

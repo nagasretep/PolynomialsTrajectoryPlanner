@@ -139,16 +139,43 @@ public sealed class PassThroughProblem1D
         return new PassThroughProblem1D(degree, m, waypoints.Count, h, f, constant);
     }
 
-    /// <summary>Solves H y = -f with a Cholesky factorization (no explicit inverse).</summary>
+    /// <summary>
+    /// Diagonal scaling s_i = 1 / sqrt(H_ii) (Jacobi / symmetric diagonal equilibration). The unknowns
+    /// have very different physical units (velocity ... snap) and durations can differ by orders of
+    /// magnitude, so H is badly scaled; S H S has a unit diagonal and a much smaller condition number.
+    /// </summary>
+    public Vector<double> DiagonalScale()
+    {
+        return Vector<double>.Build.Dense(UnknownCount, i => 1.0 / Math.Sqrt(H[i, i]));
+    }
+
+    /// <summary>
+    /// Solves H y = -f. The system is first scaled, S H S z = -S f, factorized with Cholesky
+    /// (no explicit inverse) and mapped back with y = S z. The same minimizer, better conditioned.
+    /// </summary>
     public Vector<double> Solve()
     {
         if (UnknownCount == 0)
             return Vector<double>.Build.Dense(0);
 
-        return H.Cholesky().Solve(-F);
+        Vector<double> s = DiagonalScale();
+        Matrix<double> scaledH = H.Clone();
+        for (int i = 0; i < UnknownCount; i++)
+            for (int j = 0; j < UnknownCount; j++)
+                scaledH[i, j] *= s[i] * s[j];
+
+        Vector<double> scaledF = F.PointwiseMultiply(s);
+        Vector<double> z = scaledH.Cholesky().Solve(-scaledF);
+        return z.PointwiseMultiply(s);
     }
 
-    /// <summary>J(y) = y' H y + 2 f' y + const.</summary>
+    /// <summary>
+    /// J(y) = y' H y + 2 f' y + const.
+    /// Unreliable for large constants: when the constant term is many orders of magnitude larger than J
+    /// (measured up to 4e6 times, d = 9, m = 5, 30 segments), the sum cancels and loses digits.
+    /// Meant for the optimality tests (comparing J at nearby points). For a cost to report use
+    /// <see cref="SmoothnessCost.Of"/>, which integrates the segments directly.
+    /// </summary>
     public double Cost(Vector<double> y)
     {
         if (UnknownCount == 0)

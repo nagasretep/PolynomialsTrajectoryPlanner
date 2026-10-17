@@ -141,3 +141,42 @@ public class DurationStrategyTests
             () => strategy.ComputeDuration(9, new State1D(0, 5, 0, 0, 0), State1D.FromPositionOnly(1), 0, 1));
     }
 }
+
+public class ConstraintAwareFallbackTests
+{
+    [Fact]
+    public void ZeroLengthRestToRest_UsesTheFallbackDuration()
+    {
+        var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0), fallbackDuration: 2.5);
+
+        double t = strategy.ComputeDuration(9, State1D.FromPositionOnly(3), State1D.FromPositionOnly(3), 0, 1);
+
+        Assert.Equal(2.5, t, 12);
+    }
+
+    [Fact]
+    public void NoActiveLimit_UsesTheFallbackDuration_AndDefaultsToOneSecond()
+    {
+        var strategy = new ConstraintAwareDuration(KinematicLimits.None);
+
+        Assert.Equal(1.0, strategy.ComputeDuration(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(5), 0, 1), 12);
+    }
+
+    [Fact]
+    public void DeterminedCase_IgnoresTheFallback()
+    {
+        var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0), fallbackDuration: 99);
+
+        double t = strategy.ComputeDuration(3, State1D.FromPositionOnly(0), State1D.FromPositionOnly(2), 0, 1);
+
+        Assert.Equal(3.0, t, 1e-6); // 3/2 * 2 / 1
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-1.0)]
+    public void NonPositiveFallback_Rejected(double fallback)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ConstraintAwareDuration(KinematicLimits.None, fallback));
+    }
+}

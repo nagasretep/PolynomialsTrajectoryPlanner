@@ -1,5 +1,6 @@
 using TrajectoryPlanner.Core.Blending;
 using TrajectoryPlanner.Core.BoundaryConditions;
+using TrajectoryPlanner.Core.ConstantVelocity;
 using TrajectoryPlanner.Core.Constraints;
 using TrajectoryPlanner.Core.Points;
 using TrajectoryPlanner.Core.Segments;
@@ -10,6 +11,9 @@ namespace TrajectoryPlanner.App;
 
 public sealed class PrototypeTrajectoryService
 {
+    /// <summary>Duration used when it is neither prescribed nor determined by active limits.</summary>
+    private const double DefaultDuration = 1.0;
+
     public PrototypeComputationResult Compute(IReadOnlyList<SegmentInputModel> inputs)
     {
         if (inputs.Count == 0)
@@ -203,11 +207,11 @@ public sealed class PrototypeTrajectoryService
         }
         else if (hasLimits)
         {
-            duration = ShortestDurationOrExplain(input.Degree, startState, endState, limits, $"Segment {input.SegmentNumber}");
+            duration = ShortestDurationOrExplain(input.Degree, startState, endState, limits, $"Segment {input.SegmentNumber}") ?? DefaultDuration;
         }
         else
         {
-            duration = 1.0;
+            duration = DefaultDuration;
         }
 
         var segment = new PolynomialSegment1D(input.Degree, startState, endState, duration);
@@ -226,89 +230,60 @@ public sealed class PrototypeTrajectoryService
         State1D endState,
         KinematicLimits limits)
     {
-        double xCvStart = ParseRequiredDouble(input.ConstantVelocityStart, $"Segment {input.SegmentNumber} constant-velocity start");
-        double xCvEnd = ParseRequiredDouble(input.ConstantVelocityEnd, $"Segment {input.SegmentNumber} constant-velocity end");
-        double speedMagnitude = ParsePositiveDouble(input.ConstantVelocitySpeed, $"Segment {input.SegmentNumber} constant speed");
+        string segmentLabel = $"Segment {input.SegmentNumber}";
+        double xCvStart = ParseRequiredDouble(input.ConstantVelocityStart, $"{segmentLabel} constant-velocity start");
+        double xCvEnd = ParseRequiredDouble(input.ConstantVelocityEnd, $"{segmentLabel} constant-velocity end");
+        double speed = ParsePositiveDouble(input.ConstantVelocitySpeed, $"{segmentLabel} constant speed");
 
-        double direction = xCvEnd >= xCvStart ? 1.0 : -1.0;
-        double signedSpeed = direction * speedMagnitude;
-        double cvDuration = Math.Abs(xCvEnd - xCvStart) / speedMagnitude;
-        if (cvDuration <= 0)
-            throw new InvalidOperationException($"Segment {input.SegmentNumber} constant-velocity stretch must have different start and end positions.");
+        if (xCvStart == xCvEnd)
+            throw new InvalidOperationException($"{segmentLabel} constant-velocity stretch must have different start and end positions.");
 
-        var cvStartState = new State1D(xCvStart, signedSpeed, 0, 0, 0);
-        var cvEndState = new State1D(xCvEnd, signedSpeed, 0, 0, 0);
-
-        bool hasLimits = HasAnyKinematicLimit(limits);
-        double entryDuration;
-        double exitDuration;
-
+        // Durations of the transitions (provisional App-level choice, theory marks it open): if the user prescribes
+        // the total duration, the time left after the constant-velocity stretch is split equally between the two
+        // transitions; they are then only verified against the limits by Core. Otherwise Core decides: shortest
+        // feasible duration with active limits, the provisional default rule without.
+        double? entryDuration = null;
+        double? exitDuration = null;
         if (input.UseDuration)
         {
-            double totalDuration = ParsePositiveDouble(input.Duration, $"Segment {input.SegmentNumber} duration");
+            double totalDuration = ParsePositiveDouble(input.Duration, $"{segmentLabel} duration");
+            double cvDuration = Math.Abs(xCvEnd - xCvStart) / speed;
             double remaining = totalDuration - cvDuration;
             if (remaining <= 0)
             {
                 throw new InvalidOperationException(
-                    $"Segment {input.SegmentNumber} duration must be greater than the constant-velocity stretch duration ({cvDuration:F4}).");
+                    $"{segmentLabel} duration must be greater than the constant-velocity stretch duration ({cvDuration:F4}).");
             }
 
             entryDuration = remaining / 2.0;
             exitDuration = remaining / 2.0;
         }
-        else if (hasLimits)
-        {
-            entryDuration = FindDurationOrExplain(input.Degree, startState, cvStartState, limits, $"Segment {input.SegmentNumber} entry transition");
-            exitDuration = FindDurationOrExplain(input.Degree, cvEndState, endState, limits, $"Segment {input.SegmentNumber} exit transition");
-        }
-        else
-        {
-            entryDuration = Math.Max(0.5 * cvDuration, 0.1);
-            exitDuration = Math.Max(0.5 * cvDuration, 0.1);
-        }
 
-        var entrySegment = new PolynomialSegment1D(input.Degree, startState, cvStartState, entryDuration);
-        var constantVelocitySegment = PolynomialSegment1D.CreateDegree3(
-            xCvStart,
-            xCvEnd,
-            signedSpeed,
-            signedSpeed,
-            cvDuration);
-        var exitSegment = new PolynomialSegment1D(input.Degree, cvEndState, endState, exitDuration);
-
-        if (input.UseDuration && hasLimits)
+        ConstantVelocityTrajectory1D trajectory;
+        try
         {
-            ValidateSegmentAgainstLimits(entrySegment, limits, $"Segment {input.SegmentNumber} entry transition");
-            ValidateSegmentAgainstLimits(constantVelocitySegment, limits, $"Segment {input.SegmentNumber} constant-velocity stretch");
-            ValidateSegmentAgainstLimits(exitSegment, limits, $"Segment {input.SegmentNumber} exit transition");
+            trajectory = new ConstantVelocityTrajectory1D(
+                startState, endState, xCvStart, xCvEnd, speed, input.Degree,
+                HasAnyKinematicLimit(limits) ? limits : null, entryDuration, exitDuration);
+        }
+        catch (Exception ex) when (ex is DurationSearchFailedException or KinematicLimitsViolatedException)
+        {
+            throw new InvalidOperationException($"{segmentLabel}: {ex.Message}", ex);
         }
 
         return
         [
-            new LabeledSegment($"Segment {input.SegmentNumber} Entry", entrySegment),
-            new LabeledSegment($"Segment {input.SegmentNumber} Constant-Velocity", constantVelocitySegment),
-            new LabeledSegment($"Segment {input.SegmentNumber} Exit", exitSegment)
+            new LabeledSegment($"{segmentLabel} Entry", trajectory.EntryTransition),
+            new LabeledSegment($"{segmentLabel} Constant-Velocity", trajectory.ConstantVelocity.ToPolynomialSegments().Single()),
+            new LabeledSegment($"{segmentLabel} Exit", trajectory.ExitTransition)
         ];
     }
 
-    private static double ShortestDurationOrExplain(int degree, State1D start, State1D end, KinematicLimits limits, string label)
+    private static double? ShortestDurationOrExplain(int degree, State1D start, State1D end, KinematicLimits limits, string label)
     {
         try
         {
             return ShortestFeasibleDuration.Find(degree, start, end, limits);
-        }
-        catch (DurationSearchFailedException ex)
-        {
-            throw new InvalidOperationException($"{label}: {ex.Message}", ex);
-        }
-    }
-
-    // Constant-velocity transitions still use the legacy search (out of scope of request 0005).
-    private static double FindDurationOrExplain(int degree, State1D start, State1D end, KinematicLimits limits, string label)
-    {
-        try
-        {
-            return DurationSearcher.FindValidDuration(degree, start, end, limits);
         }
         catch (DurationSearchFailedException ex)
         {

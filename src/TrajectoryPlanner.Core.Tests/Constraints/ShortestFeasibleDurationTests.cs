@@ -12,6 +12,14 @@ public class ShortestFeasibleDurationTests
 
     private static double C1(int degree) => degree switch { 3 => 3.0 / 2, 5 => 15.0 / 8, 7 => 35.0 / 16, _ => 315.0 / 128 };
 
+    private static double FindValue(int degree, State1D start, State1D end, KinematicLimits limits) =>
+        ShortestFeasibleDuration.Find(degree, start, end, limits)
+            ?? throw new InvalidOperationException("The limits determine no duration.");
+
+    private static double RestToRestValue(int degree, double distance, KinematicLimits limits) =>
+        ShortestFeasibleDuration.RestToRest(degree, distance, limits)
+            ?? throw new InvalidOperationException("The limits determine no duration.");
+
     private static void AssertRelative(double expected, double actual, double relativeTolerance, string? what = null)
     {
         Assert.True(
@@ -34,9 +42,9 @@ public class ShortestFeasibleDurationTests
         var limits = KinematicLimits.FromValues(vMax: vMax);
         double expected = C1(degree) * distance / vMax;
 
-        double closedForm = ShortestFeasibleDuration.RestToRest(degree, distance, limits);
+        double closedForm = RestToRestValue(degree, distance, limits);
         double search = ShortestFeasibleDuration.Search(degree, start, end, limits);
-        double dispatched = ShortestFeasibleDuration.Find(degree, start, end, limits);
+        double dispatched = FindValue(degree, start, end, limits);
 
         AssertRelative(expected, closedForm, 1e-6, "closed form: ");
         AssertRelative(expected, search, 1e-6, "search: ");
@@ -46,7 +54,7 @@ public class ShortestFeasibleDurationTests
     [Fact]
     public void Degree9_UnitDistanceUnitVelocity_Is315Over128()
     {
-        double t = ShortestFeasibleDuration.Find(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), KinematicLimits.FromValues(vMax: 1));
+        double t = FindValue(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), KinematicLimits.FromValues(vMax: 1));
 
         AssertRelative(315.0 / 128, t, 1e-6);
     }
@@ -72,7 +80,7 @@ public class ShortestFeasibleDurationTests
             _ => KinematicLimits.FromValues(sMax: 100.0)
         };
 
-        double closedForm = ShortestFeasibleDuration.RestToRest(degree, 3.0, limits);
+        double closedForm = RestToRestValue(degree, 3.0, limits);
         double search = ShortestFeasibleDuration.Search(degree, start, end, limits);
 
         AssertRelative(closedForm, search, 1e-6);
@@ -87,8 +95,8 @@ public class ShortestFeasibleDurationTests
     {
         var limits = KinematicLimits.FromValues(aMax: 3.0);
 
-        double t1 = ShortestFeasibleDuration.RestToRest(degree, 1.0, limits);
-        double t4 = ShortestFeasibleDuration.RestToRest(degree, 4.0, limits);
+        double t1 = RestToRestValue(degree, 1.0, limits);
+        double t4 = RestToRestValue(degree, 4.0, limits);
 
         AssertRelative(2.0, t4 / t1, 1e-9);
     }
@@ -101,8 +109,8 @@ public class ShortestFeasibleDurationTests
     {
         var limits = KinematicLimits.FromValues(jMax: 7.0);
 
-        double t1 = ShortestFeasibleDuration.RestToRest(degree, 1.0, limits);
-        double t8 = ShortestFeasibleDuration.RestToRest(degree, 8.0, limits);
+        double t1 = RestToRestValue(degree, 1.0, limits);
+        double t8 = RestToRestValue(degree, 8.0, limits);
 
         AssertRelative(2.0, t8 / t1, 1e-9);
     }
@@ -117,11 +125,11 @@ public class ShortestFeasibleDurationTests
         var j = KinematicLimits.FromValues(jMax: 4.0);
         var all = KinematicLimits.FromValues(vMax: 3.0, aMax: 2.0, jMax: 4.0);
 
-        double tv = ShortestFeasibleDuration.RestToRest(degree, distance, v);
-        double ta = ShortestFeasibleDuration.RestToRest(degree, distance, a);
-        double tj = ShortestFeasibleDuration.RestToRest(degree, distance, j);
+        double tv = RestToRestValue(degree, distance, v);
+        double ta = RestToRestValue(degree, distance, a);
+        double tj = RestToRestValue(degree, distance, j);
 
-        double combined = ShortestFeasibleDuration.RestToRest(degree, distance, all);
+        double combined = RestToRestValue(degree, distance, all);
         Assert.Equal(Math.Max(tv, Math.Max(ta, tj)), combined, 12);
 
         // The search agrees.
@@ -136,18 +144,45 @@ public class ShortestFeasibleDurationTests
         var start = State1D.FromPositionOnly(0);
         var end = State1D.FromPositionOnly(6);
 
-        double t = ShortestFeasibleDuration.Find(9, start, end, limits);
+        double t = FindValue(9, start, end, limits);
 
         Assert.True(ExtremaAnalyzer.VerifyLimits(new PolynomialSegment1D(9, start, end, t * (1 + 1e-7)), limits));
         Assert.False(ExtremaAnalyzer.VerifyLimits(new PolynomialSegment1D(9, start, end, t * (1 - 1e-4)), limits));
     }
 
-    [Fact]
-    public void RestToRest_ZeroDistance_GivesTheMinimumDuration()
+    [Theory]
+    [InlineData(3)]
+    [InlineData(5)]
+    [InlineData(7)]
+    [InlineData(9)]
+    public void RestToRest_ZeroDistance_IsNotDeterminedByTheLimits(int degree)
     {
-        double t = ShortestFeasibleDuration.Find(9, State1D.FromPositionOnly(2), State1D.FromPositionOnly(2), KinematicLimits.FromValues(vMax: 1));
+        var limits = KinematicLimits.FromValues(vMax: 1, aMax: 2);
 
-        Assert.Equal(ShortestFeasibleDuration.MinimumDuration, t, 12);
+        Assert.Null(ShortestFeasibleDuration.Find(degree, State1D.FromPositionOnly(2), State1D.FromPositionOnly(2), limits));
+        Assert.Null(ShortestFeasibleDuration.RestToRest(degree, 0.0, limits));
+    }
+
+    [Fact]
+    public void RestToRest_VeryShortDistance_IsStillAnAnswerBelowOneMillisecond()
+    {
+        // No floor is applied to the closed form: T* = c1 * distance / vMax = 1.5 * 1e-6 for degree 3.
+        double t = FindValue(3, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1e-6), KinematicLimits.FromValues(vMax: 1));
+
+        AssertRelative(1.5e-6, t, 1e-9);
+    }
+
+    [Fact]
+    public void ZeroLengthSegmentWithNonZeroBoundaryVelocity_IsStillDetermined()
+    {
+        // Not rest-to-rest: leaving and returning with a velocity needs time, so the search answers.
+        var start = new State1D(0, 1.0, 0, 0, 0);
+        var end = new State1D(0, -1.0, 0, 0, 0);
+
+        double? t = ShortestFeasibleDuration.Find(5, start, end, KinematicLimits.FromValues(vMax: 2, aMax: 4));
+
+        Assert.NotNull(t);
+        Assert.True(t > 0);
     }
 
     [Fact]
@@ -155,8 +190,8 @@ public class ShortestFeasibleDurationTests
     {
         var limits = KinematicLimits.FromValues(vMax: 2.0);
 
-        double up = ShortestFeasibleDuration.Find(7, State1D.FromPositionOnly(0), State1D.FromPositionOnly(4), limits);
-        double down = ShortestFeasibleDuration.Find(7, State1D.FromPositionOnly(4), State1D.FromPositionOnly(0), limits);
+        double up = FindValue(7, State1D.FromPositionOnly(0), State1D.FromPositionOnly(4), limits);
+        double down = FindValue(7, State1D.FromPositionOnly(4), State1D.FromPositionOnly(0), limits);
 
         Assert.Equal(up, down, 12);
     }
@@ -173,7 +208,7 @@ public class ShortestFeasibleDurationTests
         var end = new State1D(3.0, -0.5, 0, 0, 0);
         var limits = KinematicLimits.FromValues(vMax: 2.0, aMax: 3.0);
 
-        double t = ShortestFeasibleDuration.Find(degree, start, end, limits);
+        double t = FindValue(degree, start, end, limits);
 
         double f = ShortestFeasibleDuration.Feasibility(degree, start, end, limits, t);
         Assert.InRange(f, -1e-6, ShortestFeasibleDuration.FeasibilityTolerance + 1e-12);
@@ -200,7 +235,7 @@ public class ShortestFeasibleDurationTests
         var end = new State1D(3.0, -0.5, 0, 0, 0);
         var limits = KinematicLimits.FromValues(vMax: 2.0, aMax: 3.0);
 
-        double t = ShortestFeasibleDuration.Find(7, start, end, limits);
+        double t = FindValue(7, start, end, limits);
 
         for (double grid = 0.02; grid < 30; grid *= 1.02)
         {
@@ -216,7 +251,7 @@ public class ShortestFeasibleDurationTests
         var end = new State1D(1, 0, 0, 0, 0);
 
         Assert.Throws<DurationSearchFailedException>(
-            () => ShortestFeasibleDuration.Find(5, start, end, KinematicLimits.FromValues(vMax: 1.0)));
+            () => FindValue(5, start, end, KinematicLimits.FromValues(vMax: 1.0)));
     }
 
     [Fact]
@@ -226,16 +261,15 @@ public class ShortestFeasibleDurationTests
         var end = State1D.FromPositionOnly(1);
 
         Assert.Throws<DurationSearchFailedException>(
-            () => ShortestFeasibleDuration.Find(5, start, end, KinematicLimits.FromValues(aMax: 1.0)));
+            () => FindValue(5, start, end, KinematicLimits.FromValues(aMax: 1.0)));
     }
 
     // ---- input validation and strategy -----------------------------------------------------
 
     [Fact]
-    public void NoActiveLimit_IsRejected_BecauseNothingDeterminesTheDuration()
+    public void NoActiveLimit_IsNotDetermined_BecauseNothingFixesTheDuration()
     {
-        Assert.Throws<InvalidOperationException>(
-            () => ShortestFeasibleDuration.Find(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), KinematicLimits.None));
+        Assert.Null(ShortestFeasibleDuration.Find(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), KinematicLimits.None));
     }
 
     [Theory]
@@ -244,7 +278,7 @@ public class ShortestFeasibleDurationTests
     public void NonPositiveLimit_IsRejected(double limit)
     {
         Assert.Throws<ArgumentException>(
-            () => ShortestFeasibleDuration.Find(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), KinematicLimits.FromValues(vMax: limit)));
+            () => FindValue(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), KinematicLimits.FromValues(vMax: limit)));
     }
 
     [Fact]
@@ -267,7 +301,7 @@ public class ShortestFeasibleDurationTests
         var limits = KinematicLimits.FromValues(vMax: 10.0);
 
         double legacy = DurationSearcher.FindValidDuration(9, start, end, limits);
-        double shortest = ShortestFeasibleDuration.Find(9, start, end, limits);
+        double shortest = FindValue(9, start, end, limits);
 
         Assert.Equal(1.0, legacy, 12);
         AssertRelative(315.0 / 128 / 10.0, shortest, 1e-6);

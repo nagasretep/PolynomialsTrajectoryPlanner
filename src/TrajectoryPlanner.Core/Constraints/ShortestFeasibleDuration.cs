@@ -26,17 +26,29 @@ public static class ShortestFeasibleDuration
     /// <summary>The search stops at this factor times max(lower bound, 1 s).</summary>
     public const double MaxDurationFactor = 1e6;
 
-    /// <summary>Lower end of the search, and result for a rest-to-rest segment of zero length.</summary>
+    /// <summary>Floor of the search start: protection against degenerate numbers, never an answer by itself.</summary>
     public const double MinimumDuration = 1e-3;
 
-    /// <summary>A duration is feasible if F(T) is not above this value (relative to the limits).</summary>
-    public const double FeasibilityTolerance = 1e-9;
+    /// <summary>
+    /// A duration is feasible if F(T) is not above this value. Zero (strict) so that the result also passes
+    /// <see cref="ExtremaAnalyzer.VerifyLimits"/>, whose absolute slack is 1e-10 (a relative 1e-9 would not).
+    /// </summary>
+    public const double FeasibilityTolerance = 0.0;
 
     private const double RestTolerance = 1e-12;
 
-    /// <summary>The shortest feasible duration: closed form when applicable, otherwise the search.</summary>
-    public static double Find(int degree, State1D start, State1D end, KinematicLimits limits)
+    /// <summary>
+    /// The shortest feasible duration: closed form when applicable, otherwise the search. Returns <c>null</c>
+    /// when the limits determine no duration (no active limit, or a rest-to-rest segment of zero length, which
+    /// satisfies every limit at any duration): the caller then uses the prescribed or default duration.
+    /// A nullable result (rather than <c>TryFind</c> with an out parameter) keeps call sites to one expression,
+    /// <c>Find(...) ?? fallback</c>. Impossible limits still throw <see cref="DurationSearchFailedException"/>.
+    /// </summary>
+    public static double? Find(int degree, State1D start, State1D end, KinematicLimits limits)
     {
+        if (!limits.HasVelocityLimit && !limits.HasAccelerationLimit && !limits.HasJerkLimit && !limits.HasSnapLimit)
+            return null;
+
         var active = ActiveLimits(limits);
 
         if (HasRestBoundary(degree, start, end))
@@ -62,7 +74,7 @@ public static class ShortestFeasibleDuration
     }
 
     /// <summary>T* = max_k ( |Δ| c_k / L_k )^(1/k) for a rest-to-rest segment.</summary>
-    public static double RestToRest(int degree, double distance, KinematicLimits limits) =>
+    public static double? RestToRest(int degree, double distance, KinematicLimits limits) =>
         RestToRest(degree, distance, ActiveLimits(limits));
 
     /// <summary>The general search (also valid for rest-to-rest segments); exposed to compare with the closed form.</summary>
@@ -95,10 +107,10 @@ public static class ShortestFeasibleDuration
         return active.ToArray();
     }
 
-    private static double RestToRest(int degree, double distance, (int Order, double Limit)[] active)
+    private static double? RestToRest(int degree, double distance, (int Order, double Limit)[] active)
     {
         if (distance <= 0)
-            return MinimumDuration; // a constant segment satisfies every limit at any duration
+            return null; // a constant segment satisfies every limit at any duration: the limits determine nothing
 
         var unit = new PolynomialSegment1D(degree, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1), 1.0);
 
@@ -109,7 +121,7 @@ public static class ShortestFeasibleDuration
             result = Math.Max(result, Math.Pow(distance * c / limit, 1.0 / order));
         }
 
-        return Math.Max(result, MinimumDuration);
+        return result;
     }
 
     private static double Feasibility(int degree, State1D start, State1D end, (int Order, double Limit)[] active, double duration)
