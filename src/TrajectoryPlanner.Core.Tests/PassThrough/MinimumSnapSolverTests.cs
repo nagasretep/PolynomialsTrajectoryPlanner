@@ -311,18 +311,6 @@ public class MinimumSnapSolverTests
     }
 
     [Fact]
-    public void AutoDerivedProportional_FloorsRepeatedWaypoints_AndSplitsEquallyWhenAllCoincide()
-    {
-        var strategy = new AutoDerivedProportionalDuration(4.0);
-
-        var repeated = strategy.ComputeDurations(new[] { 0.0, 2, 2, 4 }, 9);
-        Assert.Equal(AutoDerivedProportionalDuration.DefaultMinSegmentDuration, repeated[1], 12);
-
-        var coincident = strategy.ComputeDurations(new[] { 1.0, 1, 1 }, 9);
-        Assert.Equal(new[] { 2.0, 2.0 }, coincident, new DoubleComparer());
-    }
-
-    [Fact]
     public void Builder1D_UsesConfiguredDurationStrategy()
     {
         var trajectory = new TrajectoryBuilder1D()

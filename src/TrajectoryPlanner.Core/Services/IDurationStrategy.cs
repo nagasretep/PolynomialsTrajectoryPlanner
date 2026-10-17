@@ -55,28 +55,29 @@ public class UserSpecifiedDuration : IDurationStrategy1D
 }
 
 /// <summary>
-/// Total time split proportionally to the distance between consecutive waypoints (Decision 1).
-/// Each segment gets at least <see cref="MinSegmentDuration"/>, so equal consecutive waypoints do
-/// not give a zero duration; when the floor is active the sum can exceed the requested total.
-/// If all waypoints coincide the total is split equally.
+/// Total time split proportionally to the distance between consecutive waypoints (Decision 1, rule of
+/// <c>design/07</c> A8): weights w_i = max(d_i, phi * mean(d)), durations T_i = T_total * w_i / sum(w).
+/// The sum of the durations equals the requested total; a zero-distance segment gets the floor share
+/// (phi * mean(d)) instead of a zero duration. If all distances are zero the split is equal.
 /// </summary>
 public class AutoDerivedProportionalDuration : IDurationStrategy1D
 {
-    public const double DefaultMinSegmentDuration = 0.05;
+    public const double DefaultRelativeFloor = 0.05;
 
     private readonly double _totalDuration;
 
-    public double MinSegmentDuration { get; }
+    /// <summary>phi: floor of a segment weight, as a fraction of the mean distance.</summary>
+    public double RelativeFloor { get; }
 
-    public AutoDerivedProportionalDuration(double totalDuration, double minSegmentDuration = DefaultMinSegmentDuration)
+    public AutoDerivedProportionalDuration(double totalDuration, double relativeFloor = DefaultRelativeFloor)
     {
         if (!(totalDuration > 0))
             throw new ArgumentOutOfRangeException(nameof(totalDuration), "Total duration must be positive.");
-        if (!(minSegmentDuration > 0))
-            throw new ArgumentOutOfRangeException(nameof(minSegmentDuration), "Minimum segment duration must be positive.");
+        if (!(relativeFloor >= 0))
+            throw new ArgumentOutOfRangeException(nameof(relativeFloor), "Relative floor must not be negative.");
 
         _totalDuration = totalDuration;
-        MinSegmentDuration = minSegmentDuration;
+        RelativeFloor = relativeFloor;
     }
 
     public DurationMode Mode => DurationMode.AutoDerivedProportional;
@@ -107,35 +108,48 @@ public class AutoDerivedProportionalDuration : IDurationStrategy1D
 
     private double[] SplitProportionally(double[] lengths)
     {
-        double totalLength = lengths.Sum();
         var durations = new double[lengths.Length];
+        double mean = lengths.Sum() / lengths.Length;
+
+        if (mean <= 1e-12)
+        {
+            Array.Fill(durations, _totalDuration / lengths.Length);
+            return durations;
+        }
+
+        double floor = RelativeFloor * mean;
+        double weightSum = 0;
         for (int k = 0; k < lengths.Length; k++)
         {
-            durations[k] = totalLength > 1e-12
-                ? Math.Max(MinSegmentDuration, _totalDuration * lengths[k] / totalLength)
-                : Math.Max(MinSegmentDuration, _totalDuration / lengths.Length);
+            durations[k] = Math.Max(lengths[k], floor); // weight w_k
+            weightSum += durations[k];
         }
+
+        for (int k = 0; k < durations.Length; k++)
+            durations[k] = _totalDuration * durations[k] / weightSum;
 
         return durations;
     }
 }
 
+/// <summary>
+/// Shortest duration that satisfies all active limits (project decision of 2026-10-17, design/07 A9).
+/// Requires at least one active limit; with none the duration must be prescribed or defaulted by the caller.
+/// </summary>
 public class ConstraintAwareDuration : IDurationStrategy1D
 {
     private readonly KinematicLimits _limits;
-    private readonly double _initialGuess;
 
-    public ConstraintAwareDuration(KinematicLimits limits, double initialGuess = 1.0)
+    public ConstraintAwareDuration(KinematicLimits limits)
     {
         _limits = limits;
-        _initialGuess = initialGuess;
     }
 
     public DurationMode Mode => DurationMode.AutoDerivedFromConstraints;
 
     public double ComputeDuration(int degree, State1D startState, State1D endState, int segmentIndex, int totalSegments)
     {
-        return DurationSearcher.FindValidDuration(degree, startState, endState, _limits, _initialGuess);
+        return ShortestFeasibleDuration.Find(degree, startState, endState, _limits);
     }
 
     public double[] ComputeDurations(IReadOnlyList<double> waypoints, int degree)

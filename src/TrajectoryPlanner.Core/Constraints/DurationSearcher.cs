@@ -58,7 +58,12 @@ public static class DurationSearcher
             }
         }
 
-        return duration;
+        double lastTried = duration / stepFactor;
+        throw new DurationSearchFailedException(
+            $"No duration up to {lastTried:G6} s satisfies the active kinematic limits " +
+            $"(search started at {Math.Max(initialGuess, 1e-3):G6} s and doubled {maxIterations:F0} times). " +
+            "The limits may be impossible to meet, for example a boundary velocity above the velocity limit.",
+            lastTried);
     }
 
     public static PolynomialSegment1D CreateSegmentWithAutoDuration(

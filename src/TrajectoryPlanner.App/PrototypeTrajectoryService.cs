@@ -50,9 +50,11 @@ public sealed class PrototypeTrajectoryService
         foreach (var labeled in flattenedSegments)
         {
             int supportedOrder = BoundaryConditionValidator.DerivativeLevelsForDegree(labeled.Segment.Degree) - 1;
+            // Duration of every piece (prescribed, or the shortest feasible one when limits are active).
+            coefficientRows.Add(new CoefficientReportRow(labeled.Label, "T [s]", labeled.Segment.Duration));
             for (int i = 0; i <= labeled.Segment.Degree; i++)
             {
-                coefficientRows.Add(new CoefficientReportRow(labeled.Label, $"a{i}", labeled.Segment.Coefficients[i]));
+                coefficientRows.Add(new CoefficientReportRow(labeled.Label, $"c{i}", labeled.Segment.Coefficients[i]));
             }
 
             for (int order = 0; order <= supportedOrder; order++)
@@ -201,7 +203,7 @@ public sealed class PrototypeTrajectoryService
         }
         else if (hasLimits)
         {
-            duration = DurationSearcher.FindValidDuration(input.Degree, startState, endState, limits);
+            duration = ShortestDurationOrExplain(input.Degree, startState, endState, limits, $"Segment {input.SegmentNumber}");
         }
         else
         {
@@ -256,8 +258,8 @@ public sealed class PrototypeTrajectoryService
         }
         else if (hasLimits)
         {
-            entryDuration = DurationSearcher.FindValidDuration(input.Degree, startState, cvStartState, limits);
-            exitDuration = DurationSearcher.FindValidDuration(input.Degree, cvEndState, endState, limits);
+            entryDuration = FindDurationOrExplain(input.Degree, startState, cvStartState, limits, $"Segment {input.SegmentNumber} entry transition");
+            exitDuration = FindDurationOrExplain(input.Degree, cvEndState, endState, limits, $"Segment {input.SegmentNumber} exit transition");
         }
         else
         {
@@ -287,6 +289,31 @@ public sealed class PrototypeTrajectoryService
             new LabeledSegment($"Segment {input.SegmentNumber} Constant-Velocity", constantVelocitySegment),
             new LabeledSegment($"Segment {input.SegmentNumber} Exit", exitSegment)
         ];
+    }
+
+    private static double ShortestDurationOrExplain(int degree, State1D start, State1D end, KinematicLimits limits, string label)
+    {
+        try
+        {
+            return ShortestFeasibleDuration.Find(degree, start, end, limits);
+        }
+        catch (DurationSearchFailedException ex)
+        {
+            throw new InvalidOperationException($"{label}: {ex.Message}", ex);
+        }
+    }
+
+    // Constant-velocity transitions still use the legacy search (out of scope of request 0005).
+    private static double FindDurationOrExplain(int degree, State1D start, State1D end, KinematicLimits limits, string label)
+    {
+        try
+        {
+            return DurationSearcher.FindValidDuration(degree, start, end, limits);
+        }
+        catch (DurationSearchFailedException ex)
+        {
+            throw new InvalidOperationException($"{label}: {ex.Message}", ex);
+        }
     }
 
     private static void ValidateSegmentAgainstLimits(PolynomialSegment1D segment, KinematicLimits limits, string label)

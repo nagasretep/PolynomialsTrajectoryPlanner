@@ -76,13 +76,21 @@ public class Trajectory1D
 
     public IEnumerable<double> SampleTimes(int samplesPerSegment = 50)
     {
-        foreach (var seg in _segments)
+        if (samplesPerSegment < 2)
+            throw new ArgumentOutOfRangeException(nameof(samplesPerSegment), "At least 2 samples per segment are required (start and end).");
+
+        return SampleTimesCore(samplesPerSegment);
+    }
+
+    private IEnumerable<double> SampleTimesCore(int samplesPerSegment)
+    {
+        for (int s = 0; s < _segments.Count; s++)
         {
+            double duration = _segments[s].Duration;
             for (int i = 0; i < samplesPerSegment; i++)
             {
-                double localT = (i * seg.Duration) / (samplesPerSegment - 1);
-                double globalT = _segmentStartTimes[_segments.IndexOf(seg)] + localT;
-                yield return globalT;
+                double localT = (i * duration) / (samplesPerSegment - 1);
+                yield return _segmentStartTimes[s] + localT;
             }
         }
     }
