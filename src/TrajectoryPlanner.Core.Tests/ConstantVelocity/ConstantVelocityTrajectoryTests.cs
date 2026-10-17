@@ -284,20 +284,49 @@ public class ConstantVelocityTrajectoryTests
             () => new ConstantVelocityTrajectory1D(0, 100, 0, 0, 20, 80, 15.0, 9, null, entry, exit));
     }
 
-    // ---- today's rule without limits (provisional, theory marks it open) -------------------
+    // ---- Rule 2: no limits, nothing prescribed: T = 2 |dx| / (|v_b| + v_cv) ----------------
 
     [Theory]
-    [InlineData(20.0, 80.0, 15.0)] // T_cv = 4 -> 2 s
-    [InlineData(20.0, 21.0, 15.0)] // T_cv = 1/15 -> floor 0.1 s
-    [InlineData(80.0, 20.0, 5.0)] // T_cv = 12 -> 6 s, negative direction
-    public void Today_WithoutLimitsEachTransitionTakesMaxOfHalfTheStretchAndTenthOfASecond(double cvStart, double cvEnd, double speed)
+    // x0, xf, v0, vf, cvStart, cvEnd, speed, expected entry, expected exit
+    [InlineData(0.0, 100.0, 0.0, 0.0, 20.0, 80.0, 15.0, 2.0 * 20 / 15, 2.0 * 20 / 15)] // rest ends
+    [InlineData(0.0, 100.0, 5.0, 0.0, 20.0, 80.0, 15.0, 2.0 * 20 / 20, 2.0 * 20 / 15)] // moving at the start
+    [InlineData(0.0, 100.0, 0.0, -3.0, 20.0, 80.0, 15.0, 2.0 * 20 / 15, 2.0 * 20 / 18)] // end velocity against the travel
+    [InlineData(0.0, 100.0, -5.0, 0.0, 20.0, 80.0, 15.0, 2.0 * 20 / 20, 2.0 * 20 / 15)] // start velocity against the travel
+    [InlineData(100.0, 0.0, 0.0, 0.0, 80.0, 20.0, 15.0, 2.0 * 20 / 15, 2.0 * 20 / 15)] // negative direction
+    [InlineData(0.0, 100.0, 0.0, 0.0, 10.0, 90.0, 8.0, 2.0 * 10 / 8, 2.0 * 10 / 8)] // different speed
+    public void Rule2_MeanVelocityFormula(double x0, double xf, double v0, double vf, double cvStart, double cvEnd, double speed, double expectedEntry, double expectedExit)
     {
-        var t = new ConstantVelocityTrajectory1D(0, 100, 0, 0, cvStart, cvEnd, speed);
+        var t = new ConstantVelocityTrajectory1D(x0, xf, v0, vf, cvStart, cvEnd, speed);
 
-        double expected = Math.Max(0.5 * Math.Abs(cvEnd - cvStart) / speed, 0.1);
-        Assert.Equal(expected, t.EntryTransition.Duration, 12);
-        Assert.Equal(expected, t.ExitTransition.Duration, 12);
-        Assert.Equal(expected, ConstantVelocityTrajectory1D.DefaultTransitionDuration(Math.Abs(cvEnd - cvStart) / speed), 12);
+        Assert.Equal(expectedEntry, t.EntryTransition.Duration, 12);
+        Assert.Equal(expectedExit, t.ExitTransition.Duration, 12);
+    }
+
+    [Fact]
+    public void Rule2_ZeroDistanceTransition_UsesTheFallbackMaxOfHalfTheStretchAndTenthOfASecond()
+    {
+        // Entry: starts exactly at the stretch (dx = 0) with the stretch velocity. T_cv = 4 -> fallback 2 s.
+        var t = new ConstantVelocityTrajectory1D(20, 100, 15, 0, 20, 80, 15.0);
+
+        Assert.Equal(2.0, t.EntryTransition.Duration, 12);
+        Assert.Equal(2.0 * 20 / 15, t.ExitTransition.Duration, 12);
+    }
+
+    [Fact]
+    public void Rule2_ZeroDistanceTransition_FallbackHasATenthOfASecondFloor()
+    {
+        // T_cv = 1/15 s -> 0.5 T_cv = 0.033 -> 0.1 s
+        var t = new ConstantVelocityTrajectory1D(20, 100, 15, 0, 20, 21, 15.0);
+
+        Assert.Equal(0.1, t.EntryTransition.Duration, 12);
+    }
+
+    [Fact]
+    public void MeanVelocityDuration_IsPublicAndFollowsTheFormula()
+    {
+        Assert.Equal(2.0 * 20 / (3 + 15), ConstantVelocityTrajectory1D.MeanVelocityDuration(-20, -3, 15, 4.0), 12);
+        Assert.Equal(2.0, ConstantVelocityTrajectory1D.MeanVelocityDuration(0, 7, 15, 4.0), 12); // fallback
+        Assert.Equal(0.1, ConstantVelocityTrajectory1D.MeanVelocityDuration(0, 7, 15, 0.1), 12); // floor
     }
 
     // ---- degenerate input ------------------------------------------------------------------

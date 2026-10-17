@@ -238,35 +238,20 @@ public sealed class PrototypeTrajectoryService
         if (xCvStart == xCvEnd)
             throw new InvalidOperationException($"{segmentLabel} constant-velocity stretch must have different start and end positions.");
 
-        // Durations of the transitions (provisional App-level choice, theory marks it open): if the user prescribes
-        // the total duration, the time left after the constant-velocity stretch is split equally between the two
-        // transitions; they are then only verified against the limits by Core. Otherwise Core decides: shortest
-        // feasible duration with active limits, the provisional default rule without.
-        double? entryDuration = null;
-        double? exitDuration = null;
-        if (input.UseDuration)
-        {
-            double totalDuration = ParsePositiveDouble(input.Duration, $"{segmentLabel} duration");
-            double cvDuration = Math.Abs(xCvEnd - xCvStart) / speed;
-            double remaining = totalDuration - cvDuration;
-            if (remaining <= 0)
-            {
-                throw new InvalidOperationException(
-                    $"{segmentLabel} duration must be greater than the constant-velocity stretch duration ({cvDuration:F4}).");
-            }
-
-            entryDuration = remaining / 2.0;
-            exitDuration = remaining / 2.0;
-        }
+        // Durations: Core decides (theory/ConstantVelocitySegment.md, Rules 1-3). A prescribed total duration is passed
+        // on as is; Core splits the time left after the stretch between the transitions.
+        double? totalDuration = input.UseDuration
+            ? ParsePositiveDouble(input.Duration, $"{segmentLabel} duration")
+            : null;
 
         ConstantVelocityTrajectory1D trajectory;
         try
         {
             trajectory = new ConstantVelocityTrajectory1D(
                 startState, endState, xCvStart, xCvEnd, speed, input.Degree,
-                HasAnyKinematicLimit(limits) ? limits : null, entryDuration, exitDuration);
+                HasAnyKinematicLimit(limits) ? limits : null, totalDuration: totalDuration);
         }
-        catch (Exception ex) when (ex is DurationSearchFailedException or KinematicLimitsViolatedException)
+        catch (Exception ex) when (ex is DurationSearchFailedException or KinematicLimitsViolatedException or ArgumentException)
         {
             throw new InvalidOperationException($"{segmentLabel}: {ex.Message}", ex);
         }

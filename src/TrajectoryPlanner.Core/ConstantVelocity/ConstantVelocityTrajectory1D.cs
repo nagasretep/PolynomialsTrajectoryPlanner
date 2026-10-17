@@ -11,12 +11,22 @@ namespace TrajectoryPlanner.Core.ConstantVelocity;
 /// </summary>
 /// <remarks>
 /// The two transitions have both boundary states fixed (outer end given, inner end = constant-velocity
-/// state), so each is an ordinary segment whose only free parameter is its duration; the two durations do not
-/// influence each other and are determined independently. The constant-speed stretch is fixed by the
-/// distance and speed, so limits cannot change it: a speed above the velocity limit is reported, never repaired.
+/// state), so each is an ordinary segment whose only free parameter is its duration. Durations:
+/// <list type="bullet">
+/// <item>Rule 1, limits active: each transition takes its shortest feasible duration (independently).</item>
+/// <item>Rule 2, no limits, nothing prescribed: mean-velocity rule, see <see cref="MeanVelocityDuration"/>.</item>
+/// <item>Rule 3, total duration prescribed: the time left after the stretch is split in proportion to the
+/// weights of Rule 1 (limits active) or Rule 2 (no limits).</item>
+/// <item>A prescribed transition duration always wins and is only verified against the limits.</item>
+/// </list>
+/// The constant-speed stretch is fixed by the distance and speed, so limits cannot change it: a speed above the
+/// velocity limit is reported, never repaired.
 /// </remarks>
 public class ConstantVelocityTrajectory1D
 {
+    /// <summary>Relative tolerance when comparing the time left (Rule 3) with the minimum feasible one.</summary>
+    private const double TotalTolerance = 1e-12;
+
     public PolynomialSegment1D EntryTransition { get; }
     public LinearConstantVelocitySegment ConstantVelocity { get; }
     public PolynomialSegment1D ExitTransition { get; }
@@ -27,12 +37,23 @@ public class ConstantVelocityTrajectory1D
     public double ConstantSpeed { get; }
 
     /// <summary>
-    /// Provisional rule (theory marks it open): transition duration when no limit is active and none is
-    /// prescribed, and fallback when the limits do not determine a transition (coincident boundary states):
-    /// max(0.5 * T_cv, 0.1 s). Kept as it was before request 0007.
+    /// Rule 2 (decided 2026-10-17): duration of a transition without limits and without prescribed duration,
+    /// T = 2 |Δx| / (|v_b| + v_cv), with Δx the distance covered by the transition and v_b the velocity at its
+    /// outer end. If Δx = 0 the rule gives 0, which is not a valid segment: the fallback max(0.5 T_cv, 0.1 s)
+    /// is returned instead.
     /// </summary>
-    public static double DefaultTransitionDuration(double constantVelocityDuration) =>
-        Math.Max(0.5 * constantVelocityDuration, 0.1);
+    /// <param name="distance">Distance covered by the transition (absolute value is used).</param>
+    /// <param name="outerVelocity">Velocity at the outer end of the transition (absolute value is used).</param>
+    /// <param name="speed">Constant speed v_cv (magnitude).</param>
+    /// <param name="constantVelocityDuration">T_cv, only used by the fallback.</param>
+    public static double MeanVelocityDuration(double distance, double outerVelocity, double speed, double constantVelocityDuration)
+    {
+        double absDistance = Math.Abs(distance);
+        if (absDistance <= 0)
+            return Math.Max(0.5 * constantVelocityDuration, 0.1);
+
+        return 2.0 * absDistance / (Math.Abs(outerVelocity) + Math.Abs(speed));
+    }
 
     /// <summary>Convenience: the outer states carry only position and velocity (zero acceleration, jerk, snap).</summary>
     public ConstantVelocityTrajectory1D(
@@ -43,9 +64,10 @@ public class ConstantVelocityTrajectory1D
         int polynomialDegree = 9,
         KinematicLimits? limits = null,
         double? entryDuration = null,
-        double? exitDuration = null)
+        double? exitDuration = null,
+        double? totalDuration = null)
         : this(new State1D(x0, v0, 0, 0, 0), new State1D(xf, vf, 0, 0, 0),
-               xCvStart, xCvEnd, vCv, polynomialDegree, limits, entryDuration, exitDuration)
+               xCvStart, xCvEnd, vCv, polynomialDegree, limits, entryDuration, exitDuration, totalDuration)
     {
     }
 
@@ -54,8 +76,19 @@ public class ConstantVelocityTrajectory1D
     /// <param name="limits">Active limits (null or none active: no limit is imposed).</param>
     /// <param name="entryDuration">Prescribed entry duration: kept as given, only verified against the limits.</param>
     /// <param name="exitDuration">Prescribed exit duration: kept as given, only verified against the limits.</param>
-    /// <exception cref="ArgumentException">Degenerate stretch (equal positions, zero speed) or non-positive prescribed duration.</exception>
-    /// <exception cref="KinematicLimitsViolatedException">Speed above the velocity limit, or a limit violated by a transition.</exception>
+    /// <param name="totalDuration">
+    /// Prescribed total duration (Rule 3). The time left after the stretch, R = total - T_cv, must be positive;
+    /// it is split between the transitions in proportion to their shortest feasible durations (limits active) or
+    /// their Rule 2 durations (no limits). With one prescribed transition duration the other takes the remainder.
+    /// Together with both transition durations it is a conflict.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    /// Degenerate stretch, non-positive prescribed duration, total not above T_cv, a remainder that is not positive,
+    /// or a total together with both transition durations.
+    /// </exception>
+    /// <exception cref="KinematicLimitsViolatedException">
+    /// Speed above the velocity limit; a limit violated by a transition; or a total below the minimum feasible one.
+    /// </exception>
     /// <exception cref="DurationSearchFailedException">No duration of a transition satisfies the limits.</exception>
     public ConstantVelocityTrajectory1D(
         State1D startState,
@@ -65,7 +98,8 @@ public class ConstantVelocityTrajectory1D
         int polynomialDegree = 9,
         KinematicLimits? limits = null,
         double? entryDuration = null,
-        double? exitDuration = null)
+        double? exitDuration = null,
+        double? totalDuration = null)
     {
         double speed = Math.Abs(vCv);
         if (!(speed > 0) || double.IsInfinity(speed))
@@ -78,6 +112,8 @@ public class ConstantVelocityTrajectory1D
             throw new ArgumentException("Invalid constant velocity interval: start and end positions are equal or speed is zero");
         if (entryDuration is <= 0 || exitDuration is <= 0)
             throw new ArgumentException("Prescribed transition durations must be positive");
+        if (totalDuration is not null && entryDuration is not null && exitDuration is not null)
+            throw new ArgumentException("A total duration together with both transition durations is a conflict: prescribe at most two of the three");
 
         ConstantSpeed = speed;
         var cvStartState = new State1D(xCvStart, directionSign * speed, 0, 0, 0);
@@ -97,10 +133,58 @@ public class ConstantVelocityTrajectory1D
                 "no transition can repair it.");
         }
 
-        double entry = entryDuration ?? TransitionDuration(
-            "entry transition", polynomialDegree, startState, cvStartState, active, cvDuration);
-        double exit = exitDuration ?? TransitionDuration(
-            "exit transition", polynomialDegree, cvEndState, endState, active, cvDuration);
+        double entryRule2 = MeanVelocityDuration(
+            cvStartState.Position - startState.Position, startState.Velocity, speed, cvDuration);
+        double exitRule2 = MeanVelocityDuration(
+            endState.Position - cvEndState.Position, endState.Velocity, speed, cvDuration);
+
+        double entry, exit;
+        if (totalDuration is null)
+        {
+            entry = entryDuration ?? Weight("entry transition", polynomialDegree, startState, cvStartState, active, entryRule2).Duration;
+            exit = exitDuration ?? Weight("exit transition", polynomialDegree, cvEndState, endState, active, exitRule2).Duration;
+        }
+        else
+        {
+            double remaining = totalDuration.Value - cvDuration;
+            if (!(remaining > 0))
+            {
+                throw new ArgumentException(
+                    $"The total duration {totalDuration.Value:G6} must exceed the constant-velocity stretch duration T_cv = {cvDuration:G6}");
+            }
+
+            if (entryDuration is not null)
+            {
+                entry = entryDuration.Value;
+                exit = remaining - entry;
+                RequireRemainderPositive(exit, "exit transition", entry, remaining);
+            }
+            else if (exitDuration is not null)
+            {
+                exit = exitDuration.Value;
+                entry = remaining - exit;
+                RequireRemainderPositive(entry, "entry transition", exit, remaining);
+            }
+            else
+            {
+                var sIn = Weight("entry transition", polynomialDegree, startState, cvStartState, active, entryRule2);
+                var sOut = Weight("exit transition", polynomialDegree, cvEndState, endState, active, exitRule2);
+                double weightSum = sIn.Duration + sOut.Duration;
+
+                // With limits the weights are the shortest feasible durations: the split is feasible exactly
+                // when the time left is at least their sum.
+                if (active is not null && remaining < weightSum * (1 - TotalTolerance))
+                {
+                    throw new KinematicLimitsViolatedException(
+                        $"The total duration {totalDuration.Value:G6} s is too short for the active kinematic limits: " +
+                        $"the minimum feasible total is {cvDuration + weightSum:G6} s " +
+                        $"(constant-velocity stretch {cvDuration:G6} s + entry {sIn.Duration:G6} s + exit {sOut.Duration:G6} s).");
+                }
+
+                entry = remaining * sIn.Duration / weightSum;
+                exit = remaining - entry;
+            }
+        }
 
         EntryTransition = new PolynomialSegment1D(polynomialDegree, startState, cvStartState, entry);
         ExitTransition = new PolynomialSegment1D(polynomialDegree, cvEndState, endState, exit);
@@ -113,15 +197,30 @@ public class ConstantVelocityTrajectory1D
         }
     }
 
-    private static double TransitionDuration(
-        string label, int degree, State1D from, State1D to, KinematicLimits? limits, double cvDuration)
+    private static void RequireRemainderPositive(double remainder, string label, double prescribed, double remaining)
+    {
+        if (!(remainder > 0))
+        {
+            throw new ArgumentException(
+                $"The prescribed transition duration {prescribed:G6} s leaves no time for the {label}: " +
+                $"the time left after the stretch is {remaining:G6} s");
+        }
+    }
+
+    /// <summary>
+    /// The Rule 1 duration of a transition (shortest feasible) when limits are active, or the Rule 2 duration
+    /// when they are not or when the limits do not determine the transition.
+    /// </summary>
+    private static (double Duration, bool Determined) Weight(
+        string label, int degree, State1D from, State1D to, KinematicLimits? limits, double rule2)
     {
         if (limits is null)
-            return DefaultTransitionDuration(cvDuration);
+            return (rule2, false);
 
         try
         {
-            return ShortestFeasibleDuration.Find(degree, from, to, limits) ?? DefaultTransitionDuration(cvDuration);
+            double? shortest = ShortestFeasibleDuration.Find(degree, from, to, limits);
+            return (shortest ?? rule2, shortest is not null);
         }
         catch (DurationSearchFailedException ex)
         {
