@@ -46,6 +46,8 @@ The author must remain aware of the content of the software (`spec/01-requiremen
 - PDFs are generated into `build/` with pandoc and are never edited by hand.
 - `spec/` is amended only deliberately, never regenerated.
 
-## Commits
+## Commits belong to the author
 
-Prefix the message by area: `docs:` (Cowork areas), `code:` (Code areas), `coord:` (coordination), `repo:` (structure, ignore rules). Keep documentation and code changes in separate commits.
+The author makes every commit. Neither Cowork nor Code runs `git commit`, `git push`, `git reset`, `git stash` or any command that rewrites history, and neither asks whether it should: changes are left in the working directory. (`git mv` for a requested restructure is allowed; `git status`, `git diff` and `git log` are read-only and always allowed.)
+
+At the end of every return note, add a short **Suggested commits** list: files grouped by area, each group with a suggested message. Prefixes: `docs:` (Cowork areas), `code:` (Code areas), `coord:` (coordination), `repo:` (structure, ignore rules). Keep documentation and code changes in separate commits.

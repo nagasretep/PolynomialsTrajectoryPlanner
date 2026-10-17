@@ -10,10 +10,17 @@ public class TrajectoryBuilder3D
 {
     private readonly List<PolynomialSegment3D> _segments = new();
     private int _defaultDegree = 9;
+    private SmoothnessCriterion? _criterion;
 
     public TrajectoryBuilder3D WithDefaultDegree(int degree)
     {
         _defaultDegree = degree;
+        return this;
+    }
+
+    public TrajectoryBuilder3D WithSmoothnessCriterion(SmoothnessCriterion criterion)
+    {
+        _criterion = criterion;
         return this;
     }
 
@@ -39,13 +46,15 @@ public class TrajectoryBuilder3D
     {
         int d = degree ?? _defaultDegree;
         int M = waypoints.Length - 1;
-        double[] segDurations = durations ?? DurationStrategies.ProportionalToDistance3D(waypoints, totalDuration);
+        double[] segDurations = durations ?? new AutoDerivedProportionalDuration(totalDuration).ComputeDurations(waypoints);
 
         double[] xWaypoints = waypoints.Select(p => p.X).ToArray();
         double[] yWaypoints = waypoints.Select(p => p.Y).ToArray();
         double[] zWaypoints = waypoints.Select(p => p.Z).ToArray();
 
-        var solver = new PassThroughSolver1D(new MinimumSnapCriterion());
+        // Common durations on all axes: the 3D cost is the sum of the three axis costs, so the
+        // component-wise solve is exactly optimal.
+        var solver = new PassThroughSolver1D(_criterion);
         var xSegs = solver.Solve(xWaypoints, segDurations, d);
         var ySegs = solver.Solve(yWaypoints, segDurations, d);
         var zSegs = solver.Solve(zWaypoints, segDurations, d);

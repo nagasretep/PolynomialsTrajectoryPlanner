@@ -12,10 +12,18 @@ public class TrajectoryBuilder1D
     private readonly List<PolynomialSegment1D> _segments = new();
     private IDurationStrategy1D? _durationStrategy;
     private int _defaultDegree = 9;
+    private SmoothnessCriterion? _criterion;
 
     public TrajectoryBuilder1D WithDefaultDegree(int degree)
     {
         _defaultDegree = degree;
+        return this;
+    }
+
+    /// <summary>Smoothness order of exact pass-through; default is chosen per degree (snap for degree 9).</summary>
+    public TrajectoryBuilder1D WithSmoothnessCriterion(SmoothnessCriterion criterion)
+    {
+        _criterion = criterion;
         return this;
     }
 
@@ -53,9 +61,14 @@ public class TrajectoryBuilder1D
         int? degree = null)
     {
         int d = degree ?? _defaultDegree;
-        double[] segDurations = durations ?? DurationStrategies.ProportionalToDistance(waypoints, totalDuration);
 
-        var solver = new PassThroughSolver1D(new MinimumSnapCriterion());
+        // One duration mechanism: explicit durations win, then the configured strategy, then Decision 1's default.
+        IDurationStrategy1D strategy = durations is not null
+            ? new UserSpecifiedDuration(durations)
+            : _durationStrategy ?? new AutoDerivedProportionalDuration(totalDuration);
+        double[] segDurations = strategy.ComputeDurations(waypoints, d);
+
+        var solver = new PassThroughSolver1D(_criterion);
         var segments = solver.Solve(waypoints, segDurations, d);
         _segments.AddRange(segments);
 

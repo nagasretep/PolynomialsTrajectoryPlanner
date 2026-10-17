@@ -71,7 +71,7 @@ public class PassThroughSolverTests
         double[] waypoints = { 0.0, 10.0, 20.0 };
         double[] durations = { 2.0, 2.0 };
 
-        var solver = new PassThroughSolver1D(new MinimumSnapCriterion());
+        var solver = new PassThroughSolver1D(SmoothnessCriterion.MinimumSnap);
         var segments = solver.Solve(waypoints, durations, 9);
 
         Assert.Equal(2, segments.Length);

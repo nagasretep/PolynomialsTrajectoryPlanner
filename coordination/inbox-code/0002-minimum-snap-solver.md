@@ -1,6 +1,6 @@
 # 0002 — Exact minimum-snap pass-through solver (M7)
 
-Status: open · From: Cowork · To: Code · Date: 2026-10-17
+Status: closed · From: Cowork · To: Code · Date: 2026-10-17
 
 ## Goal
 

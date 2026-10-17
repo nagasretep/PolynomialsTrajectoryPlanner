@@ -237,6 +237,10 @@ Status: accepted as is. The hand-written root finders work on the polynomials in
 
 `theory/TrajectoryPassingThroughConstraintPoints.md` (section *Global Minimum-Snap Formulation In 1D*) now states the minimum-snap problem explicitly: interior derivatives as unknowns, quadratic cost, one linear system. Consequence for the architecture note of Decision 5: the "smoothness criterion" is fully described by its **derivative order $m$** (snap: $m = 4$), not by a pluggable cost function; the solver builds the quadratic form from $m$. The current finite-difference heuristic in `PassThroughSolver1D` is superseded (request 0002). The choice of $m$ for degree 9 (snap versus crackle) is an open decision of the author, see that document's Open Questions.
 
+### A8 — Proportional Durations: Relative Floor, Total Preserved
+
+Decision 1 sets the pass-through default duration "proportional to the distance between consecutive waypoints". The first implementation used an absolute floor of 0.05 s per segment, which can make the sum exceed the requested total (for a small total and many segments). Rule adopted (2026-10-17): with $\Delta_i = \lvert x_{i+1} - x_i \rvert$ and $\bar{\Delta}$ their mean, use the weights $w_i = \max(\Delta_i,\; \varphi\,\bar{\Delta})$ and durations $T_i = T_{tot}\, w_i / \sum_j w_j$, with $\varphi = 0.05$ as a constructor parameter. The sum of the durations is then always exactly $T_{tot}$; if all $\Delta_i = 0$ the split is equal. In 3D, $\Delta_i$ is the Euclidean distance.
+
 ## Related Documents
 
 - `06-theory-library-roadmap.md`

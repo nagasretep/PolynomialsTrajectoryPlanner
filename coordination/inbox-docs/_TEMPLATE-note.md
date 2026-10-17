@@ -15,3 +15,7 @@ Status: open · From: Code · To: Cowork · Date: YYYY-MM-DD · Request: `coordi
 (`dotnet test` summary.)
 
 ## Open questions
+
+## Suggested commits
+
+(Files grouped by area with a suggested message each; the author makes the commits. Prefixes: `code:`, `coord:`, `docs:`, `repo:`.)
