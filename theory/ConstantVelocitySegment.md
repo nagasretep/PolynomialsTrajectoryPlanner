@@ -577,10 +577,24 @@ Consequences:
 - A transition whose boundary states coincide (no distance to cover, same velocity) is not determined by the limits; the fallback duration below applies.
 - A **user-specified** transition duration always wins; it is then only verified against the limits.
 
-**Provisional rules (not yet decided by the author; they keep today's behaviour documented until confirmed).**
+**A consequence worth knowing.** A transition must arrive with zero acceleration, jerk and snap at the speed $v_{cv}$, while covering a fixed distance. With a tight acceleration limit this can force a long transition even when the constant-speed stretch is short. Example (degree 9, rest start, 20 units to cover, $v_{cv}=15$, $a_{max}=6$): the shortest feasible transition lasts about $13$ s although the stretch may last only $4$ s. This is the shortest duration that satisfies the limit with that boundary condition, not an error. A lower degree, or a longer lead-in distance, shortens it.
 
-- *No limits active.* Duration from the mean-velocity rule $T = 2\,\lvert \Delta x \rvert / (v_b + v_{cv})$, with $\Delta x$ the distance covered by the transition and $v_b$ the speed at the outer end ($0$ at a rest end). It is the duration for which a smooth ramp between $v_b$ and $v_{cv}$ has about the right mean velocity. The current code uses instead $\max(0.5\,T_{cv}, 0.1\ \text{s})$; the two rules differ and the choice is open.
-- *Total duration prescribed, no limits.* The remaining time $T_{tot} - T_{cv}$ is split between the two transitions (equally in the current App). Splitting in proportion to the distances covered would be the natural alternative.
+**Rule 2 — no limits active, no prescribed duration (decided by the author, 2026-10-17).** The duration follows the mean-velocity rule
+
+$$
+T = \frac{2\,\lvert \Delta x \rvert}{\lvert v_b \rvert + v_{cv}},
+$$
+
+where $\Delta x$ is the distance covered by the transition and $v_b$ the velocity at its outer end ($0$ at a rest end). It is the duration for which a smooth ramp between $v_b$ and $v_{cv}$ has about the right mean velocity. If $\Delta x = 0$ the rule gives $T = 0$, which is not a valid segment; in that case the fallback $\max(0.5\,T_{cv},\ 0.1\ \text{s})$ applies. The rule is crude when $v_b$ points against the travel direction; it is accepted as a baseline and the result is still verified when limits exist.
+
+**Rule 3 — total duration prescribed (decided by the author, 2026-10-17).** The user fixes $T_{tot}$. The time left for the transitions is $R = T_{tot} - T_{cv}$, and it must be positive. It is split **in proportion to the shortest feasible durations** $s_{in}, s_{out}$ of the two transitions:
+
+$$
+T_{in} = R\,\frac{s_{in}}{s_{in}+s_{out}}, \qquad
+T_{out} = R\,\frac{s_{out}}{s_{in}+s_{out}}.
+$$
+
+With limits active, $s$ comes from *Shortest Feasible Duration*. Without limits, the weights $s$ are the durations of Rule 2. Since $T_{in} \ge s_{in}$ and $T_{out} \ge s_{out}$ exactly when $R \ge s_{in}+s_{out}$, a proportional split respects the limits whenever any split can; if $R < s_{in}+s_{out}$ with limits active, the request is infeasible and is reported explicitly (with the minimum total $T_{cv}+s_{in}+s_{out}$ in the message). If only one transition has a prescribed duration, the other takes the remainder $R$ minus that duration. Prescribing both durations and the total is a conflict and is rejected.
 
 ### 3D Transition Targets
 
@@ -724,7 +738,7 @@ This makes the trade-off explicit:
 - **Open — to resolve if/when a concrete need arises**: the straight-chord alternative for a genuinely curved multi-axis subpath is deliberately not part of the current baseline (see *Decided 3D Interpretation*); should it be added later as an explicit user-facing option, and what would trigger that need?
 - **Open — to resolve during data-format design**: when users specify the interval in percentages, which convention should be standardized in 3D: parameter percentage, arc-length percentage, or both?
 - **Open — to resolve together with the later blending documents**: should the transition segments around the constant-speed part always enforce zero acceleration, jerk, and snap at the junctions, or should the continuity order be configurable?
-- **Open — author decision needed (non-blocking)**: the default transition duration when no limits are active, and the split of a prescribed total duration between the two transitions (see *Durations Of The Entry And Exit Transitions In 1D*). Rule 1 (limits active) is decided.
+- **Resolved (2026-10-17)**: durations of the entry and exit transitions: Rule 1 (limits active), Rule 2 (mean-velocity rule without limits) and Rule 3 (prescribed total, proportional split); see *Durations Of The Entry And Exit Transitions In 1D*.
 - **Resolved**: the 3D arc-length section reused $\sigma$ for the local normalized time, colliding with the 1D travel-direction sign $\sigma$ defined earlier in this same document, and named the traveled-arc-length function $s(\cdot)$, colliding with $s$/$\mathbf{s}$ (reserved for snap). The local normalized time is now $\tau_{cv}$ and the traveled-arc-length function is now $\ell_{cv}(\cdot)$; see *3D Path-Preserving Strategy: Arc-Length Reparameterization*.
 
 ## Related Documents

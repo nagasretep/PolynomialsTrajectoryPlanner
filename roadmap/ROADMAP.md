@@ -15,7 +15,7 @@ Owner: Cowork. Milestone status (M1–M8) is in `coordination/STATUS.md`; the th
 | R6b ✅ | Shortest feasible duration with limits | Code | R5 | request 0005 closed |
 | R6c ✅ | Numerics and duration fixes: diagonal scaling in the pass-through solve, zero-length segment, `Cost` documentation | Code | R6b | request 0006 closed; 188/188 |
 | R7 | Consolidation: the App uses the Core builders, constant-velocity, blend (selectable degree, limit check, input validation) and limit-validation code; remove legacy `FindValidDuration` and per-segment `ComputeDuration` | Code | R6c, R8 | proposed |
-| R8 ✅ | Constant-velocity transitions: rule 1 (limits active) decided and implemented; explicit limit failures; test suite; App uses the Core class | Cowork / Code | author | request 0007 closed; 228/228. Provisional: no-limit default, split of a prescribed total |
+| R8 | Constant-velocity transitions: rules 1 (done, 0007), 2 and 3 decided 2026-10-17; implementation in request 0008 | Code | author | **request 0008 issued** |
 | R9 | 3D constant velocity and 3D blending | Code (theory exists in `theory/ConstantVelocitySegment.md`) | R7 | proposed |
 | R10 | UI: exact pass-through and 3D input (open points in `design/08`) | Code | R7, R9 | proposed |
 | R11 | Pass-through with kinematic limits (common time-scaling factor around the solver; closed form for rest ends, D5) | Cowork (theory) + Code | R6b | proposed |
