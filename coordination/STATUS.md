@@ -4,7 +4,7 @@ Owner: whoever closes a task. Last updated: 2026-10-18.
 
 ## Current phase
 
-Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, duration fixes) and 0007 (constant-velocity transitions and tests) done by Code and reviewed by Cowork (committed by the author). 0008 (constant-velocity duration rules 2 and 3) done by Code and reviewed by Cowork. 0009 (R7 consolidation) done by Code and reviewed by Cowork. 0010 (blend duration rule, number parsing) done by Code and reviewed by Cowork. 0011, 0012 and 0013 (UI pass-through mode) done by Code. Next: R9 and R10b.
+Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, duration fixes) and 0007 (constant-velocity transitions and tests) done by Code and reviewed by Cowork (committed by the author). 0008 (constant-velocity duration rules 2 and 3) done by Code and reviewed by Cowork. 0009 (R7 consolidation) done by Code and reviewed by Cowork. 0010 (blend duration rule, number parsing) done by Code and reviewed by Cowork. 0011, 0012 and 0013 (UI pass-through mode) done by Code. 0014 and 0015 done by Code and reviewed by Cowork. Next: 0016 (R9b), then R10b.
 
 ## Milestones (from `design/07-implementation-plan.md` and `design/08-ui-first-prototype.md`)
 
@@ -14,18 +14,18 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 | M2 WPF shell | implemented | chart-first, ScottPlot, 1D, blending only |
 | M3 Degrees 3/5/7 | implemented | degree 7 now tested (0004) |
 | M4 Constraints | implemented | extrema, limit verification; shortest feasible duration (closed form + search) for auto duration with limits (0005); failure of the search is reported (0003); constant-velocity transitions still use the legacy search |
-| M5 Constant velocity | partial | 1D only; Rules 1-3 for the transition durations implemented in Core, App uses the Core class (0007, 0008); 3D missing |
+| M5 Constant velocity | partial | 1D and 3D straight stretches; Rules 1-3 for the transition durations implemented in Core, App uses the Core class (0007, 0008); 3D missing |
 | M6 Blending | partial | 1D only; selectable degree, limit verification and input validation in the Core (0009); duration rule with limits to adjust (0010) |
 | M7 Exact pass-through | implemented | exact global solve (m = 4 snap default for degree 9), 67/67 tests; reviewed by Cowork 2026-10-17 (reference values and code consistent) |
-| M8 3D extension | partial | component-wise wrapping; no 3D constant velocity or blending |
+| M8 3D extension | partial | component-wise wrapping; 3D blending and straight-stretch constant velocity done (0015); curved constant speed in request 0016 |
 
 ## In progress
 
-- 0015 Core 3D blending and straight constant velocity (Code) — issued
-- 0016 Core 3D curved constant-speed stretch (Code) — issued, to run after 0015
+- 0016 Core 3D curved constant-speed stretch (Code) — issued; theory in `theory/ConstantVelocitySegment.md`
 
 ## Done
 
+- 0015 Core 3D blending and straight constant velocity (Code) — closed 2026-10-18; note `coordination/inbox-docs/0015-core-3d-blending-and-straight-constant-velocity.md`. 473 tests (372 Core + 101 App). `BlendBuilder3D`/`BlendSegment3D`, `ConstantVelocityTrajectory3D` on straight stretches (curved → `NotSupportedException`), multi-component `ShortestFeasibleDuration.Find`, shared `TransitionDurationRules`; Core pass-through default reference now 1 s per segment (D23); peaks table lists unlimited quantities (D24).
 - 0014 pass-through defaults and peaks (Code) — closed 2026-10-18; note `coordination/inbox-docs/0014-passthrough-defaults-and-peaks.md`. 438 tests (338 Core + 100 App). One default rule (A8 proportions, 1 s per segment in total) with and without limits; Summary lists the peak against each active limit with its segment; `ExtremaAnalyzer.PeakAbsoluteWithLocation`.
 
 - 0013 UI pass-through mode in 1D (Code) — closed 2026-10-18; note `coordination/inbox-docs/0013-ui-passthrough-mode.md`. 428 tests (336 Core + 92 App). Mode selector `Blending | Pass-through`, service entry point `ComputePassThrough`, Summary and Waypoints report tabs, waypoint markers, λ notice; Core violation message numbers segments from 1. Hand-check list for the author in the note.
@@ -57,4 +57,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-`coordination/inbox-code/0015-core-3d-blending-and-straight-constant-velocity.md`; then `0016-core-3d-curved-constant-speed.md`; afterwards R10b (3D UI), see `roadmap/ROADMAP.md`.
+`coordination/inbox-code/0016-core-3d-curved-constant-speed.md` (R9b). Afterwards R10b (3D UI), see `roadmap/ROADMAP.md`.

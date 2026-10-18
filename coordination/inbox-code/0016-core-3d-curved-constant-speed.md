@@ -1,6 +1,6 @@
 # 0016 — Core 3D: constant speed along a curved subpath
 
-Status: open · From: Cowork · To: Code · Date: 2026-10-18
+Status: closed · From: Cowork · To: Code · Date: 2026-10-18
 
 Run after request 0015 (it replaces the `NotSupportedException` of its straight-subpath check).
 
