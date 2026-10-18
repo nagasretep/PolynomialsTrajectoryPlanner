@@ -24,9 +24,6 @@ namespace TrajectoryPlanner.Core.ConstantVelocity;
 /// </remarks>
 public class ConstantVelocityTrajectory1D
 {
-    /// <summary>Relative tolerance when comparing the time left (Rule 3) with the minimum feasible one.</summary>
-    private const double TotalTolerance = 1e-12;
-
     public PolynomialSegment1D EntryTransition { get; }
     public LinearConstantVelocitySegment ConstantVelocity { get; }
     public PolynomialSegment1D ExitTransition { get; }
@@ -138,53 +135,11 @@ public class ConstantVelocityTrajectory1D
         double exitRule2 = MeanVelocityDuration(
             endState.Position - cvEndState.Position, endState.Velocity, speed, cvDuration);
 
-        double entry, exit;
-        if (totalDuration is null)
-        {
-            entry = entryDuration ?? Weight("entry transition", polynomialDegree, startState, cvStartState, active, entryRule2).Duration;
-            exit = exitDuration ?? Weight("exit transition", polynomialDegree, cvEndState, endState, active, exitRule2).Duration;
-        }
-        else
-        {
-            double remaining = totalDuration.Value - cvDuration;
-            if (!(remaining > 0))
-            {
-                throw new ArgumentException(
-                    $"The total duration {totalDuration.Value:G6} must exceed the constant-velocity stretch duration T_cv = {cvDuration:G6}");
-            }
-
-            if (entryDuration is not null)
-            {
-                entry = entryDuration.Value;
-                exit = remaining - entry;
-                RequireRemainderPositive(exit, "exit transition", entry, remaining);
-            }
-            else if (exitDuration is not null)
-            {
-                exit = exitDuration.Value;
-                entry = remaining - exit;
-                RequireRemainderPositive(entry, "entry transition", exit, remaining);
-            }
-            else
-            {
-                var sIn = Weight("entry transition", polynomialDegree, startState, cvStartState, active, entryRule2);
-                var sOut = Weight("exit transition", polynomialDegree, cvEndState, endState, active, exitRule2);
-                double weightSum = sIn.Duration + sOut.Duration;
-
-                // With limits the weights are the shortest feasible durations: the split is feasible exactly
-                // when the time left is at least their sum.
-                if (active is not null && remaining < weightSum * (1 - TotalTolerance))
-                {
-                    throw new KinematicLimitsViolatedException(
-                        $"The total duration {totalDuration.Value:G6} s is too short for the active kinematic limits: " +
-                        $"the minimum feasible total is {cvDuration + weightSum:G6} s " +
-                        $"(constant-velocity stretch {cvDuration:G6} s + entry {sIn.Duration:G6} s + exit {sOut.Duration:G6} s).");
-                }
-
-                entry = remaining * sIn.Duration / weightSum;
-                exit = remaining - entry;
-            }
-        }
+        // Rules 1-3 are shared with the 3D construction (TransitionDurationRules).
+        var (entry, exit) = TransitionDurationRules.Resolve(
+            cvDuration, active is not null, entryDuration, exitDuration, totalDuration,
+            () => Weight("entry transition", polynomialDegree, startState, cvStartState, active, entryRule2).Duration,
+            () => Weight("exit transition", polynomialDegree, cvEndState, endState, active, exitRule2).Duration);
 
         EntryTransition = new PolynomialSegment1D(polynomialDegree, startState, cvStartState, entry);
         ExitTransition = new PolynomialSegment1D(polynomialDegree, cvEndState, endState, exit);
@@ -197,15 +152,6 @@ public class ConstantVelocityTrajectory1D
         }
     }
 
-    private static void RequireRemainderPositive(double remainder, string label, double prescribed, double remaining)
-    {
-        if (!(remainder > 0))
-        {
-            throw new ArgumentException(
-                $"The prescribed transition duration {prescribed:G6} s leaves no time for the {label}: " +
-                $"the time left after the stretch is {remaining:G6} s");
-        }
-    }
 
     /// <summary>
     /// The Rule 1 duration of a transition (shortest feasible) when limits are active, or the Rule 2 duration
