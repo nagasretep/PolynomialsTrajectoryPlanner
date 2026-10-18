@@ -1,6 +1,6 @@
 # 0021 — Save and load projects, speed tests, unused public members
 
-Status: open · From: Cowork · To: Code · Date: 2026-10-18
+Status: closed · From: Cowork · To: Code · Date: 2026-10-18
 
 ## Goal
 

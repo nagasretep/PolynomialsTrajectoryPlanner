@@ -1,6 +1,6 @@
 # Project status
 
-Owner: whoever closes a task. Last updated: 2026-10-18 (R13).
+Owner: whoever closes a task. Last updated: 2026-10-18 (0021).
 
 ## Current phase
 
@@ -21,9 +21,11 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## In progress
 
-- 0021 Save/load, speed tests, unused public members (Code) — issued
+- None in progress.
 
 ## Done
+
+- 0021 save/load, speed tests, unused public members (Code) — closed 2026-10-18; note `coordination/inbox-docs/0021-save-load-speed-cleanup.md`. 600 tests (445 Core + 155 App). Save/Open of the inputs of all four modes (`.ptp.json`, text as typed, `version` 1, refusal messages, nothing computed on open); `SpeedTests` S1-S3 (`Category=Speed`) pass with large margins (S3 166 ms vs 1 s); unused public members removed or made internal (list in the note; 8 test methods of the removed `ConstraintAwareDuration` removed).
 
 - 0020 UI pass-through in 3D (Code) — closed 2026-10-18; note `coordination/inbox-docs/0020-ui-3d-pass-through.md`. 586 tests (450 Core + 136 App). Fourth mode `3D pass-through` (waypoint table X, Y, Z with optional durations, optional total, limits, reference example as default inputs); the design section it referred to is now in `design/08-ui-first-prototype.md`.
 
@@ -67,4 +69,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-R12 (success criteria) and R13 (theory library review, PDF build script) done by Cowork. `coordination/inbox-code/0021-save-load-speed-cleanup.md` (R14 save/load, R15 speed tests, cleanup of unused public members). Afterwards R16 user manual (Cowork). See `roadmap/ROADMAP.md`.
+R12 (success criteria) and R13 (theory library review, PDF build script) done by Cowork; 0021 (R14 save/load, R15 speed tests, cleanup) done by Code, to review. Next: R16 user manual (Cowork). See `roadmap/ROADMAP.md`.

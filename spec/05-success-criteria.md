@@ -36,6 +36,8 @@ Measured on the author's laptop, Release build, after the first run (warm-up), f
 
 Verifier: automated timing tests that report the measured times (they may be marked as performance tests and run separately), confirmed once by the author on the laptop.
 
+The input data of the timing tests are those of `SpeedTests` (`src/TrajectoryPlanner.Core.Tests/Speed/SpeedTests.cs`, run with `dotnet test --filter Category=Speed`): S1 with limits 4 / 20 / 200 / 2000 and a boundary velocity; S2 with 30 waypoints, degree 9, limits 5 / 20 / 200 / 2000; S3 with the curved stretch of the theory reference example and limits 5 / 50 / 500 / 5000. Measured 2026-10-18 (Ryzen 9 8940HX): S1 0.4-4.4 ms, S2 7 ms (1D) and 25 ms (3D), S3 166 ms.
+
 ### Software quality
 
 | Id | Criterion | Measurement | Verifier |

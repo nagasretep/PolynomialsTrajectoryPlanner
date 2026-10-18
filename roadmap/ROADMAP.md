@@ -27,8 +27,8 @@ Owner: Cowork. Milestone status (M1–M8) is in `coordination/STATUS.md`; the th
 | R11 ✅ | Pass-through with kinematic limits: common scale factor λ, closed form for rest ends, search otherwise | Code | R7b | request 0011 closed; 394/394 |
 | R12 ✅ | Measurable success criteria (`spec/05-success-criteria.md`, decided 2026-10-18) | Cowork, author decided | – | written; author sign-off of the understanding checklist pending (D4) |
 | R13 ✅ | Theory library from Draft v1 to reviewed (criterion D1) and PDF build into `build/` (D2) | Cowork | R3 | done 2026-10-18: notation collisions resolved, open questions closed, `tools/build-theory.ps1`; author runs it to produce the PDF on the Windows machine |
-| R14 | Save and load projects (inputs of all four modes) | Code | R10c | proposed; criterion A3 |
-| R15 | Speed tests (timing tests for S1-S3, run on the author's laptop) | Code | R10c | proposed; criteria S1-S3 |
+| R14 ✅ | Save and load projects (inputs of all four modes) | Code | R10c | done 2026-10-18 (0021); author hand check pending; criterion A3 |
+| R15 ✅ | Speed tests (timing tests for S1-S3, run on the author's laptop) | Code | R10c | done 2026-10-18 (0021): medians 0.4-4.4 ms (S1), 7 / 25 ms (S2), 166 ms (S3); also Q4 cleanup done |
 | R16 | Short user manual (one page per mode, worked examples) | Cowork | R10c | proposed; criterion A4 |
 
 ## Decisions taken by the author
