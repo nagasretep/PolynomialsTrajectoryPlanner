@@ -3,6 +3,7 @@ using TrajectoryPlanner.Core.Constraints;
 using TrajectoryPlanner.Core.Points;
 using TrajectoryPlanner.Core.Segments;
 using TrajectoryPlanner.Core.States;
+using TrajectoryPlanner.Core.Trajectories;
 
 namespace TrajectoryPlanner.Core.ConstantVelocity;
 
@@ -192,7 +193,8 @@ public class ConstantVelocityTrajectory3D
         if (!ExtremaAnalyzer.VerifyLimits(segment, limits))
         {
             throw new KinematicLimitsViolatedException(
-                $"The {label} (duration {segment.Duration:G6} s) violates the active kinematic limits.");
+                $"The {label} (duration {segment.Duration:G6} s) violates the active kinematic limits: " +
+                $"{TrajectoryAnalyzer3D.DescribeWorstViolation(segment, limits)}.");
         }
     }
 

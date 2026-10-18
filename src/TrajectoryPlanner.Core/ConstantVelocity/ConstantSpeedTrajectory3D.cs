@@ -142,7 +142,7 @@ public sealed class CurvedConstantSpeedStretch3D : ISegment3D
         {
             if (order == 0)
             {
-                Point3D p = Subpath.Path.EvaluatePosition(parameter);
+                Point3D p = Subpath.Path.EvaluatePosition(Math.Clamp(parameter, 0, Subpath.Path.Duration));
                 return [p.X, p.Y, p.Z];
             }
 

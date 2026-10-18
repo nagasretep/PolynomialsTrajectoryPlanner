@@ -62,7 +62,7 @@ public sealed class ArcLengthPath
     }
 
     /// <summary>σ(t) = ‖ṗ(t)‖, the speed of the original parametrization.</summary>
-    public double Speed(double t) => Path.EvaluateDerivative(t, 1).Length;
+    public double Speed(double t) => Path.EvaluateDerivative(Math.Clamp(t, 0, Path.Duration), 1).Length;
 
     /// <summary>ℓ(t), the arc length from the start of the subpath to the segment time t.</summary>
     public double LengthAt(double t)

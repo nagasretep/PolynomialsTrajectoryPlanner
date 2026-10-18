@@ -36,6 +36,9 @@ public static class ArcLengthDerivatives
             throw new ArgumentOutOfRangeException(nameof(maxOrder));
 
         // Taylor coefficients of every component around t0, up to maxOrder terms beyond the constant.
+        // Grids computed as t0 + (t1 - t0) i / n can overshoot the end of the segment by one ulp.
+        t0 = Math.Clamp(t0, 0, path.Duration);
+
         var axes = new[] { path.XAxis, path.YAxis, path.ZAxis };
         var series = new double[3][];
         for (int i = 0; i < 3; i++)

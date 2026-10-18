@@ -31,6 +31,29 @@ public class MainWindowSmokeTests
 
                 Assert.Equal("5", window.PassThroughInput.Waypoints[1].Position);
                 Assert.Equal("7", window.Segments[0].EndPosition);
+
+                // Request 0018: the third mode keeps its own data, computes and draws (time plots, path, cursor).
+                window.Segments3D[0].EndPosition.Z = "2";
+                window.IsThreeDMode = true;
+                Assert.True(window.IsThreeDMode);
+                Assert.False(window.IsOneDMode);
+                var compute = typeof(MainWindow).GetMethod("Compute_Click",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+                compute.Invoke(window, new object?[] { null, new RoutedEventArgs() });
+                Assert.StartsWith("Computed 5 plotted quantities", window.StatusMessage);
+                Assert.Single(window.PartRows3D);
+                Assert.Equal(5, window.Cursor3DRows.Count);
+                window.ShowNorm = true; // redraws
+                typeof(MainWindow).GetMethod("UpdateCursorReadout",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .Invoke(window, new object[] { 0.5 });
+                Assert.Equal(1.0, window.Cursor3DRows[0].Z, 1e-9); // rest-to-rest 0 -> 2 in 1 s: halfway (z = 1) at t = 0.5
+
+                window.IsBlendingMode = true;
+                Assert.Equal("7", window.Segments[0].EndPosition);
+                window.IsThreeDMode = true;
+                Assert.Equal("2", window.Segments3D[0].EndPosition.Z);
+                Assert.Single(window.PartRows3D); // the last 3D result is shown again
                 window.Close();
             }
             catch (Exception ex)

@@ -2,6 +2,7 @@ using TrajectoryPlanner.Core.Blending;
 using TrajectoryPlanner.Core.Constraints;
 using TrajectoryPlanner.Core.Segments;
 using TrajectoryPlanner.Core.States;
+using TrajectoryPlanner.Core.Trajectories;
 
 namespace TrajectoryPlanner.Core.Services;
 
@@ -37,7 +38,8 @@ public static class SegmentFactory3D
         if (duration is not null && limitsActive && !ExtremaAnalyzer.VerifyLimits(segment, limits!))
         {
             throw new KinematicLimitsViolatedException(
-                $"The segment violates the active kinematic limits at the specified duration ({chosen:G6} s).");
+                $"The segment violates the active kinematic limits at the specified duration ({chosen:G6} s): " +
+                $"{TrajectoryAnalyzer3D.DescribeWorstViolation(segment, limits!)}.");
         }
 
         return segment;

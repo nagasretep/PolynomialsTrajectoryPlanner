@@ -14,6 +14,15 @@
         MinWidth="1400">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+        <!-- One vector quantity of the 3D mode: three boxes X | Y | Z. -->
+        <DataTemplate x:Key="VectorBoxes" DataType="{x:Type local:VectorInput}">
+            <UniformGrid Columns="3">
+                <TextBox Margin="0,0,4,4" Text="{Binding X, UpdateSourceTrigger=PropertyChanged}" ToolTip="X" />
+                <TextBox Margin="0,0,4,4" Text="{Binding Y, UpdateSourceTrigger=PropertyChanged}" ToolTip="Y" />
+                <TextBox Margin="0,0,0,4" Text="{Binding Z, UpdateSourceTrigger=PropertyChanged}" ToolTip="Z" />
+            </UniformGrid>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid Margin="12">
@@ -34,22 +43,24 @@
                         <TextBlock Margin="0,0,10,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="Mode" />
                         <RadioButton Margin="0,0,12,0" VerticalAlignment="Center" GroupName="Mode"
                                      IsChecked="{Binding IsBlendingMode}" Content="Blending" />
-                        <RadioButton VerticalAlignment="Center" GroupName="Mode"
+                        <RadioButton Margin="0,0,12,0" VerticalAlignment="Center" GroupName="Mode"
                                      IsChecked="{Binding IsPassThroughMode}" Content="Pass-through" />
+                        <RadioButton VerticalAlignment="Center" GroupName="Mode"
+                                     IsChecked="{Binding IsThreeDMode}" Content="3D" />
                     </StackPanel>
                 </Border>
                 <Button Width="130"
                         Margin="0,0,8,0"
                         Padding="10,6"
                         Click="AddSegment_Click"
-                        Visibility="{Binding IsBlendingMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Visibility="{Binding IsSegmentMode, Converter={StaticResource BoolToVisibilityConverter}}"
                         Content="Add Segment" />
                 <Button Width="130"
                         Margin="0,0,8,0"
                         Padding="10,6"
                         Click="RemoveSelectedSegment_Click"
                         IsEnabled="{Binding CanRemoveSegment}"
-                        Visibility="{Binding IsBlendingMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Visibility="{Binding IsSegmentMode, Converter={StaticResource BoolToVisibilityConverter}}"
                         Content="Remove Segment" />
                 <Button Width="130"
                         Margin="0,0,8,0"
@@ -456,9 +467,243 @@
                 </TabControl>
             </Border>
 
+            <Border Grid.Row="0"
+                    BorderBrush="#D0D0D0"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="8"
+                    Margin="0,0,0,10"
+                    Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TabControl ItemsSource="{Binding Segments3D}"
+                            SelectedItem="{Binding SelectedSegment3D}">
+                    <TabControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:Segment3DInputModel}">
+                            <TextBlock Text="{Binding Header}" />
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+
+                    <TabControl.ContentTemplate>
+                        <DataTemplate DataType="{x:Type local:Segment3DInputModel}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="8">
+                                    <GroupBox Margin="0,0,0,8" Header="Segment Setup (vectors: X | Y | Z)">
+                                        <Grid Margin="10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="130" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Degree" />
+                                            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
+                                                      ItemsSource="{Binding DataContext.SupportedDegrees, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      SelectedItem="{Binding Degree}" />
+
+                                            <UniformGrid Grid.Row="1" Grid.Column="1" Columns="3" Margin="0,0,0,4">
+                                                <TextBlock FontWeight="SemiBold" Text="X" />
+                                                <TextBlock FontWeight="SemiBold" Text="Y" />
+                                                <TextBlock FontWeight="SemiBold" Text="Z" />
+                                            </UniformGrid>
+
+                                            <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="Start position" />
+                                            <ContentControl Grid.Row="2" Grid.Column="1" Content="{Binding StartPosition}" ContentTemplate="{StaticResource VectorBoxes}" />
+                                            <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="End position" />
+                                            <ContentControl Grid.Row="3" Grid.Column="1" Content="{Binding EndPosition}" ContentTemplate="{StaticResource VectorBoxes}" />
+
+                                            <TextBlock Grid.Row="4" VerticalAlignment="Center" Text="Start velocity" />
+                                            <ContentControl Grid.Row="4" Grid.Column="1" Content="{Binding StartVelocity}" ContentTemplate="{StaticResource VectorBoxes}" />
+                                            <TextBlock Grid.Row="5" VerticalAlignment="Center" Text="End velocity" />
+                                            <ContentControl Grid.Row="5" Grid.Column="1" Content="{Binding EndVelocity}" ContentTemplate="{StaticResource VectorBoxes}" />
+
+                                            <TextBlock Grid.Row="6" VerticalAlignment="Center" Text="Start acceleration"
+                                                       Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <ContentControl Grid.Row="6" Grid.Column="1" Content="{Binding StartAcceleration}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                            Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBlock Grid.Row="7" VerticalAlignment="Center" Text="End acceleration"
+                                                       Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <ContentControl Grid.Row="7" Grid.Column="1" Content="{Binding EndAcceleration}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                            Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                            <TextBlock Grid.Row="8" VerticalAlignment="Center" Text="Start jerk"
+                                                       Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <ContentControl Grid.Row="8" Grid.Column="1" Content="{Binding StartJerk}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                            Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBlock Grid.Row="9" VerticalAlignment="Center" Text="End jerk"
+                                                       Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <ContentControl Grid.Row="9" Grid.Column="1" Content="{Binding EndJerk}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                            Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                            <TextBlock Grid.Row="10" VerticalAlignment="Center" Text="Start snap"
+                                                       Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <ContentControl Grid.Row="10" Grid.Column="1" Content="{Binding StartSnap}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                            Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBlock Grid.Row="11" VerticalAlignment="Center" Text="End snap"
+                                                       Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <ContentControl Grid.Row="11" Grid.Column="1" Content="{Binding EndSnap}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                            Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                            <TextBlock Grid.Row="12" Grid.Column="1" Margin="0,4,0,0" FontStyle="Italic" TextWrapping="Wrap"
+                                                       Text="Positions are required; an empty box of a derivative row means zero." />
+                                        </Grid>
+                                    </GroupBox>
+
+                                    <GroupBox Margin="0,0,0,8" Header="Constraints (limits apply to every axis)">
+                                        <Grid Margin="10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="200" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Duration [s] (blank: automatic)" />
+                                            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <CheckBox Grid.Row="1" Margin="0,0,8,6" IsChecked="{Binding UseMaxVelocity}" Content="Maximum Velocity" />
+                                            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxVelocity, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <CheckBox Grid.Row="2" Margin="0,0,8,6" IsChecked="{Binding UseMaxAcceleration}" Content="Maximum Acceleration"
+                                                      Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxAcceleration, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                            <CheckBox Grid.Row="3" Margin="0,0,8,6" IsChecked="{Binding UseMaxJerk}" Content="Maximum Jerk"
+                                                      Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxJerk, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                            <CheckBox Grid.Row="4" Margin="0,0,8,0" IsChecked="{Binding UseMaxSnap}" Content="Maximum Snap"
+                                                      Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding MaxSnap, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        </Grid>
+                                    </GroupBox>
+
+                                    <Expander Margin="0,0,0,8" Header="Constant-Speed Stretch (curved or straight)">
+                                        <StackPanel Margin="8,10,8,0">
+                                            <CheckBox Margin="0,0,0,8" IsChecked="{Binding UseConstantSpeed}" Content="Enable the constant-speed stretch on this segment" />
+                                            <Grid Visibility="{Binding UseConstantSpeed, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="150" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Speed" />
+                                                <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" Text="{Binding Speed, UpdateSourceTrigger=PropertyChanged}" />
+
+                                                <TextBlock Grid.Row="1" Margin="0,0,8,6" VerticalAlignment="Center" Text="Start and end given as" />
+                                                <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" ItemsSource="{Binding StretchKinds}" SelectedItem="{Binding StretchKind}" />
+
+                                                <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="Start point"
+                                                           Visibility="{Binding StretchByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <ContentControl Grid.Row="2" Grid.Column="1" Content="{Binding StretchStartPoint}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                                Visibility="{Binding StretchByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="End point"
+                                                           Visibility="{Binding StretchByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <ContentControl Grid.Row="3" Grid.Column="1" Content="{Binding StretchEndPoint}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                                Visibility="{Binding StretchByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                                <TextBlock Grid.Row="4" Margin="0,0,8,6" VerticalAlignment="Center" Text="Start fraction (0-1)"
+                                                           Visibility="{Binding StretchByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,6" Text="{Binding StretchStartFraction, UpdateSourceTrigger=PropertyChanged}"
+                                                         Visibility="{Binding StretchByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBlock Grid.Row="5" Margin="0,0,8,6" VerticalAlignment="Center" Text="End fraction (0-1)"
+                                                           Visibility="{Binding StretchByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBox Grid.Row="5" Grid.Column="1" Margin="0,0,0,6" Text="{Binding StretchEndFraction, UpdateSourceTrigger=PropertyChanged}"
+                                                         Visibility="{Binding StretchByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                                <TextBlock Grid.Row="6" Margin="0,0,8,6" VerticalAlignment="Center" Text="Entry duration [s]" />
+                                                <TextBox Grid.Row="6" Grid.Column="1" Margin="0,0,0,6" Text="{Binding EntryDuration, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Grid.Row="7" Margin="0,0,8,6" VerticalAlignment="Center" Text="Exit duration [s]" />
+                                                <TextBox Grid.Row="7" Grid.Column="1" Margin="0,0,0,6" Text="{Binding ExitDuration, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Grid.Row="8" Margin="0,0,8,0" VerticalAlignment="Center" Text="Total duration [s]" />
+                                                <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding StretchTotalDuration, UpdateSourceTrigger=PropertyChanged}" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </Expander>
+
+                                    <Expander Header="Blend Values"
+                                              Visibility="{Binding DataContext.HasMultipleSegments3D, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <StackPanel Margin="8,10,8,0">
+                                            <TextBlock Margin="0,0,0,8" FontStyle="Italic" TextWrapping="Wrap"
+                                                       Text="Leave empty to disable the connection on that side. A fraction refers to this segment as entered. A segment with a constant-speed stretch cannot be blended." />
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="160" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Margin="0,0,8,6" VerticalAlignment="Center" Text="Values given as" />
+                                                <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" ItemsSource="{Binding BlendKinds}" SelectedItem="{Binding BlendKind}" />
+
+                                                <TextBlock Grid.Row="1" Margin="0,0,8,6" VerticalAlignment="Center" Text="Initial blend value"
+                                                           Visibility="{Binding BlendByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" Text="{Binding BlendToPrevious, UpdateSourceTrigger=PropertyChanged}"
+                                                         Visibility="{Binding BlendByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBlock Grid.Row="2" Margin="0,0,8,6" VerticalAlignment="Center" Text="Final blend value"
+                                                           Visibility="{Binding BlendByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" Text="{Binding BlendToNext, UpdateSourceTrigger=PropertyChanged}"
+                                                         Visibility="{Binding BlendByFractions, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                                <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="Initial blend point"
+                                                           Visibility="{Binding BlendByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <ContentControl Grid.Row="3" Grid.Column="1" Content="{Binding BlendToPreviousPoint}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                                Visibility="{Binding BlendByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <TextBlock Grid.Row="4" VerticalAlignment="Center" Text="Final blend point"
+                                                           Visibility="{Binding BlendByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                <ContentControl Grid.Row="4" Grid.Column="1" Content="{Binding BlendToNextPoint}" ContentTemplate="{StaticResource VectorBoxes}"
+                                                                Visibility="{Binding BlendByPoints, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </Expander>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+            </Border>
+
             <GroupBox Grid.Row="1" Header="Numeric Report">
                 <TabControl x:Name="ReportTabs" Margin="8">
-                    <TabItem Header="Extrema">
+                    <TabItem Header="Extrema"
+                             Visibility="{Binding IsOneDMode, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DataGrid ItemsSource="{Binding ExtremaReportRows}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
@@ -486,7 +731,7 @@
                         </DataGrid>
                     </TabItem>
                     <TabItem Header="Summary"
-                             Visibility="{Binding IsPassThroughMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                             Visibility="{Binding ShowsSummary, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DockPanel>
                             <GroupBox DockPanel.Dock="Bottom" Header="Peaks against the limits"
                                       Visibility="{Binding HasLimitPeaks, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -532,11 +777,66 @@
                             </DataGrid.Columns>
                         </DataGrid>
                     </TabItem>
+                    <TabItem Header="Parts"
+                             Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <DataGrid ItemsSource="{Binding PartRows3D}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Part}" Header="Part" Width="80" />
+                                <DataGridTextColumn Binding="{Binding Start, StringFormat=F4}" Header="Start" Width="60" />
+                                <DataGridTextColumn Binding="{Binding Duration, StringFormat=F4}" Header="T [s]" Width="60" />
+                                <DataGridTextColumn Binding="{Binding InheritedDuration, StringFormat=F4, TargetNullValue=''}" Header="Inherited" Width="64" />
+                                <DataGridTextColumn Binding="{Binding Adjusted}" Header="Adjusted" Width="58" />
+                                <DataGridTextColumn Binding="{Binding Length, StringFormat=F4, TargetNullValue=''}" Header="Length" Width="60" />
+                                <DataGridTextColumn Binding="{Binding Speed, StringFormat=F4, TargetNullValue=''}" Header="Speed" Width="55" />
+                                <DataGridTextColumn Binding="{Binding AdmissibleSpeed, StringFormat=F4, TargetNullValue=''}" Header="v adm" Width="55" />
+                                <DataGridTextColumn Binding="{Binding BindingLimit}" Header="Binds" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Extrema 3D"
+                             Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <DataGrid ItemsSource="{Binding ExtremaRows3D}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
+                                <DataGridTextColumn Binding="{Binding Axis}" Header="Axis" Width="35" />
+                                <DataGridTextColumn Binding="{Binding Minimum, StringFormat=F5}" Header="Min" Width="70" />
+                                <DataGridTextColumn Binding="{Binding Maximum, StringFormat=F5}" Header="Max" Width="70" />
+                                <DataGridTextColumn Binding="{Binding MaxAbsolute, StringFormat=F5}" Header="|max|" Width="70" />
+                                <DataGridTextColumn Binding="{Binding MaxAbsoluteTime, StringFormat=F4}" Header="t(|max|)" Width="60" />
+                                <DataGridTextColumn Binding="{Binding Part}" Header="Part" Width="75" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Peaks vs limits"
+                             Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <DataGrid ItemsSource="{Binding LimitRows3D}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding LimitsOf}" Header="Limits of" Width="75" />
+                                <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
+                                <DataGridTextColumn Binding="{Binding Axis}" Header="Axis" Width="35" />
+                                <DataGridTextColumn Binding="{Binding Peak, StringFormat=F5}" Header="Peak" Width="70" />
+                                <DataGridTextColumn Binding="{Binding Limit, StringFormat=F4}" Header="Limit" Width="60" />
+                                <DataGridTextColumn Binding="{Binding PercentOfLimit, StringFormat=F2}" Header="%" Width="55" />
+                                <DataGridTextColumn Binding="{Binding Part}" Header="Part" Width="75" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
                 </TabControl>
             </GroupBox>
         </Grid>
 
         <GroupBox Grid.Row="1" Grid.Column="2" Header="Trajectory Visualization">
+          <TabControl x:Name="ChartTabs" Margin="4">
+            <TabItem Header="Time">
             <Grid Margin="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="5*" />
@@ -611,18 +911,62 @@
                                    Text="Each quantity now uses its own vertical plot with independent scaling; hover any plot to inspect all values at the same time." />
                     </StackPanel>
 
-                    <DataGrid ItemsSource="{Binding CursorReadoutRows}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              HeadersVisibility="Column"
-                              IsReadOnly="True">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
-                            <DataGridTextColumn Binding="{Binding Value, StringFormat=F6}" Header="Value" Width="120" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <CheckBox DockPanel.Dock="Top" Margin="0,0,0,8" IsChecked="{Binding ShowNorm}" Content="Show the magnitude (norm) curves"
+                              Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                    <Grid>
+                        <DataGrid ItemsSource="{Binding CursorReadoutRows}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  IsReadOnly="True"
+                                  Visibility="{Binding IsOneDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
+                                <DataGridTextColumn Binding="{Binding Value, StringFormat=F6}" Header="Value" Width="120" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <DataGrid ItemsSource="{Binding Cursor3DRows}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  IsReadOnly="True"
+                                  Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
+                                <DataGridTextColumn Binding="{Binding X, StringFormat=F4}" Header="X" Width="58" />
+                                <DataGridTextColumn Binding="{Binding Y, StringFormat=F4}" Header="Y" Width="58" />
+                                <DataGridTextColumn Binding="{Binding Z, StringFormat=F4}" Header="Z" Width="58" />
+                                <DataGridTextColumn Binding="{Binding Norm, StringFormat=F4}" Header="|.|" Width="58" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
                 </DockPanel>
             </Grid>
+            </TabItem>
+            <TabItem Header="Path"
+                     Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Margin="0,0,0,6" FontStyle="Italic" TextWrapping="Wrap"
+                               Text="Projections of the path (equal scales). Blue: segment, orange: blend, grey: entry / exit transition, red: constant-speed stretch. Black squares: segment start and end; the black dot follows the cursor of the Time tab." />
+                    <UniformGrid Grid.Row="1" Columns="3">
+                        <Border Margin="0,0,6,0" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Padding="4">
+                            <ScottPlot:WpfPlot x:Name="PathPlotXY" />
+                        </Border>
+                        <Border Margin="0,0,6,0" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Padding="4">
+                            <ScottPlot:WpfPlot x:Name="PathPlotXZ" />
+                        </Border>
+                        <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Padding="4">
+                            <ScottPlot:WpfPlot x:Name="PathPlotYZ" />
+                        </Border>
+                    </UniformGrid>
+                </Grid>
+            </TabItem>
+          </TabControl>
         </GroupBox>
     </Grid>
 </Window>

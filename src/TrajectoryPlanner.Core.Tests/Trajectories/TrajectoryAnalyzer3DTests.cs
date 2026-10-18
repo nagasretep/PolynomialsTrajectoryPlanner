@@ -202,6 +202,27 @@ public class TrajectoryAnalyzer3DTests
         Assert.Equal(0.0, ay.MaxAbsolutePart);
     }
 
+    [Fact]
+    public void Analysis_DoesNotStepBeyondTheEndOfAPiece_ForAnyDuration()
+    {
+        // Regression (found by request 0018): Duration * k / k can exceed Duration by one ulp, which a segment rejects.
+        var random = new Random(3);
+        for (int i = 0; i < 200; i++)
+        {
+            double duration = 0.05 + 3 * random.NextDouble();
+            var trajectory = new TrajectoryBuilder3D()
+                .AddSegment(S(0, 0, 0, 0.3, 0, 0), S(1, 2, 0.5, 0, 1, 0), duration)
+                .Build();
+
+            _ = TrajectoryAnalyzer3D.Extrema(trajectory);
+            _ = TrajectoryAnalyzer3D.PathLength(trajectory);
+        }
+
+        var stretchTrajectory = new TrajectoryBuilder3D().AddSegment(S(0, 0, 0, 1, 0, 0), S(1, 1, 0, 1, 2, 0), 0.7394714287722989);
+        stretchTrajectory.AddConstantSpeed(0, StretchSpecification.FromParameterFractions(0, 1), 1.0);
+        _ = TrajectoryAnalyzer3D.Extrema(stretchTrajectory.Build());
+    }
+
     // ---- path length ------------------------------------------------------------------------------------
 
     [Fact]

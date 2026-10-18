@@ -97,6 +97,19 @@ public static class TrajectoryAnalyzer3D
         return rows;
     }
 
+    /// <summary>
+    /// For a single piece: "the velocity limit on axis x (peak 3.2 above 2)" for its worst violation, or null if it respects
+    /// the limits. Used to make the violation messages of the builders name the axis and the quantity.
+    /// </summary>
+    public static string? DescribeWorstViolation(ISegment3D piece, KinematicLimits limits)
+    {
+        var worst = LimitReport(new Trajectory3D(new[] { piece }), limits)
+            .Where(r => r.Violated).OrderByDescending(r => r.PercentOfLimit).FirstOrDefault();
+        return worst is null
+            ? null
+            : $"the {worst.Quantity.ToLowerInvariant()} limit on axis {worst.Axis} (peak {worst.Peak:G6} above {worst.Limit:G6})";
+    }
+
     /// <summary>Total length of the path: polynomial pieces by the quadrature of the arc length, a stretch by its own length.</summary>
     public static double PathLength(Trajectory3D trajectory)
     {
@@ -154,7 +167,7 @@ public static class TrajectoryAnalyzer3D
                 double min = double.MaxValue, max = double.MinValue, tMin = 0, tMax = 0;
                 for (int i = 0; i <= 400; i++)
                 {
-                    double t = piece.Duration * i / 400;
+                    double t = Math.Min(piece.Duration * i / 400, piece.Duration);
                     double v = piece.EvaluateDerivative(t, order)[axis];
                     if (v < min) { min = v; tMin = t; }
                     if (v > max) { max = v; tMax = t; }
@@ -180,7 +193,8 @@ public static class TrajectoryAnalyzer3D
             }
 
             // |v| of a polynomial piece: scan, then golden-section refinement around the best sample.
-            double Speed(double t) => piece.EvaluateDerivative(t, 1).Length;
+            // Clamped: Duration * k / k can exceed Duration by one ulp.
+            double Speed(double t) => piece.EvaluateDerivative(Math.Min(t, piece.Duration), 1).Length;
             const int grid = 400;
             int bestIndex = 0;
             double bestValue = -1;
@@ -216,7 +230,7 @@ public static class TrajectoryAnalyzer3D
         Point3D previous = segment.EvaluatePosition(0);
         for (int i = 1; i <= n; i++)
         {
-            Point3D p = segment.EvaluatePosition(segment.Duration * i / n);
+            Point3D p = segment.EvaluatePosition(Math.Min(segment.Duration * i / n, segment.Duration));
             length += (p - previous).Length;
             previous = p;
         }
