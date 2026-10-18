@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 
 namespace TrajectoryPlanner.App.Tests;
@@ -8,6 +9,75 @@ namespace TrajectoryPlanner.App.Tests;
 /// </summary>
 public class MainWindowSmokeTests
 {
+    /// <summary>Request 0021: Save then Open in the real window brings the inputs and the mode back; a refused file changes nothing.</summary>
+    [Fact]
+    public void SaveAndOpen_RestoreTheInputsOfAllModes_AndARefusedFileChangesNothing()
+    {
+        Exception? failure = null;
+        string path = Path.Combine(Path.GetTempPath(), $"ptp-0021-{Guid.NewGuid():N}.ptp.json");
+        string badPath = Path.Combine(Path.GetTempPath(), $"ptp-0021-{Guid.NewGuid():N}-bad.ptp.json");
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                if (Application.Current is null)
+                    _ = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+
+                var window = new MainWindow();
+                var errors = new List<string>();
+                window.ProjectErrorHandler = errors.Add;
+
+                window.Segments[0].EndPosition = "7";
+                window.PassThroughInput.Waypoints[1].Position = "5";
+                window.Segments3D[0].EndPosition.Z = "2";
+                window.PassThrough3DInput.Waypoints[2].Y = "9";
+                window.IsThreeDMode = true;
+
+                Assert.True(window.SaveProjectTo(path));
+                Assert.EndsWith(Path.GetFileName(path), window.Title);
+
+                // Change everything and the mode, then open the file: the inputs and the mode come back; nothing is computed.
+                window.Segments[0].EndPosition = "70";
+                window.PassThroughInput.Waypoints[1].Position = "50";
+                window.Segments3D[0].EndPosition.Z = "20";
+                window.PassThrough3DInput.Waypoints[2].Y = "90";
+                window.IsPassThroughMode = true;
+
+                Assert.True(window.OpenProjectFrom(path));
+                Assert.True(window.IsThreeDMode);
+                Assert.Equal("7", window.Segments[0].EndPosition);
+                Assert.Equal("5", window.PassThroughInput.Waypoints[1].Position);
+                Assert.Equal("2", window.Segments3D[0].EndPosition.Z);
+                Assert.Equal("9", window.PassThrough3DInput.Waypoints[2].Y);
+                Assert.Empty(window.PartRows3D);
+                Assert.Empty(errors);
+
+                // A file edited by hand with a wrong value is refused with a message, the inputs stay.
+                File.WriteAllText(badPath, File.ReadAllText(path).Replace("\"version\": 1", "\"version\": 7"));
+                window.Segments[0].EndPosition = "11";
+                Assert.False(window.OpenProjectFrom(badPath));
+                Assert.Single(errors);
+                Assert.Contains("version 7", errors[0]);
+                Assert.Contains(Path.GetFileName(badPath), window.StatusMessage);
+                Assert.Equal("11", window.Segments[0].EndPosition);
+                Assert.False(window.OpenProjectFrom(badPath + ".missing"));
+                Assert.Equal(2, errors.Count);
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+        File.Delete(path);
+        File.Delete(badPath);
+
+        Assert.Null(failure);
+    }
+
     [Fact]
     public void TheWindowLoads_AndSwitchesBetweenTheModes_KeepingBothInputs()
     {
