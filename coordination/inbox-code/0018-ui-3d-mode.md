@@ -1,6 +1,6 @@
 # 0018 — UI: 3D mode in the App
 
-Status: issued · From: Cowork · To: Code · Date: 2026-10-18
+Status: closed · From: Cowork · To: Code · Date: 2026-10-18
 
 ## Goal
 
