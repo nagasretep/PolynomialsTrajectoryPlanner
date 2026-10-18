@@ -1,6 +1,6 @@
 # 0020 — UI: pass-through in 3D (fourth mode)
 
-Status: issued · From: Cowork · To: Code · Date: 2026-10-18
+Status: closed · From: Cowork · To: Code · Date: 2026-10-18
 
 ## Goal
 

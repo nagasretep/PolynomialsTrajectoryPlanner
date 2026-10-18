@@ -22,7 +22,7 @@ Owner: Cowork. Milestone status (M1–M8) is in `coordination/STATUS.md`; the th
 | R9b ✅ | Curved 3D constant-speed stretch: theory (2026-10-18) and Core (arc-length derivatives, inversion, transitions, limits) | Cowork / Code | R9a | request 0016 closed; 501 tests |
 | R10a ✅ | UI: pass-through mode in 1D | Code | R7, R11 | request 0013 closed; 428 tests. Follow-up 0014 (default durations, peaks vs limits) issued |
 | R9c ✅ | Component-wise 3D pass-through: theory (2026-10-18) and Core | Cowork / Code | R9a | request 0019 closed; 572 tests |
-| R10c | UI: pass-through in 3D (fourth mode; design/08 *3D Pass-Through Mode*) | Code | R9c, R10b | **request 0020 issued** |
+| R10c ✅ | UI: pass-through in 3D (fourth mode; design/08 *3D Pass-Through Mode*) | Code | R9c, R10b | request 0020 closed; 586 tests |
 | R10b ✅ | UI: 3D mode (vector input; design/08 *3D Mode*) | Code | R9, R10a | requests 0017 (Core) and 0018 (App) closed; 551 tests |
 | R11 ✅ | Pass-through with kinematic limits: common scale factor λ, closed form for rest ends, search otherwise | Code | R7b | request 0011 closed; 394/394 |
 | R12 | Measurable success criteria (suggestion in `spec/05-success-criteria.md`) | Cowork, author decides | – | proposed |

@@ -30,7 +30,7 @@ Classes: **code** = the code must change; **theory** = a theory/design document 
 | D22 | `BlendBuilder1D`, report | When the inherited blend duration violates the limits, the blend duration and the trajectory total change without telling the user | code | `BlendSegment1D` exposes inherited and chosen duration and `AdjustedByLimits`; the service reports a notice in the status bar (0012) | **closed** |
 | D23 | `PassThroughPlanner1D.Plan` | The default reference durations (A8 with total 1 s) differ from the App rule (A8 with total = number of segments × 1 s); without limits the total matters | code | Uniform default in the Core (request 0015, part C) | closed (request 0015, 2026-10-18) |
 | D24 | App Summary | Peaks table lists only the quantities with an active limit | code | Also list the unlimited quantities (request 0015, part C) | closed (request 0015, 2026-10-18) |
-| D25 | `ConstantVelocitySegment` (3D) | Curved multi-axis constant-speed stretch: the transitions to the non-polynomial arc-length segment are not specified ("dedicated blending/reparameterization design choices in later documents") | theory gap | Cowork to write the theory; Core raises `NotSupportedException` meanwhile (request 0015) | open |
+| D25 | `ConstantVelocitySegment` (3D) | Curved multi-axis constant-speed stretch: the transitions to the non-polynomial arc-length segment are not specified ("dedicated blending/reparameterization design choices in later documents") | theory gap | Cowork to write the theory; Core raises `NotSupportedException` meanwhile (request 0015) | closed (theory 2026-10-18, Core request 0016) |
 
 ## Decisions taken by the author
 
@@ -47,3 +47,4 @@ Conventions adopted by Cowork on Code's proposals (revisable): first crossing fo
 No decision is pending.
 
 To verify by the author when running the App on the Italian PC (0012): decimal comma in the tables as in the status bar and cursor; the axis labels of the ScottPlot charts (not touched, culture unverified).
+| D26 | `ConstantVelocitySegment.md` reference values | P4x reference 18.187075 was a sampled maximum; true maximum 18.187110 | theory | Theory corrected 2026-10-18 | closed |
