@@ -69,4 +69,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-R12 (success criteria) and R13 (theory library review, PDF build script) done by Cowork; 0021 (R14 save/load, R15 speed tests, cleanup) done by Code, to review. Next: R16 user manual (Cowork). See `roadmap/ROADMAP.md`.
+R12 (success criteria) and R13 (theory library review, PDF build script) done by Cowork; 0021 (R14 save/load, R15 speed tests, cleanup) done by Code, reviewed by Cowork, hand checks by the author passed. R16 user manual written (`manual/UserManual.md`, `tools/build-manual.ps1`). No request pending for Code. Remaining for version 1.0: author review of the manual, author signature of the understanding checklist (D4), final check of the criteria in `spec/05-success-criteria.md`. See `roadmap/ROADMAP.md`.
