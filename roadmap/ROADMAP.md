@@ -19,7 +19,8 @@ Owner: Cowork. Milestone status (M1–M8) is in `coordination/STATUS.md`; the th
 | R7c ✅ | Report polish: blend adjustment notice (D22), one output culture (D21) | Code | R7b | request 0012 closed; 404/404 |
 | R8 ✅ | Constant-velocity transitions: rules 1–3 decided and implemented | Code | author | requests 0007 and 0008 closed; 256/256 |
 | R9 | 3D constant velocity and 3D blending | Code (theory exists in `theory/ConstantVelocitySegment.md`) | R7 | proposed |
-| R10 | UI: exact pass-through and 3D input (open points in `design/08`) | Code | R7, R9 | proposed |
+| R10a | UI: pass-through mode in 1D (decided 2026-10-17: separate mode, waypoint table, global limits) | Code | R7, R11 | **request 0013 issued** |
+| R10b | UI: 3D input (axis-by-axis or vector, to decide) | Code | R9, R10a | proposed |
 | R11 ✅ | Pass-through with kinematic limits: common scale factor λ, closed form for rest ends, search otherwise | Code | R7b | request 0011 closed; 394/394 |
 | R12 | Measurable success criteria (suggestion in `spec/05-success-criteria.md`) | Cowork, author decides | – | proposed |
 | R13 | Theory library from Draft v1 to reviewed; PDF build into `build/` | Cowork | R3 | proposed |

@@ -51,13 +51,35 @@ Two distinct outputs, produced after Compute:
 - Refined chart styling.
 - Advanced analysis tools (e.g. differential cursors comparing two points) — only the single value-readout cursor described above is included.
 - 3D input and visualization.
-- Exact pass-through (Requirement 14) — see rationale below.
+- Exact pass-through (Requirement 14) was out of scope for the first prototype; it is now specified in *Pass-Through Mode*.
 
 ## Resolution Of Open Points From 07-implementation-plan.md
 
 - **Default derivatives shown in charts**: **RESOLVED** — all derivatives applicable to the chosen degree are shown. The implemented prototype presents them as stacked plots with shared time inspection rather than compressing them into one shared Y-axis plot (see *Output Requirements*).
 - **3D boundary condition input (axis-by-axis vs. vector)**: **remains open**, deferred to when 3D UI work begins (Milestone M8) — out of scope for this 1D-only prototype.
 - **Unified vs. separate tool for Blending (Req. 13) and Exact Pass-Through (Req. 14)**: **remains open**, and for a reason beyond UI design: the current pass-through solver (`PassThroughSolver1D.cs`) is still a provisional finite-difference-style heuristic, not the exact global minimum-snap formulation promised by `TrajectoryPassingThroughConstraintPoints.md`. Designing UI for that requirement now would risk having to redesign it once the solver reaches its final form. This prototype therefore covers Blending only; Exact Pass-Through is added to the UI once the underlying solver is completed.
+
+## Pass-Through Mode (decided 2026-10-17)
+
+Exact pass-through (Requirement 14) is exposed as a **separate mode** selected at the top of the window: `Blending | Pass-through`. The two modes keep their own inputs; switching mode does not delete the other mode's data. Blending and constant velocity are not available in pass-through mode (a combination would need theory that does not exist yet).
+
+**Inputs in pass-through mode**
+
+- **Degree** (3 / 5 / 7 / 9) and **smoothness order** $m$ (dropdown, from $1$ to $p = (d+1)/2$, default per degree: $m = p$, except degree $9$: snap, $m = 4$).
+- **Global end conditions**: rest (default) or explicit values of the derivatives $v, a, j, s$ at the first and last waypoint, as many as the degree uses.
+- **Waypoint table**: position (required) and duration of the segment that starts at that waypoint (optional). Add / remove row buttons; at least two waypoints.
+- **Durations**: either all segment durations are filled (prescribed: kept and only verified against the limits) or all blank. A partly filled column is reported as an input error.
+- **Total duration** (optional): if given with blank segment durations, the proportional rule of A8 distributes it and it is only verified against the limits.
+- **Limits** (global, optional): maximum velocity, acceleration, jerk, snap (those the degree supports), as in blending mode.
+- With blank durations, no total and **no active limit**, each segment takes $1$ s (the same fallback as an ordinary segment). With blank durations and active limits, the shortest feasible sequence is computed with the common scale factor $\lambda$ (*Pass-Through With Kinematic Limits* in `TrajectoryPassingThroughConstraintPoints.md`).
+
+**Outputs in pass-through mode**
+
+- One continuous trajectory over all segments in the same stacked plots as blending mode, with the waypoints marked on the position plot.
+- Numeric report: segment durations $T_k$ and the total, the factor $\lambda$ when it was computed, the states $(v, a, j, s)$ at every waypoint, the smoothness cost (exact integral, `SmoothnessCost.Of`), the extrema of every quantity over the whole trajectory, and the coefficients of every segment.
+- Notices (status bar) for: $\lambda$ applied, a duration or total only verified and violating a limit (error), infeasible limits (error).
+
+**Out of scope for this step**: saving and loading, editing waypoints on the plot, 3D.
 
 ## Charting Library
 
