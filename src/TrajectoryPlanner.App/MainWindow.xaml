@@ -78,9 +78,21 @@
                         Visibility="{Binding IsWaypointMode, Converter={StaticResource BoolToVisibilityConverter}}"
                         Content="Remove Waypoint" />
                 <Button Width="130"
+                        Margin="0,0,16,0"
                         Padding="10,6"
                         Click="Compute_Click"
                         Content="Compute" />
+                <Button Width="70"
+                        Margin="0,0,8,0"
+                        Padding="10,6"
+                        Click="OpenProject_Click"
+                        ToolTip="Open a project file (the inputs of all four modes)"
+                        Content="Open" />
+                <Button Width="70"
+                        Padding="10,6"
+                        Click="SaveProject_Click"
+                        ToolTip="Save the inputs of all four modes to a project file"
+                        Content="Save" />
             </StackPanel>
 
             <TextBlock Margin="16,0,0,0"
