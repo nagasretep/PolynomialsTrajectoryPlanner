@@ -250,7 +250,7 @@ public class ConstantVelocityTrajectory3DTests
         var ex = Assert.Throws<NotSupportedException>(() =>
             ConstantVelocityTrajectory3D.OnSegment(curved, 0.2, 0.8, 1.5, S(0, 0, 0), S(8, 4, 2)));
 
-        Assert.Contains("not implemented yet", ex.Message);
+        Assert.Contains("ConstantSpeedTrajectory3D", ex.Message);
         Assert.Contains("curved", ex.Message);
         Assert.Throws<NotSupportedException>(() => ConstantVelocityTrajectory3D.OnSegment(
             curved, curved.EvaluatePosition(0.8), curved.EvaluatePosition(3.2), 1.5, S(0, 0, 0), S(8, 4, 2)));
