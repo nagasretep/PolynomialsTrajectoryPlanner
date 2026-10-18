@@ -700,7 +700,7 @@ The path $\mathbf{p}(t) = (t,\ t^2,\ 0)$ on $t \in [0, 1]$ (computed by Cowork w
 - Length $L = (2\sqrt{5} + \operatorname{asinh} 2)/4 = 1.478943$.
 - At $t = 0$: $\mathbf{p}_s = (1, 0, 0)$, $\mathbf{p}_{ss} = (0, 2, 0)$, $\mathbf{p}_{sss} = (-4, 0, 0)$, $\mathbf{p}_{ssss} = (0, -32, 0)$.
 - At $t = 1$: $\mathbf{p}_s = (0.447214, 0.894427, 0)$, $\mathbf{p}_{ss} = (-0.16, 0.08, 0)$, $\mathbf{p}_{sss} = (0.157419, -0.114487, 0)$, $\mathbf{p}_{ssss} = (-0.24064, 0.23552, 0)$.
-- Component peaks over $[0,1]$ (sampling, $2001$ points): $P_1 = (1, 0.894427)$, $P_2 = (0.649519, 2)$, $P_3 = (4, 3.808294)$, $P_4 = (18.187075, 32)$ for the $(x, y)$ components; the maxima over components are $1, 2, 4, 32$.
+- Component peaks over $[0,1]$ (true maxima, refined; a $2001$-point sampling gives $18.187075$ for the first value of $P_4$ because the maximum lies between samples): $P_1 = (1, 0.894427)$, $P_2 = (0.649519, 2)$, $P_3 = (4, 3.808294)$, $P_4 = (18.187110, 32)$ for the $(x, y)$ components; the maxima over components are $1, 2, 4, 32$.
 - Admissible speed with $a_{max} = 8$ and $j_{max} = 20$ per axis: $\min\{(8/2)^{1/2}, (20/4)^{1/3}\} = \min\{2, 1.709976\} = 1.709976$ (jerk binds).
 - With $v_{cv} = 1$ on this path the stretch lasts $T_{cv} = 1.478943$ s, and at $t = T_{cv}/2$ the parameter is the solution of $\ell(t^*) = L/2$.
 

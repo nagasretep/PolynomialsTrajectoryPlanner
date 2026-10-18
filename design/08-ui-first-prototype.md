@@ -100,6 +100,22 @@ The first 3D increment is a third entry of the mode selector: `Blending | Pass-t
 
 **Out of scope**: saving, editing on the plot, 3D pass-through, per-axis limits, rotating 3D view.
 
+## 3D Pass-Through Mode (decided 2026-10-18)
+
+A fourth entry of the mode selector: `Blending | Pass-through | 3D | 3D pass-through`. It is the vector counterpart of the 1D pass-through mode and shares the 3D result presentation (time plots, path projections, reports). Each mode keeps its data when the user switches.
+
+**Inputs** (vector form, as in *3D Mode*):
+- **Degree** (3 / 5 / 7 / 9) and **smoothness order** $m$ (as in 1D: default $p$, snap for degree 9).
+- **Global end conditions**: rest (default) or vectors of $v, a, j, s$ (as many as the degree uses) at the first and last waypoint, each a row `X | Y | Z`.
+- **Waypoint table**: columns `X | Y | Z` and, optional, the duration of the segment that starts at that waypoint; add / remove rows; at least two waypoints. Durations all filled (prescribed, common to the three axes, only verified) or all blank; a partly filled column is an input error.
+- **Total duration** (optional, with blank durations: A8 proportional rule on the Euclidean chords, only verified).
+- **Limits** (global, optional): one value per quantity, applied to every axis.
+- With blank durations and no total: reference durations = A8 on the chords with one second per segment; with active limits the common scale $\lambda$ makes the sequence the shortest feasible.
+
+**Outputs**: as the 3D mode (stacked X / Y / Z plots with the norm option, path projections with the **waypoints marked**, cursor table) plus, in the report: segment durations and total; $\lambda$ and the **binding quantity and axis** when limits are active; the vector state ($v, a, j, s$) at every waypoint; the total smoothness cost (sum over the axes); peaks versus limits per axis; extrema; coefficients per segment. Notices: $\lambda$ applied (with the binding pair), prescribed durations violating a limit (error naming segment, axis, quantity), infeasible limits (error).
+
+**Out of scope**: blends or constant-speed stretches inside the pass-through, saving and loading, editing on the plot, per-axis limits.
+
 ## Charting Library
 
 **DECISION**: **ScottPlot**.
