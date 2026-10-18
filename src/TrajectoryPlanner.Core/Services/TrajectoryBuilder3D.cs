@@ -76,45 +76,31 @@ public class TrajectoryBuilder3D
         Point3D p0, Point3D pf, double? duration = null, int? degree = null, KinematicLimits? limits = null) =>
         AddSegment(State3D.FromPositionOnly(p0), State3D.FromPositionOnly(pf), duration, degree, limits);
 
+    /// <summary>Outcome of the last pass-through call: final and reference durations, λ and the binding quantity and axis.</summary>
+    public PassThroughResult3D? LastPassThroughResult { get; private set; }
+
+    /// <summary>
+    /// Exact pass-through of the waypoints with <see cref="PassThroughPlanner3D"/>. Durations are prescribed when
+    /// <paramref name="durations"/> or <paramref name="totalDuration"/> is given (kept and, with limits, verified);
+    /// otherwise automatic: the chord rule with one second per segment, scaled by λ to the shortest feasible sequence
+    /// when limits are active.
+    /// </summary>
     public TrajectoryBuilder3D AddSegmentsFromWaypointsPassThrough(
         Point3D[] waypoints,
         double[]? durations = null,
-        double totalDuration = 1.0,
-        int? degree = null)
+        double? totalDuration = null,
+        int? degree = null,
+        KinematicLimits? limits = null,
+        State3D? startBoundary = null,
+        State3D? endBoundary = null)
     {
         int d = degree ?? _defaultDegree;
-        int M = waypoints.Length - 1;
-        double[] segDurations = durations ?? new AutoDerivedProportionalDuration(totalDuration).ComputeDurations(waypoints);
+        var result = PassThroughPlanner3D.Plan(
+            waypoints, d, _criterion, limits, durations, totalDuration, startBoundary: startBoundary, endBoundary: endBoundary);
+        LastPassThroughResult = result;
 
-        double[] xWaypoints = waypoints.Select(p => p.X).ToArray();
-        double[] yWaypoints = waypoints.Select(p => p.Y).ToArray();
-        double[] zWaypoints = waypoints.Select(p => p.Z).ToArray();
-
-        // Common durations on all axes: the 3D cost is the sum of the three axis costs, so the
-        // component-wise solve is exactly optimal.
-        var solver = new PassThroughSolver1D(_criterion);
-        var xSegs = solver.Solve(xWaypoints, segDurations, d);
-        var ySegs = solver.Solve(yWaypoints, segDurations, d);
-        var zSegs = solver.Solve(zWaypoints, segDurations, d);
-
-        for (int k = 0; k < M; k++)
-        {
-            var startState = new State3D(
-                new Point3D(xSegs[k].StartState.Position, ySegs[k].StartState.Position, zSegs[k].StartState.Position),
-                new Point3D(xSegs[k].StartState.Velocity, ySegs[k].StartState.Velocity, zSegs[k].StartState.Velocity),
-                new Point3D(xSegs[k].StartState.Acceleration, ySegs[k].StartState.Acceleration, zSegs[k].StartState.Acceleration),
-                new Point3D(xSegs[k].StartState.Jerk, ySegs[k].StartState.Jerk, zSegs[k].StartState.Jerk),
-                new Point3D(xSegs[k].StartState.Snap, ySegs[k].StartState.Snap, zSegs[k].StartState.Snap));
-
-            var endState = new State3D(
-                new Point3D(xSegs[k].EndState.Position, ySegs[k].EndState.Position, zSegs[k].EndState.Position),
-                new Point3D(xSegs[k].EndState.Velocity, ySegs[k].EndState.Velocity, zSegs[k].EndState.Velocity),
-                new Point3D(xSegs[k].EndState.Acceleration, ySegs[k].EndState.Acceleration, zSegs[k].EndState.Acceleration),
-                new Point3D(xSegs[k].EndState.Jerk, ySegs[k].EndState.Jerk, zSegs[k].EndState.Jerk),
-                new Point3D(xSegs[k].EndState.Snap, ySegs[k].EndState.Snap, zSegs[k].EndState.Snap));
-
-            _pieces.Add(new Piece(PartKind.Segment, new PolynomialSegment3D(d, startState, endState, segDurations[k]), _nextOriginal++, null));
-        }
+        foreach (var segment in result.Segments)
+            _pieces.Add(new Piece(PartKind.Segment, segment, _nextOriginal++, null));
 
         return this;
     }
