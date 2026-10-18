@@ -21,9 +21,12 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## In progress
 
-- 0014 pass-through defaults and peaks report (Code) — issued
+- 0015 Core 3D blending and straight constant velocity (Code) — issued
+- 0016 Core 3D curved constant-speed stretch (Code) — issued, to run after 0015
 
 ## Done
+
+- 0014 pass-through defaults and peaks (Code) — closed 2026-10-18; note `coordination/inbox-docs/0014-passthrough-defaults-and-peaks.md`. 438 tests (338 Core + 100 App). One default rule (A8 proportions, 1 s per segment in total) with and without limits; Summary lists the peak against each active limit with its segment; `ExtremaAnalyzer.PeakAbsoluteWithLocation`.
 
 - 0013 UI pass-through mode in 1D (Code) — closed 2026-10-18; note `coordination/inbox-docs/0013-ui-passthrough-mode.md`. 428 tests (336 Core + 92 App). Mode selector `Blending | Pass-through`, service entry point `ComputePassThrough`, Summary and Waypoints report tabs, waypoint markers, λ notice; Core violation message numbers segments from 1. Hand-check list for the author in the note.
 
@@ -54,4 +57,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-`coordination/inbox-code/0014-passthrough-defaults-and-peaks.md`; afterwards R9 (3D constant velocity and blending) and R10b (3D UI), see `roadmap/ROADMAP.md`.
+`coordination/inbox-code/0015-core-3d-blending-and-straight-constant-velocity.md`; then `0016-core-3d-curved-constant-speed.md`; afterwards R10b (3D UI), see `roadmap/ROADMAP.md`.

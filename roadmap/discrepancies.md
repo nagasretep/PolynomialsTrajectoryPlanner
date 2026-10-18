@@ -28,6 +28,9 @@ Classes: **code** = the code must change; **theory** = a theory/design document 
 | D20 | `PrototypeTrajectoryService` | `double.TryParse` without culture: on Italian regional settings a decimal point may be read as a thousands separator | code | `InputNumber`: current culture then invariant, no thousands separators; tested with it-IT and en-US (0010) | **closed** |
 | D21 | App output | XAML tables always show a decimal point (WPF default culture en-US) while the status bar and cursor follow the current culture (comma on an Italian PC) | code | All displayed numbers follow the current culture (`UiCulture`, WPF `Language`); tested under it-IT (0012). To check by the author on the Italian PC: tables, status bar, cursor, ScottPlot axis labels | **closed** |
 | D22 | `BlendBuilder1D`, report | When the inherited blend duration violates the limits, the blend duration and the trajectory total change without telling the user | code | `BlendSegment1D` exposes inherited and chosen duration and `AdjustedByLimits`; the service reports a notice in the status bar (0012) | **closed** |
+| D23 | `PassThroughPlanner1D.Plan` | The default reference durations (A8 with total 1 s) differ from the App rule (A8 with total = number of segments × 1 s); without limits the total matters | code | Uniform default in the Core (request 0015, part C) | open |
+| D24 | App Summary | Peaks table lists only the quantities with an active limit | code | Also list the unlimited quantities (request 0015, part C) | open |
+| D25 | `ConstantVelocitySegment` (3D) | Curved multi-axis constant-speed stretch: the transitions to the non-polynomial arc-length segment are not specified ("dedicated blending/reparameterization design choices in later documents") | theory gap | Theory written 2026-10-18 (boundary states from arc-length derivatives, evaluation, limits, reference values); Core implementation in request 0016 (after 0015) | open (code) |
 
 ## Decisions taken by the author
 

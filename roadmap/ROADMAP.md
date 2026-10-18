@@ -18,7 +18,8 @@ Owner: Cowork. Milestone status (M1–M8) is in `coordination/STATUS.md`; the th
 | R7b ✅ | Blend duration rule (inherited if feasible), number parsing culture | Code | R7 | request 0010 closed; 359/359 |
 | R7c ✅ | Report polish: blend adjustment notice (D22), one output culture (D21) | Code | R7b | request 0012 closed; 404/404 |
 | R8 ✅ | Constant-velocity transitions: rules 1–3 decided and implemented | Code | author | requests 0007 and 0008 closed; 256/256 |
-| R9 | 3D constant velocity and 3D blending | Code (theory exists in `theory/ConstantVelocitySegment.md`) | R7 | proposed |
+| R9a | Core 3D: blending (component-wise, common duration), constant velocity on straight subpaths | Code | R7 | **request 0015 issued** |
+| R9b | Curved 3D constant-speed stretch: theory written 2026-10-18; Core in request 0016 | Cowork (theory) / Code | R9a | **theory done; request 0016 issued (after 0015)** |
 | R10a ✅ | UI: pass-through mode in 1D | Code | R7, R11 | request 0013 closed; 428 tests. Follow-up 0014 (default durations, peaks vs limits) issued |
 | R10b | UI: 3D input (axis-by-axis or vector, to decide) | Code | R9, R10a | proposed |
 | R11 ✅ | Pass-through with kinematic limits: common scale factor λ, closed form for rest ends, search otherwise | Code | R7b | request 0011 closed; 394/394 |
