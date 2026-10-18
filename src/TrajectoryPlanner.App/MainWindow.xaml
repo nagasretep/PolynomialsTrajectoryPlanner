@@ -487,15 +487,33 @@
                     </TabItem>
                     <TabItem Header="Summary"
                              Visibility="{Binding IsPassThroughMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <DataGrid ItemsSource="{Binding SummaryReportRows}"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  IsReadOnly="True">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding Item}" Header="Item" Width="*" />
-                                <DataGridTextColumn Binding="{Binding Value}" Header="Value" Width="130" />
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <DockPanel>
+                            <GroupBox DockPanel.Dock="Bottom" Header="Peaks against the limits"
+                                      Visibility="{Binding HasLimitPeaks, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <DataGrid ItemsSource="{Binding LimitPeakRows}"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          IsReadOnly="True"
+                                          MaxHeight="140">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
+                                        <DataGridTextColumn Binding="{Binding Peak, StringFormat=F6}" Header="Peak" Width="90" />
+                                        <DataGridTextColumn Binding="{Binding Limit, StringFormat=F6}" Header="Limit" Width="90" />
+                                        <DataGridTextColumn Binding="{Binding PercentOfLimit, StringFormat=F4}" Header="% of limit" Width="80" />
+                                        <DataGridTextColumn Binding="{Binding Segment}" Header="Segment" Width="65" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </GroupBox>
+                            <DataGrid ItemsSource="{Binding SummaryReportRows}"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Binding="{Binding Item}" Header="Item" Width="*" />
+                                    <DataGridTextColumn Binding="{Binding Value}" Header="Value" Width="130" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
                     </TabItem>
                     <TabItem Header="Waypoints"
                              Visibility="{Binding IsPassThroughMode, Converter={StaticResource BoolToVisibilityConverter}}">

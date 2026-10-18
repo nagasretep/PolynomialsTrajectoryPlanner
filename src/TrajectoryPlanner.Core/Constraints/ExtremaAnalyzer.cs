@@ -134,6 +134,30 @@ public static class ExtremaAnalyzer
         return peak;
     }
 
+    /// <summary>
+    /// Largest |x^(k)| over all given segments and where it occurs: the zero-based index of the segment (the first one
+    /// in case of a tie) and the time inside that segment.
+    /// </summary>
+    public static (double Peak, int SegmentIndex, double LocalTime) PeakAbsoluteWithLocation(
+        IReadOnlyList<PolynomialSegment1D> segments, int derivativeOrder)
+    {
+        double peak = 0;
+        int index = 0;
+        double time = 0;
+        for (int k = 0; k < segments.Count; k++)
+        {
+            ExtremaResult e = FindExtrema(segments[k], derivativeOrder);
+            if (e.MaxAbsolute > peak)
+            {
+                peak = e.MaxAbsolute;
+                index = k;
+                time = Math.Abs(e.Maximum) >= Math.Abs(e.Minimum) ? e.MaxTime : e.MinTime;
+            }
+        }
+
+        return (peak, index, time);
+    }
+
     public static ExtremaResult PositionExtrema(PolynomialSegment1D segment)
     {
         return FindExtrema(segment, 0);

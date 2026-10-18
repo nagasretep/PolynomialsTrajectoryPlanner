@@ -15,8 +15,8 @@ namespace TrajectoryPlanner.App;
 /// </summary>
 public sealed partial class PrototypeTrajectoryService
 {
-    /// <summary>Segment duration used when nothing determines it: no durations, no total, no active limit (design/08).</summary>
-    public const double FallbackSegmentDuration = 1.0;
+    /// <summary>Reference total per segment when no duration and no total are given: A8 proportions of N x 1 s (design/08).</summary>
+    public const double ReferenceDurationPerSegment = 1.0;
 
     public PrototypeComputationResult ComputePassThrough(PassThroughInputModel input)
     {
@@ -53,10 +53,9 @@ public sealed partial class PrototypeTrajectoryService
         }
         else if (prescribed is null)
         {
-            if (limits.HasAnyLimit)
-                reference = new AutoDerivedProportionalDuration(segmentCount * FallbackSegmentDuration).ComputeDurations(waypoints, degree);
-            else
-                prescribed = Enumerable.Repeat(FallbackSegmentDuration, segmentCount).ToArray();
+            // One rule with and without limits: A8 proportions, one second per segment in total. Without limits the
+            // planner uses them as they are; with limits it scales them by λ.
+            reference = new AutoDerivedProportionalDuration(segmentCount * ReferenceDurationPerSegment).ComputeDurations(waypoints, degree);
         }
 
         PassThroughResult plan = CallCore("Cannot build the trajectory", () =>
@@ -71,11 +70,11 @@ public sealed partial class PrototypeTrajectoryService
                 $"Limits applied: all segment durations were multiplied by λ = {plan.Scale:F6}; total duration {plan.TotalDuration:F4} s.");
         }
 
-        return BuildPassThroughResult(degree, criterion, waypoints, plan, notices);
+        return BuildPassThroughResult(degree, criterion, waypoints, plan, limits, notices);
     }
 
     private static PrototypeComputationResult BuildPassThroughResult(
-        int degree, SmoothnessCriterion criterion, double[] waypoints, PassThroughResult plan, List<string> notices)
+        int degree, SmoothnessCriterion criterion, double[] waypoints, PassThroughResult plan, KinematicLimits limits, List<string> notices)
     {
         var trajectory = new Trajectory1D(plan.Segments);
         int maxDerivativeOrder = BoundaryConditionValidator.DerivativeLevelsForDegree(degree) - 1;
@@ -132,6 +131,17 @@ public sealed partial class PrototypeTrajectoryService
             $"Smoothness cost J (order {criterion.DerivativeOrder})",
             $"{SmoothnessCost.Of(plan.Segments, criterion.DerivativeOrder):G8}"));
 
+        // Peak against each active limit over the whole trajectory (the binding limit of a λ-scaled result is at 100 %).
+        var peaks = new List<LimitPeakRow>();
+        foreach (var (order, limit) in new[] { (1, limits.MaxVelocity), (2, limits.MaxAcceleration), (3, limits.MaxJerk), (4, limits.MaxSnap) })
+        {
+            if (limit is null || order > maxDerivativeOrder)
+                continue;
+
+            var (peak, segmentIndex, _) = ExtremaAnalyzer.PeakAbsoluteWithLocation(plan.Segments, order);
+            peaks.Add(new LimitPeakRow(GetQuantityName(order), peak, limit.Value, 100.0 * peak / limit.Value, segmentIndex + 1));
+        }
+
         return new PrototypeComputationResult(
             series,
             extremaRows,
@@ -142,7 +152,8 @@ public sealed partial class PrototypeTrajectoryService
             notices,
             markers,
             states,
-            summary);
+            summary,
+            peaks);
     }
 
     private static double[] ParseWaypoints(PassThroughInputModel input)

@@ -57,6 +57,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public ObservableCollection<SummaryRow> SummaryReportRows { get; } = [];
 
+    public ObservableCollection<LimitPeakRow> LimitPeakRows { get; } = [];
+
+    public bool HasLimitPeaks => LimitPeakRows.Count > 0;
+
     public ObservableCollection<WaypointStateRow> WaypointStateRows { get; } = [];
 
     public bool IsBlendingMode
@@ -176,6 +180,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             ExtremaReportRows.Clear();
             CoefficientReportRows.Clear();
             SummaryReportRows.Clear();
+            LimitPeakRows.Clear();
+            OnPropertyChanged(nameof(HasLimitPeaks));
             WaypointStateRows.Clear();
             CursorReadoutRows.Clear();
             ResetPlot();
@@ -222,6 +228,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         ReplaceRows(ExtremaReportRows, result.ExtremaRows);
         ReplaceRows(CoefficientReportRows, result.CoefficientRows);
         ReplaceRows(SummaryReportRows, result.SummaryRows ?? []);
+        ReplaceRows(LimitPeakRows, result.LimitPeaks ?? []);
+        OnPropertyChanged(nameof(HasLimitPeaks));
         ReplaceRows(WaypointStateRows, result.WaypointStates ?? []);
 
         BuildPlot(result);

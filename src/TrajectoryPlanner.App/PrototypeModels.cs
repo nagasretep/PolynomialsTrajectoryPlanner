@@ -293,7 +293,8 @@ public sealed record PrototypeComputationResult(
     IReadOnlyList<string> Notices,
     IReadOnlyList<WaypointMarker>? WaypointMarkers = null,
     IReadOnlyList<WaypointStateRow>? WaypointStates = null,
-    IReadOnlyList<SummaryRow>? SummaryRows = null);
+    IReadOnlyList<SummaryRow>? SummaryRows = null,
+    IReadOnlyList<LimitPeakRow>? LimitPeaks = null);
 
 /// <summary>One row of the pass-through waypoint table: a position and, optionally, the duration of the segment that starts there.</summary>
 public sealed class WaypointInputModel : ObservableObject
@@ -454,3 +455,6 @@ public sealed record SummaryRow(string Item, string Value);
 
 /// <summary>Where a waypoint is reached, for the markers on the position plot.</summary>
 public sealed record WaypointMarker(double Time, double Position);
+
+/// <summary>For one active limit: the peak of the whole trajectory against the limit, and the segment (from 1) where it occurs.</summary>
+public sealed record LimitPeakRow(string Quantity, double Peak, double Limit, double PercentOfLimit, int Segment);
