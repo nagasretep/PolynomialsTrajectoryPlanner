@@ -40,8 +40,8 @@ public sealed record PassThroughResult(
 /// </remarks>
 public static class PassThroughPlanner1D
 {
-    /// <summary>Total of the reference durations (the proportional rule of design/07 A8 is applied to it).</summary>
-    public const double ReferenceTotal = 1.0;
+    /// <summary>Default reference duration per segment: the A8 proportional rule is applied to a total of (number of segments) x this value (D23).</summary>
+    public const double ReferenceDurationPerSegment = 1.0;
 
     /// <summary>Geometric ratio of the λ search (non-zero boundary derivatives).</summary>
     public const double GrowthRatio = 1.05;
@@ -61,7 +61,7 @@ public static class PassThroughPlanner1D
     /// <param name="prescribedDurations">One duration per segment (kept and verified), or null for automatic durations.</param>
     /// <param name="referenceDurations">
     /// Automatic durations only: the proportions T̄_k to scale (any positive total); null: the proportional rule of
-    /// design/07 A8 with total 1 s. Not allowed together with prescribed durations.
+    /// design/07 A8 with a total of one second per segment. Not allowed together with prescribed durations.
     /// </param>
     /// <param name="startBoundary">Prescribed derivatives (orders 1 .. p-1) at the start; null: rest.</param>
     /// <param name="endBoundary">Same at the end.</param>
@@ -106,7 +106,7 @@ public static class PassThroughPlanner1D
 
         double[] reference = referenceDurations is not null
             ? (double[])referenceDurations.Clone()
-            : new AutoDerivedProportionalDuration(ReferenceTotal).ComputeDurations(wp, degree);
+            : new AutoDerivedProportionalDuration((wp.Length - 1) * ReferenceDurationPerSegment).ComputeDurations(wp, degree);
 
         if (!active)
             return new PassThroughResult(Solve(reference), reference, 1.0, false);

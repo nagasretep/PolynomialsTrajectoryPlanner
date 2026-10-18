@@ -456,5 +456,5 @@ public sealed record SummaryRow(string Item, string Value);
 /// <summary>Where a waypoint is reached, for the markers on the position plot.</summary>
 public sealed record WaypointMarker(double Time, double Position);
 
-/// <summary>For one active limit: the peak of the whole trajectory against the limit, and the segment (from 1) where it occurs.</summary>
-public sealed record LimitPeakRow(string Quantity, double Peak, double Limit, double PercentOfLimit, int Segment);
+/// <summary>The peak of a quantity over the whole trajectory, the segment (from 1) where it occurs and, if the quantity has an active limit, the limit and the percentage of it (null otherwise).</summary>
+public sealed record LimitPeakRow(string Quantity, double Peak, double? Limit, double? PercentOfLimit, int Segment);

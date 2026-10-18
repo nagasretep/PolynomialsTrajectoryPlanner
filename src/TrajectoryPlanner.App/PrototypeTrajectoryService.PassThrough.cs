@@ -15,9 +15,6 @@ namespace TrajectoryPlanner.App;
 /// </summary>
 public sealed partial class PrototypeTrajectoryService
 {
-    /// <summary>Reference total per segment when no duration and no total are given: A8 proportions of N x 1 s (design/08).</summary>
-    public const double ReferenceDurationPerSegment = 1.0;
-
     public PrototypeComputationResult ComputePassThrough(PassThroughInputModel input)
     {
         int degree = input.Degree;
@@ -46,22 +43,17 @@ public sealed partial class PrototypeTrajectoryService
         // Which durations are prescribed (kept and only verified) and which are scaled by the limits is the Core's job;
         // here only the user's inputs are turned into the planner's arguments.
         double[]? prescribed = segmentDurations;
-        double[]? reference = null;
         if (prescribed is null && totalDuration is not null)
         {
             prescribed = new AutoDerivedProportionalDuration(totalDuration.Value).ComputeDurations(waypoints, degree);
         }
-        else if (prescribed is null)
-        {
-            // One rule with and without limits: A8 proportions, one second per segment in total. Without limits the
-            // planner uses them as they are; with limits it scales them by λ.
-            reference = new AutoDerivedProportionalDuration(segmentCount * ReferenceDurationPerSegment).ComputeDurations(waypoints, degree);
-        }
 
+        // Blank durations and no total: the planner's default reference (A8 proportions, one second per segment in total) is
+        // used as it is without limits and scaled by λ with limits (D23): the rule lives in the Core only.
         PassThroughResult plan = CallCore("Cannot build the trajectory", () =>
             PassThroughPlanner1D.Plan(
                 waypoints, degree, criterion, limits.HasAnyLimit ? limits : null,
-                prescribed, reference, startBoundary, endBoundary));
+                prescribed, startBoundary: startBoundary, endBoundary: endBoundary));
 
         var notices = new List<string>();
         if (plan.ScaledByLimits)
@@ -131,15 +123,24 @@ public sealed partial class PrototypeTrajectoryService
             $"Smoothness cost J (order {criterion.DerivativeOrder})",
             $"{SmoothnessCost.Of(plan.Segments, criterion.DerivativeOrder):G8}"));
 
-        // Peak against each active limit over the whole trajectory (the binding limit of a λ-scaled result is at 100 %).
+        // Peaks over the whole trajectory, only when a limit is active: first the limited quantities against their limit
+        // (the binding limit of a λ-scaled result is at 100 %), then the others with no limit and no percentage (D24).
         var peaks = new List<LimitPeakRow>();
-        foreach (var (order, limit) in new[] { (1, limits.MaxVelocity), (2, limits.MaxAcceleration), (3, limits.MaxJerk), (4, limits.MaxSnap) })
+        if (limits.HasAnyLimit)
         {
-            if (limit is null || order > maxDerivativeOrder)
-                continue;
+            var byOrder = new[] { (1, limits.MaxVelocity), (2, limits.MaxAcceleration), (3, limits.MaxJerk), (4, limits.MaxSnap) };
+            foreach (bool limited in new[] { true, false })
+            {
+                foreach (var (order, limit) in byOrder)
+                {
+                    if ((limit is not null) != limited || order > maxDerivativeOrder)
+                        continue;
 
-            var (peak, segmentIndex, _) = ExtremaAnalyzer.PeakAbsoluteWithLocation(plan.Segments, order);
-            peaks.Add(new LimitPeakRow(GetQuantityName(order), peak, limit.Value, 100.0 * peak / limit.Value, segmentIndex + 1));
+                    var (peak, segmentIndex, _) = ExtremaAnalyzer.PeakAbsoluteWithLocation(plan.Segments, order);
+                    peaks.Add(new LimitPeakRow(
+                        GetQuantityName(order), peak, limit, limit is null ? null : 100.0 * peak / limit.Value, segmentIndex + 1));
+                }
+            }
         }
 
         return new PrototypeComputationResult(

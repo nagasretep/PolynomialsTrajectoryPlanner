@@ -498,8 +498,8 @@
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
                                         <DataGridTextColumn Binding="{Binding Peak, StringFormat=F6}" Header="Peak" Width="90" />
-                                        <DataGridTextColumn Binding="{Binding Limit, StringFormat=F6}" Header="Limit" Width="90" />
-                                        <DataGridTextColumn Binding="{Binding PercentOfLimit, StringFormat=F4}" Header="% of limit" Width="80" />
+                                        <DataGridTextColumn Binding="{Binding Limit, StringFormat=F6, TargetNullValue=''}" Header="Limit" Width="90" />
+                                        <DataGridTextColumn Binding="{Binding PercentOfLimit, StringFormat=F4, TargetNullValue=''}" Header="% of limit" Width="80" />
                                         <DataGridTextColumn Binding="{Binding Segment}" Header="Segment" Width="65" />
                                     </DataGrid.Columns>
                                 </DataGrid>

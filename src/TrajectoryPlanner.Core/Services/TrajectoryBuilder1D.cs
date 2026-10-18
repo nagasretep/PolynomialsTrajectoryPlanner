@@ -63,7 +63,7 @@ public class TrajectoryBuilder1D
     /// when <paramref name="totalDuration"/> is given (proportional rule): they are kept and, if limits are active,
     /// verified (<see cref="KinematicLimitsViolatedException"/> naming the segment). Otherwise they are <b>automatic</b>:
     /// with active limits the shortest feasible sequence (one common scale λ on the proportional reference durations,
-    /// see <see cref="PassThroughPlanner1D"/>), without limits the reference durations (total 1 s).
+    /// see <see cref="PassThroughPlanner1D"/>), without limits the reference durations (A8 proportions, one second per segment in total).
     /// </summary>
     /// <param name="startBoundary">Prescribed derivatives (orders 1 .. p-1) at the start; null: rest.</param>
     /// <param name="endBoundary">Same at the end.</param>

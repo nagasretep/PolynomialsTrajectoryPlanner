@@ -97,11 +97,26 @@ public class PassThroughDefaultsAndPeaksTests
         var peaks = r.LimitPeaks!;
         Assert.Equal(new[] { "Velocity", "Acceleration", "Jerk", "Snap" }, peaks.Select(p => p.Quantity).ToArray());
         var acceleration = peaks.Single(p => p.Quantity == "Acceleration");
-        Assert.Equal(100.0, acceleration.PercentOfLimit, 1e-4);
-        Assert.Equal(3.0, acceleration.Limit);
-        Assert.All(peaks.Where(p => p.Quantity != "Acceleration"), p => Assert.True(p.PercentOfLimit < 100.0 - 1e-3));
+        Assert.Equal(100.0, acceleration.PercentOfLimit!.Value, 1e-4);
+        Assert.Equal(3.0, acceleration.Limit!.Value);
+        Assert.All(peaks.Where(p => p.Quantity != "Acceleration"), p => Assert.True(p.PercentOfLimit!.Value < 100.0 - 1e-3));
         Assert.All(peaks, p => Assert.InRange(p.Segment, 1, 2));
-        Assert.All(peaks, p => Assert.Equal(100.0 * p.Peak / p.Limit, p.PercentOfLimit, 9));
+        Assert.All(peaks, p => Assert.Equal(100.0 * p.Peak / p.Limit!.Value, p.PercentOfLimit!.Value, 9));
+    }
+
+    [Fact]
+    public void QuantitiesWithoutAnActiveLimit_AreListedAfterTheLimitedOnes_WithEmptyLimitAndPercentage()
+    {
+        var m = Input("0", "1", "2");
+        m.UseMaxAcceleration = true; m.MaxAcceleration = "3";
+        m.UseMaxSnap = true; m.MaxSnap = "50";
+
+        var r = _service.ComputePassThrough(m);
+
+        var peaks = r.LimitPeaks!;
+        Assert.Equal(new[] { "Acceleration", "Snap", "Velocity", "Jerk" }, peaks.Select(p => p.Quantity).ToArray());
+        Assert.All(peaks.Take(2), p => Assert.NotNull(p.Limit));
+        Assert.All(peaks.Skip(2), p => { Assert.Null(p.Limit); Assert.Null(p.PercentOfLimit); Assert.True(p.Peak > 0); });
     }
 
     [Fact]
@@ -113,8 +128,8 @@ public class PassThroughDefaultsAndPeaksTests
 
         var r = _service.ComputePassThrough(m);
 
-        Assert.Equal(2, r.LimitPeaks!.Single().Segment);
-        Assert.True(r.LimitPeaks!.Single().PercentOfLimit < 100.0);
+        Assert.Equal(2, r.LimitPeaks!.First().Segment);
+        Assert.True(r.LimitPeaks!.First().PercentOfLimit < 100.0);
     }
 
     [Fact]
@@ -141,7 +156,7 @@ public class PassThroughDefaultsAndPeaksTests
             var r = _service.ComputePassThrough(m);
 
             Assert.Contains(',', r.SummaryRows!.Single(s => s.Item.StartsWith("Total duration")).Value);
-            Assert.Equal(100.0, r.LimitPeaks!.Single().PercentOfLimit, 1e-4); // numbers: the window formats them with the culture
+            Assert.Equal(100.0, r.LimitPeaks!.First().PercentOfLimit!.Value, 1e-4); // numbers: the window formats them with the culture
             return 0;
         });
     }

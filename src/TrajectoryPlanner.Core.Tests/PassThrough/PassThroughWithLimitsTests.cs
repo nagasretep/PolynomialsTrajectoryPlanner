@@ -130,10 +130,10 @@ public class PassThroughWithLimitsTests
 
         var r = PassThroughPlanner1D.Plan(Data2, 9, null, limits);
 
-        // Reference: A8 with a total of 1 s, distances 1, 2, 1 -> (0.25, 0.5, 0.25), then scaled by lambda.
-        Assert.Equal(r.Durations[0] / r.Scale, 0.25, 9);
-        Assert.Equal(r.Durations[1] / r.Scale, 0.5, 9);
-        Assert.Equal(r.Durations[2] / r.Scale, 0.25, 9);
+        // Reference: A8 with a total of one second per segment (3 s), distances 1, 2, 1 -> (0.75, 1.5, 0.75), then scaled by lambda.
+        Assert.Equal(0.75, r.Durations[0] / r.Scale, 9);
+        Assert.Equal(1.5, r.Durations[1] / r.Scale, 9);
+        Assert.Equal(0.75, r.Durations[2] / r.Scale, 9);
         AssertRelative(3.0, Peaks(r.Segments)[0], 1e-9, "binding velocity");
     }
 
@@ -209,7 +209,7 @@ public class PassThroughWithLimitsTests
 
         Assert.False(r.ScaledByLimits);
         Assert.Equal(1.0, r.Scale);
-        Assert.Equal(new[] { 1.0 / 3, 1.0 / 3, 1.0 / 3 }, r.Durations, new Tolerance(1e-12));
+        Assert.Equal(new[] { 1.0, 1.0, 1.0 }, r.Durations, new Tolerance(1e-12));
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class PassThroughWithLimitsTests
             var r = PassThroughPlanner1D.Plan(Data2, 9, null, limits);
 
             Assert.False(r.ScaledByLimits);
-            Assert.Equal(1.0, r.TotalDuration, 12);
+            Assert.Equal(3.0, r.TotalDuration, 12);
         }
     }
 
@@ -401,11 +401,11 @@ public class PassThroughWithLimitsTests
     }
 
     [Fact]
-    public void Builder_WithoutLimits_KeepsTheEarlierBehaviour_TotalOneSecondByDefault()
+    public void Builder_WithoutLimits_UsesTheDefaultReference_OneSecondPerSegment()
     {
         var trajectory = new TrajectoryBuilder1D().AddSegmentsFromWaypointsPassThrough(Data2).Build();
 
-        Assert.Equal(1.0, trajectory.TotalDuration, 12);
+        Assert.Equal(3.0, trajectory.TotalDuration, 12);
     }
 
     [Fact]
