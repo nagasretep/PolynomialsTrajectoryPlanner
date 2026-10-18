@@ -295,7 +295,7 @@ public static class PassThroughPlanner1D
                 if (peak > limit + 1e-10)
                 {
                     throw new KinematicLimitsViolatedException(
-                        $"Pass-through segment {k} (duration {segments[k].Duration:G6} s) violates the {KindName(order)} limit: " +
+                        $"Pass-through segment {k + 1} (duration {segments[k].Duration:G6} s) violates the {KindName(order)} limit: " +
                         $"peak {peak:G6} exceeds {limit:G6}.");
                 }
             }

@@ -352,7 +352,7 @@ public class PassThroughWithLimitsTests
 
         Assert.Contains("segment", ex.Message);
         Assert.Contains("velocity limit", ex.Message);
-        Assert.Matches(@"segment [0-2] ", ex.Message);
+        Assert.Matches(@"segment [1-3] ", ex.Message);
     }
 
     [Fact]

@@ -15,7 +15,7 @@ namespace TrajectoryPlanner.App;
 /// factory, blending, constant velocity), and formats the results for the report tables and the plots.
 /// Durations, limit checks, blend point search, evaluation and sampling are all done by the Core.
 /// </summary>
-public sealed class PrototypeTrajectoryService
+public sealed partial class PrototypeTrajectoryService
 {
     /// <summary>Samples per plotted curve: at least this many, or this many per segment, whichever is larger.</summary>
     private const int MinimumSamples = 300;
@@ -48,11 +48,7 @@ public sealed class PrototypeTrajectoryService
             .DefaultIfEmpty(0)
             .Max();
 
-        TrajectorySamples samples = trajectory.Sample(
-            Math.Max(MinimumSamples, flattenedSegments.Count * SamplesPerSegment), maxDerivativeOrder);
-        var series = new List<SeriesData>();
-        for (int order = 0; order <= maxDerivativeOrder; order++)
-            series.Add(new SeriesData(GetQuantityName(order), order, samples.Times, samples.Values[order]));
+        List<SeriesData> series = SampleSeries(trajectory, maxDerivativeOrder);
 
         var extremaRows = new List<ExtremaReportRow>();
         var coefficientRows = new List<CoefficientReportRow>();
@@ -85,6 +81,17 @@ public sealed class PrototypeTrajectoryService
             trajectory.EvaluateDerivative,
             trajectory.TotalDuration,
             notices);
+    }
+
+    /// <summary>Samples the plotted quantities (position ... highest derivative) of a whole trajectory.</summary>
+    private static List<SeriesData> SampleSeries(Trajectory1D trajectory, int maxDerivativeOrder)
+    {
+        TrajectorySamples samples = trajectory.Sample(
+            Math.Max(MinimumSamples, trajectory.Segments.Count * SamplesPerSegment), maxDerivativeOrder);
+        var series = new List<SeriesData>();
+        for (int order = 0; order <= maxDerivativeOrder; order++)
+            series.Add(new SeriesData(GetQuantityName(order), order, samples.Times, samples.Values[order]));
+        return series;
     }
 
     private static SegmentRepresentation BuildRepresentation(SegmentInputModel input)

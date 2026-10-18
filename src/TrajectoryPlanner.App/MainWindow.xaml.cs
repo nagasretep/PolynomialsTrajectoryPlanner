@@ -17,6 +17,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly List<WpfPlot> _plotControls = [];
     private readonly List<Border> _plotHosts = [];
     private PrototypeComputationResult? _currentResult;
+    private PrototypeComputationResult? _blendingResult;
+    private PrototypeComputationResult? _passThroughResult;
+    private bool _passThroughMode;
+    private WaypointInputModel? _selectedWaypoint;
     private readonly List<VerticalLine> _cursorLines = [];
     private SegmentInputModel? _selectedSegment;
     private string _statusMessage = "Configure the prototype inputs, then click Compute.";
@@ -31,6 +35,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _plotHosts.AddRange([PlotHost1, PlotHost2, PlotHost3, PlotHost4, PlotHost5]);
 
         Segments.CollectionChanged += OnSegmentsCollectionChanged;
+        PassThroughInput.Waypoints.CollectionChanged += (_, _) => OnPropertyChanged(nameof(CanRemoveWaypoint));
         AddInitialSegment();
         Loaded += (_, _) => ResetPlot();
     }
@@ -46,6 +51,37 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     public ObservableCollection<CoefficientReportRow> CoefficientReportRows { get; } = [];
 
     public ObservableCollection<CursorReadoutRow> CursorReadoutRows { get; } = [];
+
+    /// <summary>Inputs of the pass-through mode; kept when the mode is switched.</summary>
+    public PassThroughInputModel PassThroughInput { get; } = new();
+
+    public ObservableCollection<SummaryRow> SummaryReportRows { get; } = [];
+
+    public ObservableCollection<WaypointStateRow> WaypointStateRows { get; } = [];
+
+    public bool IsBlendingMode
+    {
+        get => !_passThroughMode;
+        set { if (value) SwitchMode(passThrough: false); }
+    }
+
+    public bool IsPassThroughMode
+    {
+        get => _passThroughMode;
+        set { if (value) SwitchMode(passThrough: true); }
+    }
+
+    public WaypointInputModel? SelectedWaypoint
+    {
+        get => _selectedWaypoint;
+        set
+        {
+            if (SetProperty(ref _selectedWaypoint, value))
+                OnPropertyChanged(nameof(CanRemoveWaypoint));
+        }
+    }
+
+    public bool CanRemoveWaypoint => PassThroughInput.Waypoints.Count > 2 && SelectedWaypoint is not null;
 
     public bool HasMultipleSegments => Segments.Count > 1;
 
@@ -122,17 +158,93 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         StatusMessage = $"Removed segment {removedIndex + 1}.";
     }
 
+    private void SwitchMode(bool passThrough)
+    {
+        if (_passThroughMode == passThrough)
+            return;
+
+        _passThroughMode = passThrough;
+        OnPropertyChanged(nameof(IsBlendingMode));
+        OnPropertyChanged(nameof(IsPassThroughMode));
+        ReportTabs.SelectedIndex = 0;
+
+        // Each mode keeps its inputs (separate models) and the last result it computed.
+        PrototypeComputationResult? stored = passThrough ? _passThroughResult : _blendingResult;
+        if (stored is null)
+        {
+            _currentResult = null;
+            ExtremaReportRows.Clear();
+            CoefficientReportRows.Clear();
+            SummaryReportRows.Clear();
+            WaypointStateRows.Clear();
+            CursorReadoutRows.Clear();
+            ResetPlot();
+            StatusMessage = passThrough
+                ? "Pass-through mode: enter the waypoints, then click Compute."
+                : "Configure the prototype inputs, then click Compute.";
+        }
+        else
+        {
+            ShowResult(stored);
+            StatusMessage = "Showing the last result of this mode.";
+        }
+    }
+
+    private void AddWaypoint_Click(object sender, RoutedEventArgs e)
+    {
+        var waypoints = PassThroughInput.Waypoints;
+        WaypointInputModel? last = waypoints.LastOrDefault();
+        string position = last is not null && InputNumber.TryParse(last.Position, out double lastPosition)
+            ? (lastPosition + 1.0).ToString("F0") : "0";
+
+        var waypoint = new WaypointInputModel(waypoints.Count + 1, position);
+        waypoints.Add(waypoint);
+        SelectedWaypoint = waypoint;
+        StatusMessage = $"Added waypoint {waypoints.Count}.";
+    }
+
+    private void RemoveWaypoint_Click(object sender, RoutedEventArgs e)
+    {
+        if (!CanRemoveWaypoint || SelectedWaypoint is null)
+            return;
+
+        var waypoints = PassThroughInput.Waypoints;
+        int index = waypoints.IndexOf(SelectedWaypoint);
+        waypoints.Remove(SelectedWaypoint);
+        SelectedWaypoint = waypoints[Math.Clamp(index, 0, waypoints.Count - 1)];
+        StatusMessage = $"Removed waypoint {index + 1}.";
+    }
+
+    private void ShowResult(PrototypeComputationResult result)
+    {
+        _currentResult = result;
+
+        ReplaceRows(ExtremaReportRows, result.ExtremaRows);
+        ReplaceRows(CoefficientReportRows, result.CoefficientRows);
+        ReplaceRows(SummaryReportRows, result.SummaryRows ?? []);
+        ReplaceRows(WaypointStateRows, result.WaypointStates ?? []);
+
+        BuildPlot(result);
+        UpdateCursorReadout(0.0);
+    }
+
     private void Compute_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            _currentResult = _trajectoryService.Compute(Segments);
+            if (_passThroughMode)
+            {
+                WaypointGrid.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
+                _passThroughResult = _trajectoryService.ComputePassThrough(PassThroughInput);
+                _currentResult = _passThroughResult;
+            }
+            else
+            {
+                _blendingResult = _trajectoryService.Compute(Segments);
+                _currentResult = _blendingResult;
+            }
 
-            ReplaceRows(ExtremaReportRows, _currentResult.ExtremaRows);
-            ReplaceRows(CoefficientReportRows, _currentResult.CoefficientRows);
-
-            BuildPlot(_currentResult);
-            UpdateCursorReadout(0.0);
+            ShowResult(_currentResult);
 
             StatusMessage = $"Computed {_currentResult.Series.Count} plotted quantities across {_currentResult.TotalDuration:F4} seconds."
                 + (_currentResult.Notices.Count > 0 ? " " + string.Join(" ", _currentResult.Notices) : string.Empty);
@@ -165,6 +277,16 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             plotControl.Plot.Title(series.Name);
             plotControl.Plot.YLabel(series.Name);
             plotControl.Plot.XLabel("Time");
+            if (series.Order == 0 && result.WaypointMarkers is { Count: > 0 } markers)
+            {
+                // Pass-through: the waypoints, on the position plot.
+                var points = plotControl.Plot.Add.Scatter(
+                    markers.Select(m => m.Time).ToArray(), markers.Select(m => m.Position).ToArray());
+                points.LineWidth = 0;
+                points.MarkerSize = 10;
+                points.LegendText = "Waypoints";
+            }
+
             plotControl.Plot.Axes.AutoScale();
 
             var cursorLine = plotControl.Plot.Add.VerticalLine(0);
