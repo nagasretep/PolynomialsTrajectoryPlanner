@@ -15,7 +15,7 @@ namespace TrajectoryPlanner.App;
 /// Durations, limits, blend windows, constant-speed geometry and every check of them are done by the Core; the App only
 /// turns text into the builder's arguments and the Core's answers into tables, curves and messages.
 /// </summary>
-public sealed class Prototype3DTrajectoryService
+public sealed partial class Prototype3DTrajectoryService
 {
     /// <summary>Samples per plotted curve: at least this many, or this many per part, whichever is larger.</summary>
     private const int MinimumSamples = 600;
@@ -79,17 +79,29 @@ public sealed class Prototype3DTrajectoryService
         }
 
         Trajectory3D trajectory = builder.Build();
-        return Report(trajectory, parsed, inputs.Any(x => x.UseConstantSpeed));
+
+        int maxOrder = parsed.Max(p => BoundaryConditionValidator.DerivativeLevelsForDegree(p.Degree) - 1);
+        if (inputs.Any(x => x.UseConstantSpeed))
+            maxOrder = 4; // the stretch supplies every order up to snap
+
+        var notices = new List<string>();
+        foreach (var part in trajectory.Parts.Where(p => p.Kind == PartKind.Blend && p.AdjustedByLimits))
+        {
+            notices.Add(
+                $"{part.Label}: duration adjusted from {part.InheritedDuration:F4} s to {part.Duration:F4} s to respect the limits.");
+        }
+
+        return Report(trajectory, maxOrder, LimitRows(trajectory, parsed), notices, []);
     }
 
-    // ---- report ---------------------------------------------------------------------------------
+    // ---- report (shared by the 3D mode and the 3D pass-through mode) ------------------------------
 
-    private static Prototype3DComputationResult Report(Trajectory3D trajectory, List<ParsedSegment> parsed, bool anyStretch)
+    private static Prototype3DComputationResult Report(
+        Trajectory3D trajectory, int maxOrder, List<Limit3DReportRow> limitRows, List<string> notices,
+        List<SummaryRow> leadingSummary,
+        IReadOnlyList<WaypointMarker3D>? waypoints = null, IReadOnlyList<WaypointState3DRow>? waypointStates = null)
     {
         var parts = trajectory.Parts;
-        int maxOrder = parsed.Max(p => BoundaryConditionValidator.DerivativeLevelsForDegree(p.Degree) - 1);
-        if (anyStretch)
-            maxOrder = 4; // the stretch supplies every order up to snap
 
         TrajectorySamples3D samples = trajectory.Sample(Math.Max(MinimumSamples, parts.Count * SamplesPerPart), maxOrder);
         var series = new List<Series3D>();
@@ -139,8 +151,6 @@ public sealed class Prototype3DTrajectoryService
             }
         }
 
-        var limitRows = LimitRows(trajectory, parsed);
-
         var coefficientRows = new List<CoefficientReportRow>();
         foreach (var part in parts)
         {
@@ -158,7 +168,7 @@ public sealed class Prototype3DTrajectoryService
         }
 
         double pathLength = TrajectoryAnalyzer3D.PathLength(trajectory);
-        var summary = new List<SummaryRow>
+        var summary = new List<SummaryRow>(leadingSummary)
         {
             new("Total duration [s]", $"{trajectory.TotalDuration:F6}"),
             new("Path length", $"{pathLength:F6}"),
@@ -166,18 +176,11 @@ public sealed class Prototype3DTrajectoryService
             new("Largest speed |v|", $"{extrema.MaxSpeed:F6} at t = {extrema.MaxSpeedTime:F4} s")
         };
 
-        var notices = new List<string>();
-        foreach (var part in parts.Where(p => p.Kind == PartKind.Blend && p.AdjustedByLimits))
-        {
-            notices.Add(
-                $"{part.Label}: duration adjusted from {part.InheritedDuration:F4} s to {part.Duration:F4} s to respect the limits.");
-        }
-
         return new Prototype3DComputationResult(
             series, pieces, endpoints, parts.Skip(1).Select(p => p.StartTime).ToList(),
             partRows, extremaRows, limitRows, coefficientRows, summary,
             t => trajectory.EvaluateState(Math.Clamp(t, 0.0, trajectory.TotalDuration)),
-            trajectory.TotalDuration, pathLength, notices);
+            trajectory.TotalDuration, pathLength, notices, waypoints, waypointStates);
     }
 
     /// <summary>

@@ -45,8 +45,10 @@
                                      IsChecked="{Binding IsBlendingMode}" Content="Blending" />
                         <RadioButton Margin="0,0,12,0" VerticalAlignment="Center" GroupName="Mode"
                                      IsChecked="{Binding IsPassThroughMode}" Content="Pass-through" />
-                        <RadioButton VerticalAlignment="Center" GroupName="Mode"
+                        <RadioButton Margin="0,0,12,0" VerticalAlignment="Center" GroupName="Mode"
                                      IsChecked="{Binding IsThreeDMode}" Content="3D" />
+                        <RadioButton VerticalAlignment="Center" GroupName="Mode"
+                                     IsChecked="{Binding IsThreeDPassThroughMode}" Content="3D pass-through" />
                     </StackPanel>
                 </Border>
                 <Button Width="130"
@@ -66,14 +68,14 @@
                         Margin="0,0,8,0"
                         Padding="10,6"
                         Click="AddWaypoint_Click"
-                        Visibility="{Binding IsPassThroughMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Visibility="{Binding IsWaypointMode, Converter={StaticResource BoolToVisibilityConverter}}"
                         Content="Add Waypoint" />
                 <Button Width="130"
                         Margin="0,0,8,0"
                         Padding="10,6"
                         Click="RemoveWaypoint_Click"
                         IsEnabled="{Binding CanRemoveWaypoint}"
-                        Visibility="{Binding IsPassThroughMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Visibility="{Binding IsWaypointMode, Converter={StaticResource BoolToVisibilityConverter}}"
                         Content="Remove Waypoint" />
                 <Button Width="130"
                         Padding="10,6"
@@ -700,6 +702,170 @@
                 </TabControl>
             </Border>
 
+            <Border Grid.Row="0"
+                    BorderBrush="#D0D0D0"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="8"
+                    Margin="0,0,0,10"
+                    DataContext="{Binding PassThrough3DInput}"
+                    Visibility="{Binding DataContext.IsThreeDPassThroughMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+                        <GroupBox Margin="0,0,0,8" Header="3D Pass-Through Setup">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Degree" />
+                                <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
+                                          ItemsSource="{Binding DataContext.SupportedDegrees, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          SelectedItem="{Binding Degree}" />
+
+                                <TextBlock Grid.Row="1" Margin="0,0,8,0" VerticalAlignment="Center" Text="Smoothness order m" />
+                                <ComboBox Grid.Row="1" Grid.Column="1"
+                                          ItemsSource="{Binding AvailableSmoothnessOrders}"
+                                          SelectedItem="{Binding SmoothnessOrder}" />
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Margin="0,0,0,8" Header="End Conditions (vectors: X | Y | Z, empty box = 0)">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <CheckBox Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,6" IsChecked="{Binding StartAtRest}" Content="First waypoint at rest" />
+                                <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="Start velocity" />
+                                <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding StartVelocity}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding StartEditable}" />
+                                <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="Start acceleration"
+                                           Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ContentControl Grid.Row="2" Grid.Column="1" Content="{Binding StartAcceleration}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding StartEditable}"
+                                                Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="Start jerk"
+                                           Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ContentControl Grid.Row="3" Grid.Column="1" Content="{Binding StartJerk}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding StartEditable}"
+                                                Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBlock Grid.Row="4" VerticalAlignment="Center" Text="Start snap"
+                                           Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ContentControl Grid.Row="4" Grid.Column="1" Content="{Binding StartSnap}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding StartEditable}"
+                                                Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                <CheckBox Grid.Row="5" Grid.ColumnSpan="2" Margin="0,6,0,6" IsChecked="{Binding EndAtRest}" Content="Last waypoint at rest" />
+                                <TextBlock Grid.Row="6" VerticalAlignment="Center" Text="End velocity" />
+                                <ContentControl Grid.Row="6" Grid.Column="1" Content="{Binding EndVelocity}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding EndEditable}" />
+                                <TextBlock Grid.Row="7" VerticalAlignment="Center" Text="End acceleration"
+                                           Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ContentControl Grid.Row="7" Grid.Column="1" Content="{Binding EndAcceleration}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding EndEditable}"
+                                                Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBlock Grid.Row="8" VerticalAlignment="Center" Text="End jerk"
+                                           Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ContentControl Grid.Row="8" Grid.Column="1" Content="{Binding EndJerk}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding EndEditable}"
+                                                Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBlock Grid.Row="9" VerticalAlignment="Center" Text="End snap"
+                                           Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ContentControl Grid.Row="9" Grid.Column="1" Content="{Binding EndSnap}" ContentTemplate="{StaticResource VectorBoxes}" IsEnabled="{Binding EndEditable}"
+                                                Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Margin="0,0,0,8" Header="Waypoints">
+                            <StackPanel Margin="10">
+                                <TextBlock Margin="0,0,0,6" FontStyle="Italic" TextWrapping="Wrap"
+                                           Text="Duration = time of the segment that starts at that waypoint (common to the three axes). Fill all durations or leave all blank (the last row has no duration)." />
+                                <DataGrid x:Name="WaypointGrid3D"
+                                          Height="170"
+                                          ItemsSource="{Binding Waypoints}"
+                                          SelectedItem="{Binding DataContext.SelectedWaypoint3D, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Binding="{Binding Number}" Header="#" Width="35" IsReadOnly="True" />
+                                        <DataGridTextColumn Binding="{Binding X, UpdateSourceTrigger=PropertyChanged}" Header="X" Width="*" />
+                                        <DataGridTextColumn Binding="{Binding Y, UpdateSourceTrigger=PropertyChanged}" Header="Y" Width="*" />
+                                        <DataGridTextColumn Binding="{Binding Z, UpdateSourceTrigger=PropertyChanged}" Header="Z" Width="*" />
+                                        <DataGridTextColumn Binding="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" Header="Duration [s]" Width="*">
+                                            <DataGridTextColumn.CellStyle>
+                                                <Style TargetType="DataGridCell">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasSegment}" Value="False">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                            <Setter Property="Background" Value="#EEEEEE" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DataGridTextColumn.CellStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" Text="Total duration [s]" />
+                                    <TextBox Grid.Column="1" Text="{Binding TotalDuration, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
+                                <TextBlock Margin="0,4,0,0" FontStyle="Italic" TextWrapping="Wrap"
+                                           Text="Optional; not together with segment durations. Blank durations and no total: the chord rule (one second per segment), or the shortest feasible common durations if limits are set." />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Margin="0,0,0,8" Header="Limits (optional, each value applies to every axis)">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <CheckBox Grid.Row="0" Margin="0,0,8,6" IsChecked="{Binding UseMaxVelocity}" Content="Maximum Velocity" />
+                                <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxVelocity, UpdateSourceTrigger=PropertyChanged}" />
+                                <CheckBox Grid.Row="1" Margin="0,0,8,6" IsChecked="{Binding UseMaxAcceleration}" Content="Maximum Acceleration"
+                                          Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxAcceleration, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="{Binding SupportsAcceleration, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <CheckBox Grid.Row="2" Margin="0,0,8,6" IsChecked="{Binding UseMaxJerk}" Content="Maximum Jerk"
+                                          Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" Text="{Binding MaxJerk, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="{Binding SupportsJerk, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <CheckBox Grid.Row="3" Margin="0,0,8,0" IsChecked="{Binding UseMaxSnap}" Content="Maximum Snap"
+                                          Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding MaxSnap, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="{Binding SupportsSnap, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </Grid>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
             <GroupBox Grid.Row="1" Header="Numeric Report">
                 <TabControl x:Name="ReportTabs" Margin="8">
                     <TabItem Header="Extrema"
@@ -778,7 +944,7 @@
                         </DataGrid>
                     </TabItem>
                     <TabItem Header="Parts"
-                             Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                             Visibility="{Binding IsAny3DMode, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DataGrid ItemsSource="{Binding PartRows3D}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
@@ -797,7 +963,7 @@
                         </DataGrid>
                     </TabItem>
                     <TabItem Header="Extrema 3D"
-                             Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                             Visibility="{Binding IsAny3DMode, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DataGrid ItemsSource="{Binding ExtremaRows3D}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
@@ -814,7 +980,7 @@
                         </DataGrid>
                     </TabItem>
                     <TabItem Header="Peaks vs limits"
-                             Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                             Visibility="{Binding IsAny3DMode, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DataGrid ItemsSource="{Binding LimitRows3D}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
@@ -827,6 +993,22 @@
                                 <DataGridTextColumn Binding="{Binding Limit, StringFormat=F4}" Header="Limit" Width="60" />
                                 <DataGridTextColumn Binding="{Binding PercentOfLimit, StringFormat=F2}" Header="%" Width="55" />
                                 <DataGridTextColumn Binding="{Binding Part}" Header="Part" Width="75" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Waypoint states"
+                             Visibility="{Binding IsThreeDPassThroughMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <DataGrid ItemsSource="{Binding WaypointStateRows3D}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Waypoint}" Header="#" Width="35" />
+                                <DataGridTextColumn Binding="{Binding Time, StringFormat=F4}" Header="t" Width="60" />
+                                <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
+                                <DataGridTextColumn Binding="{Binding X, StringFormat=F6}" Header="X" Width="80" />
+                                <DataGridTextColumn Binding="{Binding Y, StringFormat=F6}" Header="Y" Width="80" />
+                                <DataGridTextColumn Binding="{Binding Z, StringFormat=F6}" Header="Z" Width="80" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </TabItem>
@@ -912,7 +1094,7 @@
                     </StackPanel>
 
                     <CheckBox DockPanel.Dock="Top" Margin="0,0,0,8" IsChecked="{Binding ShowNorm}" Content="Show the magnitude (norm) curves"
-                              Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                              Visibility="{Binding IsAny3DMode, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <Grid>
                         <DataGrid ItemsSource="{Binding CursorReadoutRows}"
@@ -931,7 +1113,7 @@
                                   CanUserAddRows="False"
                                   HeadersVisibility="Column"
                                   IsReadOnly="True"
-                                  Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                                  Visibility="{Binding IsAny3DMode, Converter={StaticResource BoolToVisibilityConverter}}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Binding="{Binding Quantity}" Header="Quantity" Width="*" />
                                 <DataGridTextColumn Binding="{Binding X, StringFormat=F4}" Header="X" Width="58" />
@@ -945,7 +1127,7 @@
             </Grid>
             </TabItem>
             <TabItem Header="Path"
-                     Visibility="{Binding IsThreeDMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                     Visibility="{Binding IsAny3DMode, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid Margin="8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

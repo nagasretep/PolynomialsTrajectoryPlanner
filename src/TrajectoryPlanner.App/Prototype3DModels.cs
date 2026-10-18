@@ -231,4 +231,6 @@ public sealed record Prototype3DComputationResult(
     Func<double, State3D> StateAt,
     double TotalDuration,
     double PathLength,
-    IReadOnlyList<string> Notices);
+    IReadOnlyList<string> Notices,
+    IReadOnlyList<WaypointMarker3D>? Waypoints = null,
+    IReadOnlyList<WaypointState3DRow>? WaypointStates = null);

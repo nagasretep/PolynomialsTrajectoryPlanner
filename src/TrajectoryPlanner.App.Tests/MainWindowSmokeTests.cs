@@ -54,6 +54,30 @@ public class MainWindowSmokeTests
                 window.IsThreeDMode = true;
                 Assert.Equal("2", window.Segments3D[0].EndPosition.Z);
                 Assert.Single(window.PartRows3D); // the last 3D result is shown again
+
+                // Request 0020: the fourth mode (default inputs = the reference example of the theory, with its limits).
+                window.IsThreeDPassThroughMode = true;
+                Assert.True(window.IsAny3DMode);
+                Assert.True(window.IsWaypointMode);
+                var input = window.PassThrough3DInput;
+                input.UseMaxVelocity = input.UseMaxAcceleration = input.UseMaxJerk = input.UseMaxSnap = true;
+                compute.Invoke(window, new object?[] { null, new RoutedEventArgs() });
+                Assert.StartsWith("Computed 5 plotted quantities across 14.9715", window.StatusMessage.Replace(',', '.'));
+                Assert.Contains("binding: velocity on axis x", window.StatusMessage);
+                Assert.Equal(3, window.PartRows3D.Count);
+                Assert.Equal(20, window.WaypointStateRows3D.Count);
+                typeof(MainWindow).GetMethod("UpdateCursorReadout",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .Invoke(window, new object[] { 3.0 });
+
+                // Round trip over the four modes keeps every result and input.
+                window.IsThreeDMode = true;
+                Assert.Single(window.PartRows3D);
+                window.IsPassThroughMode = true;
+                Assert.Equal("5", window.PassThroughInput.Waypoints[1].Position);
+                window.IsThreeDPassThroughMode = true;
+                Assert.Equal(3, window.PartRows3D.Count);
+                Assert.Equal("3", input.Waypoints[2].Y);
                 window.Close();
             }
             catch (Exception ex)

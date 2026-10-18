@@ -17,7 +17,8 @@ public enum AppMode
 {
     Blending,
     PassThrough,
-    ThreeD
+    ThreeD,
+    ThreeDPassThrough
 }
 
 public partial class MainWindow : Window, INotifyPropertyChanged
@@ -33,6 +34,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private PrototypeComputationResult? _blendingResult;
     private PrototypeComputationResult? _passThroughResult;
     private Prototype3DComputationResult? _result3D;
+    private Prototype3DComputationResult? _result3DPassThrough;
+    private Waypoint3DInputModel? _selectedWaypoint3D;
     private AppMode _mode = AppMode.Blending;
     private bool _showNorm;
     private WaypointInputModel? _selectedWaypoint;
@@ -55,6 +58,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         Segments.CollectionChanged += OnSegmentsCollectionChanged;
         Segments3D.CollectionChanged += OnSegmentsCollectionChanged;
         PassThroughInput.Waypoints.CollectionChanged += (_, _) => OnPropertyChanged(nameof(CanRemoveWaypoint));
+        PassThrough3DInput.Waypoints.CollectionChanged += (_, _) => OnPropertyChanged(nameof(CanRemoveWaypoint));
         AddInitialSegment();
         AddInitialSegment3D();
         Loaded += (_, _) => ResetPlot();
@@ -114,8 +118,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         get => _showNorm;
         set
         {
-            if (SetProperty(ref _showNorm, value) && _mode == AppMode.ThreeD && _result3D is not null)
-                Show3DResult(_result3D);
+            if (SetProperty(ref _showNorm, value) && Current3DResult is { } shown)
+                Show3DResult(shown);
         }
     }
 
@@ -139,10 +143,45 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set { if (value) SwitchMode(AppMode.ThreeD); }
     }
 
-    public bool IsOneDMode => _mode != AppMode.ThreeD;
+    public bool IsThreeDPassThroughMode
+    {
+        get => _mode == AppMode.ThreeDPassThrough;
+        set { if (value) SwitchMode(AppMode.ThreeDPassThrough); }
+    }
+
+    /// <summary>The two 3D modes share the presentation (three curves, Path tab, 3D report tabs, 3D cursor table).</summary>
+    public bool IsAny3DMode => _mode is AppMode.ThreeD or AppMode.ThreeDPassThrough;
+
+    public bool IsOneDMode => !IsAny3DMode;
 
     /// <summary>Modes whose inputs are segment tabs (add / remove segment buttons).</summary>
-    public bool IsSegmentMode => _mode != AppMode.PassThrough;
+    public bool IsSegmentMode => _mode is AppMode.Blending or AppMode.ThreeD;
+
+    /// <summary>Modes whose inputs are a waypoint table (add / remove waypoint buttons).</summary>
+    public bool IsWaypointMode => _mode is AppMode.PassThrough or AppMode.ThreeDPassThrough;
+
+    /// <summary>Inputs of the 3D pass-through mode; kept when the mode is switched.</summary>
+    public PassThrough3DInputModel PassThrough3DInput { get; } = new();
+
+    public ObservableCollection<WaypointState3DRow> WaypointStateRows3D { get; } = [];
+
+    public Waypoint3DInputModel? SelectedWaypoint3D
+    {
+        get => _selectedWaypoint3D;
+        set
+        {
+            if (SetProperty(ref _selectedWaypoint3D, value))
+                OnPropertyChanged(nameof(CanRemoveWaypoint));
+        }
+    }
+
+    /// <summary>The 3D result of the current mode (null in the 1D modes or before Compute).</summary>
+    private Prototype3DComputationResult? Current3DResult => _mode switch
+    {
+        AppMode.ThreeD => _result3D,
+        AppMode.ThreeDPassThrough => _result3DPassThrough,
+        _ => null
+    };
 
     public bool ShowsSummary => _mode != AppMode.Blending;
 
@@ -156,7 +195,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    public bool CanRemoveWaypoint => PassThroughInput.Waypoints.Count > 2 && SelectedWaypoint is not null;
+    public bool CanRemoveWaypoint => _mode == AppMode.ThreeDPassThrough
+        ? PassThrough3DInput.Waypoints.Count > 2 && SelectedWaypoint3D is not null
+        : PassThroughInput.Waypoints.Count > 2 && SelectedWaypoint is not null;
 
     public bool HasMultipleSegments => Segments.Count > 1;
 
@@ -295,28 +336,31 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _mode = mode;
         foreach (string name in new[]
                  {
-                     nameof(IsBlendingMode), nameof(IsPassThroughMode), nameof(IsThreeDMode), nameof(IsOneDMode),
-                     nameof(IsSegmentMode), nameof(ShowsSummary), nameof(CanRemoveSegment)
+                     nameof(IsBlendingMode), nameof(IsPassThroughMode), nameof(IsThreeDMode), nameof(IsThreeDPassThroughMode),
+                     nameof(IsAny3DMode), nameof(IsOneDMode), nameof(IsSegmentMode), nameof(IsWaypointMode),
+                     nameof(ShowsSummary), nameof(CanRemoveSegment), nameof(CanRemoveWaypoint)
                  })
             OnPropertyChanged(name);
 
-        // The first report tab that this mode shows.
-        ReportTabs.SelectedIndex = mode == AppMode.ThreeD ? 4 : 0; // 3D: Parts; 1D: Extrema
+        // The first report tab that this mode shows: 1D Extrema, 3D Parts, 3D pass-through Summary.
+        ReportTabs.SelectedIndex = mode switch { AppMode.ThreeD => 4, AppMode.ThreeDPassThrough => 2, _ => 0 };
         ChartTabs.SelectedIndex = 0;
 
         ClearReports();
 
         // Each mode keeps its inputs (separate models) and the last result it computed.
-        if (mode == AppMode.ThreeD)
+        if (IsAny3DMode)
         {
-            if (_result3D is null)
+            if (Current3DResult is null)
             {
                 ResetPlot();
-                StatusMessage = "3D mode: enter the segments as vectors (X | Y | Z), then click Compute.";
+                StatusMessage = mode == AppMode.ThreeD
+                    ? "3D mode: enter the segments as vectors (X | Y | Z), then click Compute."
+                    : "3D pass-through mode: enter the waypoints (X | Y | Z), then click Compute.";
             }
             else
             {
-                Show3DResult(_result3D);
+                Show3DResult(Current3DResult);
                 StatusMessage = "Showing the last result of this mode.";
             }
 
@@ -353,10 +397,24 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         ExtremaRows3D.Clear();
         LimitRows3D.Clear();
         Cursor3DRows.Clear();
+        WaypointStateRows3D.Clear();
     }
 
     private void AddWaypoint_Click(object sender, RoutedEventArgs e)
     {
+        if (_mode == AppMode.ThreeDPassThrough)
+        {
+            var list = PassThrough3DInput.Waypoints;
+            Waypoint3DInputModel? previous = list.LastOrDefault();
+            var added = previous is null
+                ? new Waypoint3DInputModel(1, "0", "0", "0")
+                : new Waypoint3DInputModel(list.Count + 1, Shifted(previous.X, 1), previous.Y, previous.Z);
+            list.Add(added);
+            SelectedWaypoint3D = added;
+            StatusMessage = $"Added waypoint {list.Count}.";
+            return;
+        }
+
         var waypoints = PassThroughInput.Waypoints;
         WaypointInputModel? last = waypoints.LastOrDefault();
         string position = last is not null && InputNumber.TryParse(last.Position, out double lastPosition)
@@ -370,7 +428,20 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void RemoveWaypoint_Click(object sender, RoutedEventArgs e)
     {
-        if (!CanRemoveWaypoint || SelectedWaypoint is null)
+        if (!CanRemoveWaypoint)
+            return;
+
+        if (_mode == AppMode.ThreeDPassThrough)
+        {
+            var list = PassThrough3DInput.Waypoints;
+            int removed = list.IndexOf(SelectedWaypoint3D!);
+            list.Remove(SelectedWaypoint3D!);
+            SelectedWaypoint3D = list[Math.Clamp(removed, 0, list.Count - 1)];
+            StatusMessage = $"Removed waypoint {removed + 1}.";
+            return;
+        }
+
+        if (SelectedWaypoint is null)
             return;
 
         var waypoints = PassThroughInput.Waypoints;
@@ -399,12 +470,22 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         try
         {
-            if (_mode == AppMode.ThreeD)
+            if (IsAny3DMode)
             {
-                _result3D = _trajectory3DService.Compute(Segments3D);
-                Show3DResult(_result3D);
-                StatusMessage = $"Computed {_result3D.Series.Count} plotted quantities across {_result3D.TotalDuration:F4} seconds; path length {_result3D.PathLength:F4}."
-                    + (_result3D.Notices.Count > 0 ? " " + string.Join(" ", _result3D.Notices) : string.Empty);
+                Prototype3DComputationResult computed;
+                if (_mode == AppMode.ThreeD)
+                {
+                    computed = _result3D = _trajectory3DService.Compute(Segments3D);
+                }
+                else
+                {
+                    WaypointGrid3D.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
+                    computed = _result3DPassThrough = _trajectory3DService.ComputePassThrough(PassThrough3DInput);
+                }
+
+                Show3DResult(computed);
+                StatusMessage = $"Computed {computed.Series.Count} plotted quantities across {computed.TotalDuration:F4} seconds; path length {computed.PathLength:F4}."
+                    + (computed.Notices.Count > 0 ? " " + string.Join(" ", computed.Notices) : string.Empty);
                 return;
             }
 
@@ -482,6 +563,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         ReplaceRows(LimitRows3D, result.LimitRows);
         ReplaceRows(CoefficientReportRows, result.CoefficientRows);
         ReplaceRows(SummaryReportRows, result.SummaryRows);
+        ReplaceRows(WaypointStateRows3D, result.WaypointStates ?? []);
 
         BuildPlot3D(result);
         BuildPathPlots(result);
@@ -523,6 +605,20 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 norm.LineWidth = 1.5f;
                 norm.MarkerSize = 0;
                 norm.LinePattern = LinePattern.Dashed;
+            }
+
+            // 3D pass-through: the waypoints on the position plot (one marker per axis, in the axis colour).
+            if (series.Order == 0 && result.Waypoints is { Count: > 0 } waypoints)
+            {
+                for (int axis = 0; axis < 3; axis++)
+                {
+                    var marks = plotControl.Plot.Add.Scatter(
+                        waypoints.Select(w => w.Time).ToArray(), waypoints.Select(w => w.Point[axis]).ToArray());
+                    marks.LineWidth = 0;
+                    marks.MarkerSize = 9;
+                    marks.MarkerShape = MarkerShape.OpenCircle;
+                    marks.Color = AxisColors[axis];
+                }
             }
 
             // Part boundaries.
@@ -586,6 +682,17 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             ends.MarkerShape = MarkerShape.FilledSquare;
             ends.Color = Colors.Black;
 
+            if (result.Waypoints is { Count: > 0 } waypoints)
+            {
+                var marks = plot.Add.Scatter(
+                    waypoints.Select(w => hp(w.Point)).ToArray(), waypoints.Select(w => vp(w.Point)).ToArray());
+                marks.LineWidth = 0;
+                marks.MarkerSize = 12;
+                marks.MarkerShape = MarkerShape.OpenCircle;
+                marks.Color = Colors.DarkGreen;
+                marks.LegendText = "Waypoints";
+            }
+
             // The cursor marker: a one-point series whose arrays are updated in place.
             var markerX = new double[1];
             var markerY = new double[1];
@@ -638,9 +745,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
 
     private double CurrentTotalDuration =>
-        _mode == AppMode.ThreeD ? _result3D?.TotalDuration ?? 0 : _currentResult?.TotalDuration ?? 0;
+        IsAny3DMode ? Current3DResult?.TotalDuration ?? 0 : _currentResult?.TotalDuration ?? 0;
 
-    private bool HasResult => _mode == AppMode.ThreeD ? _result3D is not null : _currentResult is not null;
+    private bool HasResult => IsAny3DMode ? Current3DResult is not null : _currentResult is not null;
 
     private void TrajectoryPlot_MouseMove(object sender, MouseEventArgs e)
     {
@@ -662,7 +769,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void UpdateCursorReadout(double time)
     {
-        if (_mode == AppMode.ThreeD)
+        if (IsAny3DMode)
         {
             UpdateCursorReadout3D(time);
             return;
@@ -703,20 +810,21 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void UpdateCursorReadout3D(double time)
     {
-        if (_result3D is null)
+        Prototype3DComputationResult? result = Current3DResult;
+        if (result is null)
             return;
 
         foreach (VerticalLine cursorLine in _cursorLines)
             cursorLine.X = time;
 
         CursorStatusText = $"Cursor time: {time:F6}";
-        State3D state = _result3D.StateAt(time);
+        State3D state = result.StateAt(time);
 
-        for (int i = 0; i < _result3D.Series.Count; i++)
+        for (int i = 0; i < result.Series.Count; i++)
         {
-            Point3D value = state.GetDerivative(_result3D.Series[i].Order);
+            Point3D value = state.GetDerivative(result.Series[i].Order);
             if (i >= Cursor3DRows.Count)
-                Cursor3DRows.Add(new Cursor3DRow(_result3D.Series[i].Name));
+                Cursor3DRows.Add(new Cursor3DRow(result.Series[i].Name));
 
             Cursor3DRows[i].X = value.X;
             Cursor3DRows[i].Y = value.Y;
@@ -724,7 +832,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             Cursor3DRows[i].Norm = value.Length;
         }
 
-        while (Cursor3DRows.Count > _result3D.Series.Count)
+        while (Cursor3DRows.Count > result.Series.Count)
             Cursor3DRows.RemoveAt(Cursor3DRows.Count - 1);
 
         // The marker on the path projections.
@@ -737,7 +845,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             _pathPlots[k].Refresh();
         }
 
-        foreach (WpfPlot plotControl in _plotControls.Where((_, index) => index < _result3D.Series.Count))
+        foreach (WpfPlot plotControl in _plotControls.Where((_, index) => index < result.Series.Count))
             plotControl.Refresh();
     }
 
