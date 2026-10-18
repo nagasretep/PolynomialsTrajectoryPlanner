@@ -183,6 +183,10 @@ public static class ExtremaAnalyzer
         return FindExtrema(segment, 4);
     }
 
+    /// <summary>The limits are per axis (component-wise treatment, <c>theory/TrajectoryConstraints.md</c>): all three axes must respect them.</summary>
+    public static bool VerifyLimits(PolynomialSegment3D segment, KinematicLimits limits) =>
+        VerifyLimits(segment.XAxis, limits) && VerifyLimits(segment.YAxis, limits) && VerifyLimits(segment.ZAxis, limits);
+
     public static bool VerifyLimits(PolynomialSegment1D segment, KinematicLimits limits)
     {
         if (limits.HasVelocityLimit)

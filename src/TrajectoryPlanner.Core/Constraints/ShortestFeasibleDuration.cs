@@ -44,17 +44,36 @@ public static class ShortestFeasibleDuration
     /// A nullable result (rather than <c>TryFind</c> with an out parameter) keeps call sites to one expression,
     /// <c>Find(...) ?? fallback</c>. Impossible limits still throw <see cref="DurationSearchFailedException"/>.
     /// </summary>
-    public static double? Find(int degree, State1D start, State1D end, KinematicLimits limits)
+    public static double? Find(int degree, State1D start, State1D end, KinematicLimits limits) =>
+        Find(degree, new[] { start }, new[] { end }, limits);
+
+    /// <summary>
+    /// Multi-component version (3D, request 0015): the components share one duration and the feasibility is the maximum
+    /// over the components and the active limits (per-axis limits). All components at rest: the closed form with the
+    /// largest distance; otherwise the same search, with F(T) as the maximum over the components.
+    /// </summary>
+    public static double? Find(int degree, IReadOnlyList<State1D> starts, IReadOnlyList<State1D> ends, KinematicLimits limits)
     {
+        if (starts.Count != ends.Count || starts.Count == 0)
+            throw new ArgumentException("The start and end states must have the same, non-zero number of components.");
+
         if (!limits.HasVelocityLimit && !limits.HasAccelerationLimit && !limits.HasJerkLimit && !limits.HasSnapLimit)
             return null;
 
         var active = ActiveLimits(limits);
 
-        if (HasRestBoundary(degree, start, end))
-            return RestToRest(degree, Math.Abs(end.Position - start.Position), active);
+        bool allRest = true;
+        double largestDistance = 0;
+        for (int i = 0; i < starts.Count; i++)
+        {
+            allRest &= HasRestBoundary(degree, starts[i], ends[i]);
+            largestDistance = Math.Max(largestDistance, Math.Abs(ends[i].Position - starts[i].Position));
+        }
 
-        return Search(degree, start, end, active);
+        if (allRest)
+            return RestToRest(degree, largestDistance, active);
+
+        return Search(degree, starts, ends, active);
     }
 
     /// <summary>
@@ -79,11 +98,11 @@ public static class ShortestFeasibleDuration
 
     /// <summary>The general search (also valid for rest-to-rest segments); exposed to compare with the closed form.</summary>
     public static double Search(int degree, State1D start, State1D end, KinematicLimits limits) =>
-        Search(degree, start, end, ActiveLimits(limits));
+        Search(degree, new[] { start }, new[] { end }, ActiveLimits(limits));
 
     /// <summary>F(T) of the theory: max over active limits of P_k(T) / L_k - 1.</summary>
     public static double Feasibility(int degree, State1D start, State1D end, KinematicLimits limits, double duration) =>
-        Feasibility(degree, start, end, ActiveLimits(limits), duration);
+        Feasibility(degree, new[] { start }, new[] { end }, ActiveLimits(limits), duration);
 
     // ---------------------------------------------------------------------------------------------
 
@@ -124,23 +143,25 @@ public static class ShortestFeasibleDuration
         return result;
     }
 
-    private static double Feasibility(int degree, State1D start, State1D end, (int Order, double Limit)[] active, double duration)
+    private static double Feasibility(int degree, IReadOnlyList<State1D> starts, IReadOnlyList<State1D> ends, (int Order, double Limit)[] active, double duration)
     {
-        var segment = new PolynomialSegment1D(degree, start, end, duration);
-
         double worst = double.MinValue;
-        foreach (var (order, limit) in active)
-            worst = Math.Max(worst, ExtremaAnalyzer.FindExtrema(segment, order).MaxAbsolute / limit);
+        for (int i = 0; i < starts.Count; i++)
+        {
+            var segment = new PolynomialSegment1D(degree, starts[i], ends[i], duration);
+            foreach (var (order, limit) in active)
+                worst = Math.Max(worst, ExtremaAnalyzer.FindExtrema(segment, order).MaxAbsolute / limit);
+        }
 
         return worst - 1.0;
     }
 
-    private static double Search(int degree, State1D start, State1D end, (int Order, double Limit)[] active)
+    private static double Search(int degree, IReadOnlyList<State1D> starts, IReadOnlyList<State1D> ends, (int Order, double Limit)[] active)
     {
-        double lower = LowerBound(degree, start, end, active);
+        double lower = LowerBound(degree, starts, ends, active);
 
         double feasible = lower;
-        if (Feasibility(degree, start, end, active, feasible) <= FeasibilityTolerance)
+        if (Feasibility(degree, starts, ends, active, feasible) <= FeasibilityTolerance)
             return feasible; // nothing shorter can work: lower is a necessary condition
 
         double cap = MaxDurationFactor * Math.Max(lower, 1.0);
@@ -148,7 +169,7 @@ public static class ShortestFeasibleDuration
         bool found = false;
         for (double t = lower * GrowthRatio; t <= cap * GrowthRatio; t *= GrowthRatio)
         {
-            if (Feasibility(degree, start, end, active, t) <= FeasibilityTolerance)
+            if (Feasibility(degree, starts, ends, active, t) <= FeasibilityTolerance)
             {
                 feasible = t;
                 found = true;
@@ -170,7 +191,7 @@ public static class ShortestFeasibleDuration
         for (int i = 0; i < 100 && feasible - infeasible > 1e-13 * feasible; i++)
         {
             double mid = 0.5 * (infeasible + feasible);
-            if (Feasibility(degree, start, end, active, mid) <= FeasibilityTolerance)
+            if (Feasibility(degree, starts, ends, active, mid) <= FeasibilityTolerance)
                 feasible = mid;
             else
                 infeasible = mid;
@@ -183,7 +204,7 @@ public static class ShortestFeasibleDuration
     /// Necessary conditions: the mean of x^(k) over the segment cannot exceed its peak, so
     /// T >= |x^(k-1)(end) - x^(k-1)(start)| / L_k for every active limit whose boundary value is prescribed.
     /// </summary>
-    private static double LowerBound(int degree, State1D start, State1D end, (int Order, double Limit)[] active)
+    private static double LowerBound(int degree, IReadOnlyList<State1D> starts, IReadOnlyList<State1D> ends, (int Order, double Limit)[] active)
     {
         int p = (degree + 1) / 2;
         double lower = MinimumDuration;
@@ -192,8 +213,11 @@ public static class ShortestFeasibleDuration
             if (order - 1 > p - 1)
                 continue; // the (order-1)-th boundary derivative is not prescribed for this degree
 
-            double change = Math.Abs(end.GetDerivative(order - 1) - start.GetDerivative(order - 1));
-            lower = Math.Max(lower, change / limit);
+            for (int i = 0; i < starts.Count; i++)
+            {
+                double change = Math.Abs(ends[i].GetDerivative(order - 1) - starts[i].GetDerivative(order - 1));
+                lower = Math.Max(lower, change / limit);
+            }
         }
 
         return lower;
