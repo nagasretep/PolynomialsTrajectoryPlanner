@@ -120,10 +120,8 @@ public class ConstantVelocityTrajectory3D
 
     /// <summary>
     /// Constant velocity along the part of a given 3D segment between two of its parameters (τ_start &lt; τ_end). The
-    /// subpath must be a straight line: if the segment's path between the two points is not collinear (within
-    /// <paramref name="relativeTolerance"/> times the chord length) a <see cref="NotSupportedException"/> is raised, because
-    /// the curved multi-axis case (arc-length reparameterization, <c>theory/ConstantVelocitySegment.md</c>) is not
-    /// implemented yet.
+    /// <paramref name="relativeTolerance"/> times the chord length) a <see cref="NotSupportedException"/> is raised: this is the
+    /// straight-chord construction, and a curved subpath keeps its path only with <see cref="ConstantSpeedTrajectory3D"/>.
     /// </summary>
     /// <exception cref="NotSupportedException">The subpath is curved (or doubles back along the line).</exception>
     public static ConstantVelocityTrajectory3D OnSegment(
@@ -172,7 +170,7 @@ public class ConstantVelocityTrajectory3D
             startState, endState, stretchStart, stretchEnd, speed, polynomialDegree, limits, entryDuration, exitDuration, totalDuration);
     }
 
-    private static double Weight(
+    internal static double Weight(
         string label, int degree, State3D from, State3D to, KinematicLimits? limits, double rule2)
     {
         if (limits is null)
@@ -189,7 +187,7 @@ public class ConstantVelocityTrajectory3D
         }
     }
 
-    private static void Verify(PolynomialSegment3D segment, KinematicLimits limits, string label)
+    internal static void Verify(PolynomialSegment3D segment, KinematicLimits limits, string label)
     {
         if (!ExtremaAnalyzer.VerifyLimits(segment, limits))
         {
@@ -309,8 +307,8 @@ public static class StraightSubpath
         if (!IsStraight(segment, tauStart, tauEnd, relativeTolerance, out string reason))
         {
             throw new NotSupportedException(
-                "Constant velocity along a curved subpath is not implemented yet: only a straight subpath is supported " +
-                $"(arc-length reparameterization is still to be written). Here {reason}.");
+                "The straight-chord construction needs a straight subpath; this one is curved or does not run monotonically " +
+                $"(use ConstantSpeedTrajectory3D for constant speed along a curved subpath). Here {reason}.");
         }
     }
 
