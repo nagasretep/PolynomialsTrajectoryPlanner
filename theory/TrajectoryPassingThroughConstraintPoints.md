@@ -647,6 +647,50 @@ This is fully consistent with the overall project philosophy:
 - start from the 1D theory;
 - extend to 3D through structured vector composition.
 
+### Common Durations And Kinematic Limits In 3D (decided 2026-10-18)
+
+**Decoupling.** For fixed durations the smoothness cost of the 3D problem is the sum of the three scalar costs, and the waypoint conditions and the (zero or prescribed) end conditions act on each component separately. The 3D optimum is therefore the three scalar optima, computed with the **same durations** $T_k$; the durations are the only coupling.
+
+**Reference durations.** The proportional rule of A8 uses the Euclidean chords $\Delta_k = \lVert \mathbf{p}_{k} - \mathbf{p}_{k-1} \rVert$ in place of $\lvert\Delta x\rvert$:
+
+$$
+\bar T_k = N\,\frac{\Delta_k}{\sum_j \Delta_j}\quad(\text{total } N \text{ seconds, one per segment}).
+$$
+
+Along a single axis the chords are the absolute increments and the rule reduces to the 1D rule exactly.
+
+**Scaling law.** For zero boundary derivatives the scalar law $x_\lambda(t) = x_{\bar T}(t/\lambda)$ holds on every axis with the same $\lambda$, so the vector trajectory scales as a whole and
+
+$$
+P_k(\lambda) = \lambda^{-k}\,\max_{a\in\{x,y,z\}} P_{k,a}(1),
+$$
+
+where $P_{k,a}(1)$ is the peak of $\lvert x_a^{(k)}\rvert$ over the whole trajectory for the reference durations. Limits are applied **component-wise** (one value $L_k$ per quantity, equal for the three axes). The shortest feasible common scale is
+
+$$
+\lambda^{\star} = \max_{k\ \text{active}}\ \max_{a}\ \left(\frac{P_{k,a}(1)}{L_k}\right)^{1/k},\qquad T_k^{\star} = \lambda^{\star}\bar T_k .
+$$
+
+The pair $(k, a)$ that attains the maximum is the **binding limit and axis** (to be reported). An axis whose waypoints are all equal is constant and imposes nothing; if every axis is constant, or no limit is active, the limits determine nothing.
+
+**Non-zero boundary derivatives.** The boundary derivatives are given as vectors. As in 1D the scaling law is lost, $F(\lambda) = \max_{k,a} P_{k,a}(\lambda)/L_k - 1$ (maximum over all axes) is searched with the general duration search (geometric growth from the zero-boundary closed form, bisection, explicit failure, caveat on non-monotone windows). Each evaluation is three scalar global solves.
+
+**Prescribed durations.** The common durations are kept and verified on every axis; a violation names the segment, the axis and the quantity.
+
+**Reference values** (NumPy prototype of *Reference Values For Verification*, rest ends, $d = 9$, $m = 4$, peaks on 20001 points per segment, verify to about $10^{-5}$ relative). Waypoints $(0,0,0),\ (1,0,0),\ (1,3,0),\ (1,3,4)$: chords $(1, 3, 4)$, reference durations $(0.375,\ 1.125,\ 1.5)$ (total $3$).
+
+| Axis | $P_1$ | $P_2$ | $P_3$ | $P_4$ |
+|---|---|---|---|---|
+| $x$ | 9.981004 | 38.207532 | 207.293297 | 2904.831335 |
+| $y$ | 4.044221 | 7.592746 | 25.276926 | 127.142593 |
+| $z$ | 4.895422 | 8.795230 | 28.459199 | 123.104392 |
+
+With limits $v \le 2$, $a \le 3$, $j \le 10$, $s \le 50$ per axis: the ratios $(P_{k,x}/L_k)^{1/k}$ of the $x$ axis are $4.990502,\ 3.568731,\ 2.747020,\ 2.760818$ and dominate the other axes, so $\lambda^{\star} = 4.990502$ (velocity on $x$ binds), durations $(1.871438,\ 5.614315,\ 7.485753)$, total $14.971506$; at $\lambda^{\star}$ the peaks over the axes are $2.0,\ 1.534124,\ 1.667833,\ 4.683214$ (below the other limits). The example shows the weakness of the chord rule: the $x$ axis makes its whole motion in the short first segment, and only the common scale can repair it.
+
+**Consistency.** With waypoints that differ along one axis only, the 3D result equals the 1D result (durations, coefficients, $\lambda^{\star}$).
+
+**Open point.** Choosing the proportions $\bar T_k$ so that all axes are well balanced is a nonlinear problem and is not part of the baseline (as in 1D).
+
 ## Why Requirement 14 Is More Constrained Than Requirement 13
 
 Requirement 13 gives geometric freedom because the transition may avoid the nominal endpoint.
