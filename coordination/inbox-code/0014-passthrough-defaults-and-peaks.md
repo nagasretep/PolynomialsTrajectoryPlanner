@@ -1,6 +1,6 @@
 # 0014 — Pass-through: uniform default durations and peaks against limits
 
-Status: open · From: Cowork · To: Code · Date: 2026-10-18
+Status: closed · From: Cowork · To: Code · Date: 2026-10-18
 
 ## Goal
 
