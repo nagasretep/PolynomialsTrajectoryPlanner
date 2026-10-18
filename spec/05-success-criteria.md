@@ -21,7 +21,7 @@ The qualitative criteria above are made checkable as follows. Each criterion has
 | N1 | Boundary conditions are reached | Every polynomial segment reproduces its prescribed start and end states (position and the derivatives its degree uses) to within $10^{-9}$ (absolute, values of order 1) | automated tests |
 | N2 | Junctions are continuous | At every junction between pieces of a trajectory (segment, blend, entry, stretch, exit, pass-through segment) the state is continuous up to the order the degrees allow, to within $10^{-9}$ | automated tests |
 | N3 | Limits are respected | With active limits, no extremum exceeds its limit by more than $10^{-9}$ relative; a request that cannot meet the limits is reported explicitly (never silently altered); the path and the speed are never changed silently | automated tests |
-| N4 | Reference values of the theory are reproduced | Every reference table in `theory/` (pass-through peaks and $\lambda$, parabola derivatives and $v_{adm}$, 13 s example, ...) is reproduced by an automated test at the precision stated in the theory | automated tests |
+| N4 | Reference values of the theory are reproduced | Every reference table in `theory/` (pass-through values, peaks and $\lambda$, 3D common durations, parabola derivatives and $v_{adm}$; the list is in `07-verification-v1.md`) is reproduced by an automated test at the precision stated in the theory | automated tests |
 | N5 | Pass-through is the exact optimum | The pass-through solution has the minimum smoothness cost: the cost equals an independent evaluation to $10^{-6}$ relative, and the 3D result along one axis equals the 1D result to $10^{-9}$ | automated tests |
 
 ### Speed
@@ -62,10 +62,12 @@ The input data of the timing tests are those of `SpeedTests` (`src/TrajectoryPla
 |---|---|---|---|
 | D1 | Theory library reviewed | every document in `theory/` has status *Reviewed* in `roadmap/06-theory-library-roadmap.md` and agrees with the code (no open item in `roadmap/discrepancies.md` of kind theory) | Cowork review (R13) |
 | D2 | Theory book builds | the PDF of the theory builds into `build/` without errors, with working cross references | build script |
-| D3 | Decisions are justified | every decision of `roadmap/decisions/` and every closed discrepancy has its reason recorded | Cowork review |
+| D3 | Decisions are justified | every decision of the author (`roadmap/discrepancies.md`, *Decisions taken by the author*, and `roadmap/decisions/`) and every closed discrepancy has its reason recorded | Cowork review |
 | D4 | The author understands | the checklist below is completed and signed by the author | author sign-off |
 
 #### Understanding checklist (to be completed by the author)
+
+Questions per module and reference answers to help completing it: `06-understanding-questions.md`, `06-understanding-answers.md`. The verification of every criterion, with the commands and the hand-check script, is in `07-verification-v1.md`.
 
 One row per module. The author marks each column when it is true for him: *Theory* (the document explains the module completely), *Algorithm* (the algorithm is explained step by step), *Decisions* (the decisions are recorded with reasons), *Understood* (the author can explain the module in his own words).
 

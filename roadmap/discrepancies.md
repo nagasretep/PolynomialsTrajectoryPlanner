@@ -44,6 +44,12 @@ Classes: **code** = the code must change; **theory** = a theory/design document 
 
 Conventions adopted by Cowork on Code's proposals (revisable): first crossing for an overshooting segment, blend limits = most restrictive of the neighbours, default blend degree = neighbours' degree if equal else 9, unused public members kept until R9.
 
+6. **3D input by vector** (every point as a row X | Y | Z), 2026-10-18.
+7. **3D pass-through: durations common to all axes, distributed by the proportional rule on the Euclidean chords, 1 s per segment in total by default**, 2026-10-18: the axes share one time axis, so the waypoint instants must be the same for all of them.
+8. **One common scale factor $\lambda$ for all axes with limits active**, 2026-10-18: it keeps the shape of the motion and only changes the time scale; per-axis factors would distort the path.
+9. **Success criteria (R12)**: rigorous speed targets, understanding checklist signed by the author, version 1.0 = theory review (R13) + PDF + save/load + short manual, 2026-10-18.
+10. **Manual**: Markdown in the repository plus a PDF, in English, 2026-10-18.
+
 No decision is pending.
 
 To verify by the author when running the App on the Italian PC (0012): decimal comma in the tables as in the status bar and cursor; the axis labels of the ScottPlot charts (not touched, culture unverified).
