@@ -56,7 +56,7 @@ Two distinct outputs, produced after Compute:
 ## Resolution Of Open Points From 07-implementation-plan.md
 
 - **Default derivatives shown in charts**: **RESOLVED** — all derivatives applicable to the chosen degree are shown. The implemented prototype presents them as stacked plots with shared time inspection rather than compressing them into one shared Y-axis plot (see *Output Requirements*).
-- **3D boundary condition input (axis-by-axis vs. vector)**: **remains open**, deferred to when 3D UI work begins (Milestone M8) — out of scope for this 1D-only prototype.
+- **3D boundary condition input (axis-by-axis vs. vector)**: **RESOLVED 2026-10-18** — by vector; see *3D Mode*.
 - **Unified vs. separate tool for Blending (Req. 13) and Exact Pass-Through (Req. 14)**: **remains open**, and for a reason beyond UI design: the current pass-through solver (`PassThroughSolver1D.cs`) is still a provisional finite-difference-style heuristic, not the exact global minimum-snap formulation promised by `TrajectoryPassingThroughConstraintPoints.md`. Designing UI for that requirement now would risk having to redesign it once the solver reaches its final form. This prototype therefore covers Blending only; Exact Pass-Through is added to the UI once the underlying solver is completed.
 
 ## Pass-Through Mode (decided 2026-10-17)
@@ -80,6 +80,25 @@ Exact pass-through (Requirement 14) is exposed as a **separate mode** selected a
 - Notices (status bar) for: $\lambda$ applied, a duration or total only verified and violating a limit (error), infeasible limits (error).
 
 **Out of scope for this step**: saving and loading, editing waypoints on the plot, 3D.
+
+## 3D Mode (decided 2026-10-18)
+
+The first 3D increment is a third entry of the mode selector: `Blending | Pass-through | 3D`. The two 1D modes are unchanged and keep their data. 3D pass-through is **not** part of this increment (the Core planner is 1D; see `roadmap/ROADMAP.md`, R9c).
+
+**Input form (decided by the author, 2026-10-18)**: by **vector**. Every quantity with three components is one row with three boxes `X | Y | Z` (position, velocity, acceleration, jerk, snap boundary conditions of the segment; blend points; stretch points). Numbers are parsed with `InputNumber`.
+
+**Segment tabs** as in blending mode (add, remove, degree 3 / 5 / 7 / 9, boundary conditions the degree needs), with:
+- **Constraints**: duration (optional), maximum velocity, acceleration, jerk, snap (those the degree supports). One value per quantity, applied **component-wise** to each of the three axes (the limits are per axis, equal for all axes).
+- **Constant-speed stretch** (optional, curved or straight, one code path): speed value; start and end of the stretch given in one of three ways chosen by a selector: *points* (absolute `X|Y|Z`, accepted if on the segment's path), *path-parameter fractions* (0–1) or *arc-length fractions* (0–1). Optional durations of the entry and exit transitions, or a total duration, as in 1D.
+- **Blend**: initial and final blend values toward the previous / next segment, as fractions of the segment parameter, or as points.
+
+**Outputs**
+- Stacked plots per quantity (position, velocity, acceleration, jerk, snap) as in 1D, each with **three curves** (X, Y, Z) and a checkbox to add the **magnitude** (norm); shared time cursor; cursor table with X, Y, Z (and norm).
+- A **Path** area with the three projections XY, XZ, YZ (equal axes), the path coloured by part (segment, blend, entry / stretch / exit), waypoint markers, a marker at the cursor time. A true 3D view is not part of this increment.
+- Numeric report: for each part its kind, duration and coefficients (polynomial parts); for a curved stretch its length, speed, duration and the admissible speed $v_{adm}$ with the binding limit; per quantity and per axis the maximum absolute value over the whole trajectory against the limit (same table form as the pass-through peaks); total duration and path length.
+- Notices (status bar): blend duration adjusted by limits, transition search failures, speed above $v_{adm}$, stretch not on the path, singular path point (zero speed on the stretch).
+
+**Out of scope**: saving, editing on the plot, 3D pass-through, per-axis limits, rotating 3D view.
 
 ## Charting Library
 
