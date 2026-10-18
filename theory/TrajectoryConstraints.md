@@ -549,7 +549,7 @@ A duration is feasible if $F(T) \le 0$, and the goal is $T^{\star} = \min\{\, T 
 
 ### Closed Form For Rest-To-Rest Segments
 
-If all prescribed boundary derivatives of order $1, \dots, p-1$ are zero, the profile is a fixed shape scaled by the distance $\Delta = x_f - x_0$: $x(t) = x_0 + \Delta\, \varphi(t/T)$. Then $P_k(T) = \lvert \Delta \rvert\, c_k\, T^{-k}$ with $c_k = \max \lvert \varphi^{(k)} \rvert$ independent of $T$, and the feasibility condition becomes $T^{k} \ge \lvert \Delta \rvert\, c_k / L_k$ for every active limit:
+If all prescribed boundary derivatives of order $1, \dots, p-1$ are zero, the profile is a fixed shape scaled by the distance $\Delta = x_f - x_0$: $x(t) = x_0 + \Delta\, g(t/T)$. Then $P_k(T) = \lvert \Delta \rvert\, c_k\, T^{-k}$ with $c_k = \max \lvert g^{(k)} \rvert$ independent of $T$, and the feasibility condition becomes $T^{k} \ge \lvert \Delta \rvert\, c_k / L_k$ for every active limit:
 
 $$
 T^{\star} = \max_{k\ \text{active}} \left( \frac{\lvert \Delta \rvert\, c_k}{L_k} \right)^{1/k}
@@ -701,7 +701,7 @@ This document gives the theoretical meaning of those entries:
 - duration search provides one baseline strategy to impose the bound;
 - the same structure later supports the constant-velocity requirement addressed separately in `ConstantVelocitySegment`.
 
-One implementation-oriented point remains open: if multiple limits must be imposed simultaneously on the same segment, the future software design may need a clearer representation than a single type/value pair viewed in isolation, even though the current `constraints[]` container already points in that direction.
+The implementation-oriented point is resolved (2026-10-18): all limits that apply to a segment are carried by one limits object (maximum velocity, acceleration, jerk and snap, each optional), applied component-wise to each axis in 3D, instead of a list of type/value pairs.
 
 ## Generic Constraint-Verification Algorithm
 
@@ -801,9 +801,9 @@ to understand the total 3D kinematic demand.
 
 ## Open Questions
 
-- **Open — to resolve during software implementation** (`src/`): which numerical root solver should be adopted for interval root extraction of the stationarity polynomials?
+- **Resolved (2026-10-17)**: the stationarity roots are found by a scan of the interval for sign changes followed by bisection, cross-checked by a 201-point sampling (see the implementation note in *Generic Constraint-Verification Algorithm*).
 - **Resolved**: when several limits are imposed simultaneously on the same segment, only the duration is searched (see *Shortest Feasible Duration*, feasibility function with the maximum over the active limits).
-- **Open — to resolve during later project phases**: should snap also receive an explicit limit-imposition requirement, beyond the extrema analysis already covered here?
+- **Resolved (2026-10-17)**: snap is a limit like the others (maximum snap), used in the shortest-feasible-duration search and in the pass-through with limits.
 
 ## Related Documents
 

@@ -710,8 +710,8 @@ This is mathematically cleaner and implementation-friendly.
 ## Open Questions
 
 - **Open — to resolve during software implementation** (`src/`): should the application store only normalized coefficients internally, or also keep an absolute-time coefficient expansion for inspection/export?
-- **Deferred to the later constraints/blending documents**: when a formulation moves beyond the default necessary-condition set, should the software solve a restructured exact system, or transition to constrained/optimization-based formulations?
-- **Open — to resolve during API/data-structure design**: should each condition within `necessaryConditions[]` / `possibleConditions[]` / `redundantConditions[]` be stored as a generic condition record, or as degree-specific strongly typed structures for degrees 3, 5, 7, and 9? (The classified array structure itself is already in place in `02-data-model.md`; only the internal representation of each entry remains open. Same open question as in `BoundaryConditions.md` — not yet decided in either document.)
+- **Resolved (2026-10-17)**: beyond the necessary-condition set the project uses an optimization-based formulation where the problem is under-determined across segments (exact pass-through: global minimum of a smoothness cost, see `TrajectoryPassingThroughConstraintPoints`); a single segment always uses the exact square system.
+- **Resolved (2026-10-18)**: conditions are stored as states with entries by derivative order (see `BoundaryConditions`), not as degree-specific types.
 
 ## Related Documents
 

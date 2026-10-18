@@ -281,6 +281,25 @@ $$
 \mathbf{v}_{cv}
 $$
 
+## Symbols Introduced By Later Documents
+
+The following symbols were introduced after the first draft of this document. They are listed here so that each letter has one meaning across the whole library.
+
+| Symbol | Meaning | Defined in |
+|---|---|---|
+| $\eta$ | fraction of a segment, $\eta \in [0,1]$, of the parameter or of the arc length (blend window, constant-speed stretch) | `BlendingSegments`, `ConstantVelocitySegment` |
+| $\lambda$ | common scale factor of the segment durations of a pass-through, $T_k = \lambda \bar T_k$ | pass-through document |
+| $\bar T_k$ | reference duration of segment $k$ (fixes the proportions) | pass-through document |
+| $\sigma \in \{+1,-1\}$ | 1D travel-direction sign | `ConstantVelocitySegment` |
+| $\nu(t)$ | parametric speed $\lVert \dot{\mathbf{p}}(t) \rVert$ of a path | `ConstantVelocitySegment` |
+| $\ell$ | arc length along a path | `ConstantVelocitySegment` |
+| $\kappa$ | curvature of a path | `ConstantVelocitySegment` |
+| $\tau_{cv}$ | local normalized time of a constant-speed stretch | `ConstantVelocitySegment` |
+| $m$ | order of the smoothness cost (the derivative whose square is integrated) | pass-through document |
+| $L_k$, $P_k$ | limit and peak of the derivative of order $k$ | `TrajectoryConstraints` |
+| $g$ | unit profile of a rest-to-rest segment, $x(t) = x_0 + \Delta\, g(t/T)$ | `TrajectoryConstraints` |
+| $\rho$ | growth factor of the duration search | `TrajectoryConstraints` |
+
 ## Reserved Orientation Notation
 
 Orientation is not developed here, but the following symbols are reserved so that future documents remain coherent:

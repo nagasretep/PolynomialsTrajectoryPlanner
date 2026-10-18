@@ -506,9 +506,9 @@ That exact structural match is one of the main reasons why the degree-nine case 
 
 ## Open Questions
 
-- **Resolved**: whether `02-data-model.md`'s `BoundaryConditions` structure should be revised to the degree-parametrized, classified form — it has been, see *Relation To The Data Model*. **Still open, deferred to `PolynomialCoefficientDetermination`**: the internal representation of each individual condition within `necessaryConditions[]` / `possibleConditions[]` / `redundantConditions[]` (by derivative order vs. a more descriptive enum-based type) — this is `PolynomialCoefficientDetermination`'s own Open Question on the same topic, not yet decided there either.
+- **Resolved**: whether `02-data-model.md`'s `BoundaryConditions` structure should be revised to the degree-parametrized, classified form — it has been, see *Relation To The Data Model*. **Resolved in the implementation (2026-10-18)**: a condition is identified by its derivative order; the boundary data of a segment end are held as a state (position, velocity, acceleration, jerk, snap), and the degree decides which entries are used.
 - **Open — to resolve if/when alternative formulations are introduced** (interior points, optimization-based fitting): should the project keep the same necessary/possible/redundant naming, or add a fourth category for "active in the current variant"? No urgency yet, since the project still uses the fixed default formulation.
-- **Open — to resolve during the application/UI design phase** (Req. 15): for 3D trajectories, should the user interface expose boundary conditions axis by axis, or primarily in vector form?
+- **Resolved (2026-10-18)**: the 3D interface takes boundary conditions in vector form (one row $X \mid Y \mid Z$ per quantity), see `design/08-ui-first-prototype.md`.
 
 ## Related Documents
 

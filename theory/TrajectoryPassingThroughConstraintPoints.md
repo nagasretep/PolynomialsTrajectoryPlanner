@@ -753,11 +753,7 @@ This complements the interpretation already given in `BlendingSegments.md`:
 - `segmentEndpointRespect = no` activates ordinary blending logic;
 - `segmentEndpointRespect = yes` activates exact-pass-through logic.
 
-At the state level, the current data model does not yet explicitly store the shared interior waypoint derivatives needed by this document. So one future refinement will likely need a more explicit representation of:
-
-- waypoint state variables;
-- segment durations;
-- global continuity mode.
+At the state level the implementation does not store the shared interior waypoint derivatives separately: they are the unknowns of the global solve, and the waypoint states are recovered by evaluating the segments (Resolved 2026-10-18).
 
 ## Worked Symbolic Considerations
 
@@ -847,7 +843,7 @@ Once that interior state and the segment durations are fixed, both segments are 
 - **Resolved (author, 2026-10-17)**: for degree $9$ the default is snap ($m = 4$: derivatives continuous up to snap, crackle may jump at the waypoints). The natural order crackle ($m = 5$, derivatives continuous up to the 8th) remains available as a parameter.
 - **Resolved (2026-10-17)**: durations in exact-pass-through mode are user-specified or derived by the proportional rule; with active limits a common scale factor $\lambda$ gives the shortest feasible sequence (*Pass-Through With Kinematic Limits*).
 - **Open — later, non-blocking**: allocating the durations unequally to reduce the total time under limits (a nonlinear joint search over the individual $T_k$) is not part of the baseline; is it worth the complexity?
-- **Open — to resolve during data-structure design**: should shared interior waypoint derivatives be represented explicitly as trajectory-level state objects, or should they remain implicit variables reconstructed only during computation?
+- **Resolved (2026-10-18)**: the shared interior derivatives are the unknowns of the global solve and are not stored separately; the state at every waypoint is obtained by evaluating the segments and is reported to the user.
 
 ## Related Documents
 

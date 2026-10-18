@@ -1,29 +1,31 @@
 # Project status
 
-Owner: whoever closes a task. Last updated: 2026-10-18.
+Owner: whoever closes a task. Last updated: 2026-10-18 (R13).
 
 ## Current phase
 
-Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, duration fixes) and 0007 (constant-velocity transitions and tests) done by Code and reviewed by Cowork (committed by the author). 0008 (constant-velocity duration rules 2 and 3) done by Code and reviewed by Cowork. 0009 (R7 consolidation) done by Code and reviewed by Cowork. 0010 (blend duration rule, number parsing) done by Code and reviewed by Cowork. 0011, 0012 and 0013 (UI pass-through mode) done by Code. Next: R9 and R10b.
+Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, duration fixes) and 0007 (constant-velocity transitions and tests) done by Code and reviewed by Cowork (committed by the author). 0008 (constant-velocity duration rules 2 and 3) done by Code and reviewed by Cowork. 0009 (R7 consolidation) done by Code and reviewed by Cowork. 0010 (blend duration rule, number parsing) done by Code and reviewed by Cowork. 0011-0014 (pass-through with limits, UI pass-through, defaults) and 0015-0020 (3D Core and UI: blending, constant speed, trajectory level, pass-through) done by Code and reviewed by Cowork. R12 (criteria) and R13 (theory review) done. Next: R14-R15 and cleanup (Code), then R16 manual (Cowork).
 
 ## Milestones (from `design/07-implementation-plan.md` and `design/08-ui-first-prototype.md`)
 
 | Milestone | State | Notes |
 |---|---|---|
 | M1 Core degree-9 engine (1D) | implemented | build + tests verified 2026-10-17 (173/173 pass) |
-| M2 WPF shell | implemented | chart-first, ScottPlot, 1D, blending only |
+| M2 WPF shell | implemented | chart-first, ScottPlot; now four modes (blending, pass-through, 3D, 3D pass-through) |
 | M3 Degrees 3/5/7 | implemented | degree 7 now tested (0004) |
 | M4 Constraints | implemented | extrema, limit verification; shortest feasible duration (closed form + search) for auto duration with limits (0005); failure of the search is reported (0003); constant-velocity transitions still use the legacy search |
-| M5 Constant velocity | partial | 1D, 3D straight and 3D curved (0015, 0016); no Trajectory3D-level builder; Rules 1-3 for the transition durations implemented in Core, App uses the Core class (0007, 0008); 3D missing |
-| M6 Blending | partial | 1D only; selectable degree, limit verification and input validation in the Core (0009); duration rule with limits to adjust (0010) |
+| M5 Constant velocity | implemented | 1D, 3D straight and 3D curved (0015, 0016), Trajectory3D-level builder (0017); Rules 1-3 for the transition durations in Core (0007, 0008) |
+| M6 Blending | implemented | 1D and 3D (0015); selectable degree, limit verification and input validation in the Core (0009); duration rule with limits to adjust (0010) |
 | M7 Exact pass-through | implemented | exact global solve (m = 4 snap default for degree 9), 67/67 tests; reviewed by Cowork 2026-10-17 (reference values and code consistent) |
-| M8 3D extension | partial | Core and UI: 3D blending, straight and curved constant speed, 3D builder and analysis, 3D mode in the App (0015-0018); 3D pass-through missing (R9c) |
+| M8 3D extension | implemented | Core and UI: 3D blending, straight and curved constant speed, 3D builder and analysis, 3D pass-through with common durations, four modes in the App (0015-0020) |
 
 ## In progress
 
-- 0020 UI pass-through in 3D (Code) — issued
+- None. Next request for Code to be written (R14, R15, cleanup).
 
 ## Done
+
+- 0020 UI pass-through in 3D (Code) — closed 2026-10-18; note `coordination/inbox-docs/0020-ui-3d-pass-through.md`. 586 tests (450 Core + 136 App). Fourth mode `3D pass-through` (waypoint table X, Y, Z with optional durations, optional total, limits, reference example as default inputs); the design section it referred to is now in `design/08-ui-first-prototype.md`.
 
 - 0019 Core 3D pass-through (Code) — closed 2026-10-18; note `coordination/inbox-docs/0019-core-3d-pass-through.md`. 572 tests (450 Core + 122 App). `PassThroughPlanner3D` (chord rule, common λ, binding quantity and axis); the algorithm of `PassThroughPlanner1D` moved into one shared `PassThroughEngine` (1D tests unchanged); `TrajectoryBuilder3D.AddSegmentsFromWaypointsPassThrough` uses it (default now 1 s per segment instead of a 1 s total).
 
@@ -65,4 +67,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-`coordination/inbox-code/0020-ui-3d-pass-through.md`. Afterwards: R12 success criteria and R13 theory library review (Cowork), cleanup of unused public members (Code). See `roadmap/ROADMAP.md`.
+R12 (success criteria) and R13 (theory library review, PDF build script) done by Cowork. Next request for Code: R14 save/load, R15 speed tests and cleanup of unused public members (to be written). Afterwards R16 user manual (Cowork). See `roadmap/ROADMAP.md`.

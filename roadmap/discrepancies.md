@@ -48,3 +48,4 @@ No decision is pending.
 
 To verify by the author when running the App on the Italian PC (0012): decimal comma in the tables as in the status bar and cursor; the axis labels of the ScottPlot charts (not touched, culture unverified).
 | D26 | `ConstantVelocitySegment.md` reference values | P4x reference 18.187075 was a sampled maximum; true maximum 18.187110 | theory | Theory corrected 2026-10-18 | closed |
+| D27 | theory library (all documents) | One letter with two meanings (λ fraction vs λ duration scale; σ direction sign vs parametric speed; φ profile vs orientation angle); Open Questions already settled by the implementation or by 2026-10-17/18 decisions; stale paragraphs | theory | Renamed (fractions η, parametric speed ν, profile g), table of later symbols added to `SymbolsAndNomenclature`, Open Questions marked resolved, stale paragraphs rewritten (R13, 2026-10-18) | closed |

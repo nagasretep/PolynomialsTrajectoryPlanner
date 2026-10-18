@@ -427,8 +427,8 @@ then a ninth-degree 3D segment is simply three synchronized ninth-degree scalar 
 ## Open Questions
 
 - **Open — to resolve during the software design/implementation phase** (`src/`): should derivative profiles be evaluated directly from canonical formulas or from Horner-style recursive schemes? This is not a theory-library decision — both forms are proven equivalent above; the choice depends on measured performance in the actual C#/WPF implementation, not on the underlying math.
-- **Resolved in `TrajectoryConstraints`**: whether limits should be interpreted component-wise or on vector magnitude when extending from 1D to 3D. This duplicates the same open question in `SymbolsAndNomenclature` — see the consolidated note there; it will be resolved once developed in `TrajectoryConstraints`, not decided here.
-- **Open — to resolve during the application/UI design phase** (Req. 15): in the final application, which derivative levels should be visible by default in the charts, and which should remain optional?
+- **Resolved in `TrajectoryConstraints`**: limits are applied component-wise in 3D (one value per quantity for each axis).
+- **Resolved (2026-10-17)**: all derivatives applicable to the chosen degree are shown, each in its own stacked plot, see `design/08-ui-first-prototype.md`.
 
 ## Related Documents
 

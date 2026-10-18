@@ -348,17 +348,17 @@ This is intuitive when the scalar positions themselves are meaningful and the co
 A convenient local parameter-based form is:
 
 $$
-\lambda_k^{start}, \qquad \lambda_{k+1}^{end} \in [0,1]
+\eta_k^{start}, \qquad \eta_{k+1}^{end} \in [0,1]
 $$
 
 with:
 
 $$
-\tau_{b,k}^{start} = \lambda_k^{start}
+\tau_{b,k}^{start} = \eta_k^{start}
 $$
 
 $$
-\tau_{b,k+1}^{end} = \lambda_{k+1}^{end}
+\tau_{b,k+1}^{end} = \eta_{k+1}^{end}
 $$
 
 where each $\tau$ is the local normalized coordinate of its own segment.
@@ -548,7 +548,7 @@ This is meaningful when the intended points on the original segments are already
 A particularly practical choice is local parameter percentage:
 
 $$
-\lambda_k^{start}, \qquad \lambda_{k+1}^{end} \in [0,1]
+\eta_k^{start}, \qquad \eta_{k+1}^{end} \in [0,1]
 $$
 
 applied to the normalized parameter of each segment.
@@ -556,8 +556,8 @@ applied to the normalized parameter of each segment.
 Then:
 
 $$
-\tau_{b,k}^{start} = \lambda_k^{start}, \qquad
-\tau_{b,k+1}^{end} = \lambda_{k+1}^{end}
+\tau_{b,k}^{start} = \eta_k^{start}, \qquad
+\tau_{b,k+1}^{end} = \eta_{k+1}^{end}
 $$
 
 and the corresponding points are obtained by direct evaluation of the original segments.
@@ -581,6 +581,14 @@ So blending and constraints are not separate universes:
 - constraints decide whether that shape is admissible.
 
 If the blend violates active limits, one baseline remedy is to modify the blend duration $T_b$ and recompute.
+
+### Decisions For The 3D Baseline (2026-10-18)
+
+- **Common duration.** The blend has one duration for the three axes. The inherited duration is the sum of the removed portions (with a floor); with active limits it is kept if the blend respects them on all three axes, and otherwise replaced by the shortest feasible common duration (the multi-component search of `TrajectoryConstraints`: for rest boundary states the closed form with the largest distance, otherwise the geometric search with the feasibility function taken as the maximum over the axes). A prescribed duration is only verified. The result reports the inherited duration, the chosen duration and whether the limits changed it.
+- **Limits.** One value per quantity, applied to each axis; for a blend between two segments with different limits the most restrictive of the two applies.
+- **Degree.** The degree of the neighbours if equal, otherwise 9.
+- **Windows.** Parameter fractions outside $[0,1]$, an empty window, and a window that would remove a whole neighbour are rejected.
+- **Absolute points.** A point is converted to the parameter of the closest point on the path of the segment. It is rejected when its distance from the path exceeds $10^{-9}$ times the extent of the segment (the diagonal of the box containing the path). If the path passes near the point at several places the closest one wins; an intended point on a self-crossing path is ambiguous, as stated above, so fractions are the safe choice.
 
 ## Baseline Blending Algorithm
 
@@ -694,8 +702,8 @@ This is the cleanest way to combine 3D geometry with scalar polynomial theory.
 ## Open Questions
 
 - **Resolved (2026-10-17)**: the blend duration is user-specified (only verified), or inherited from the removed portions; with active limits and a violation, the shortest feasible duration replaces it (see *Decisions For The 1D Baseline*).
-- **Open — to resolve during data-format design**: should blend points be stored primarily as absolute points, as local percentages, or as both representations?
-- **Open — to resolve together with `TrajectoryPassingThroughConstraintPoints`**: should the application expose Requirement 13 and Requirement 14 as two clearly separated modes, or as one continuity tool with a mandatory pass-through toggle?
+- **Resolved (2026-10-18)**: the blend window is stored as the two segment-parameter fractions $\eta$ (primary representation); absolute points are accepted as input and converted to parameters (first crossing in 1D, closest point in 3D, see *Decisions For The 3D Baseline*), so no second stored representation is needed.
+- **Resolved (2026-10-17)**: Requirement 13 and Requirement 14 are exposed as two clearly separated modes (blending and pass-through), see `design/08-ui-first-prototype.md`.
 
 ## Related Documents
 

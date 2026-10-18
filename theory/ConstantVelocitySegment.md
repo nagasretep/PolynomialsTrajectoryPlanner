@@ -242,17 +242,17 @@ This is the clearest formulation whenever the scalar coordinate range is already
 A simple percentage-based choice is:
 
 $$
-\lambda_{start}, \lambda_{end} \in [0,1]
+\eta_{start}, \eta_{end} \in [0,1]
 $$
 
 with:
 
 $$
-x_{cv}^{start} = x_0 + \lambda_{start}(x_f - x_0)
+x_{cv}^{start} = x_0 + \eta_{start}(x_f - x_0)
 $$
 
 $$
-x_{cv}^{end} = x_0 + \lambda_{end}(x_f - x_0)
+x_{cv}^{end} = x_0 + \eta_{end}(x_f - x_0)
 $$
 
 This is convenient, but it should be interpreted carefully:
@@ -493,17 +493,17 @@ For path-oriented use, the most meaningful percentage convention is based on the
 One convenient choice is to define:
 
 $$
-\lambda_{start}, \lambda_{end} \in [0,1]
+\eta_{start}, \eta_{end} \in [0,1]
 $$
 
 on the original segment parameter interval:
 
 $$
-t_s^{orig} = t_0 + \lambda_{start}(t_f - t_0)
+t_s^{orig} = t_0 + \eta_{start}(t_f - t_0)
 $$
 
 $$
-t_e^{orig} = t_0 + \lambda_{end}(t_f - t_0)
+t_e^{orig} = t_0 + \eta_{end}(t_f - t_0)
 $$
 
 and then:
@@ -518,8 +518,8 @@ This is parameter-percentage, not true arc-length percentage.
 If a geometric percentage of traveled distance is preferred, then the percentage should be defined on arc length instead:
 
 $$
-\ell(t_s^{orig}) = \lambda_{start} L_{tot}, \qquad
-\ell(t_e^{orig}) = \lambda_{end} L_{tot}
+\ell(t_s^{orig}) = \eta_{start} L_{tot}, \qquad
+\ell(t_e^{orig}) = \eta_{end} L_{tot}
 $$
 
 where $L_{tot}$ is the total arc length of the original segment.
@@ -623,15 +623,17 @@ The curved case is completed in *Curved 3D Constant-Speed Stretch: Boundary Stat
 
 ## Curved 3D Constant-Speed Stretch: Boundary States, Evaluation And Limits
 
+**Notation note**: in this section the parametric speed of the path is $\nu(t) = \lVert \dot{\mathbf{p}}(t) \rVert$ (not $\sigma$, which is the 1D travel-direction sign), the fractions of the segment are $\eta$ (not $\lambda$, which is the common duration scale factor of the pass-through documents), and the arc length is $\ell$.
+
 This section completes the path-preserving 3D option (*3D Path-Preserving Strategy: Arc-Length Reparameterization*) for a genuinely curved subpath: what states the stretch has at its two ends, how the transitions connect to it, how it is evaluated, and what the limits imply. For a straight subpath everything below reduces to the straight-chord construction (see *Consistency With The Straight Case*).
 
 ### Regularity
 
-Let $\mathbf{p}(t)$ be the polynomial path of the original segment and $\sigma(t) = \lVert \dot{\mathbf{p}}(t) \rVert$ its speed in the original time. The selected subpath $[t_s, t_e]$ must satisfy $\sigma(t) > 0$ on the whole closed interval, so that the arc length $\ell$ is a strictly increasing function of $t$. A subpath that touches a point where $\dot{\mathbf{p}} = \mathbf{0}$ (for example the rest state at the very start of a segment) is rejected with an explicit error: the tangent is not defined there. The direction of travel is the direction of increasing $t$ ($t_e > t_s$).
+Let $\mathbf{p}(t)$ be the polynomial path of the original segment and $\nu(t) = \lVert \dot{\mathbf{p}}(t) \rVert$ its speed in the original time. The selected subpath $[t_s, t_e]$ must satisfy $\nu(t) > 0$ on the whole closed interval, so that the arc length $\ell$ is a strictly increasing function of $t$. A subpath that touches a point where $\dot{\mathbf{p}} = \mathbf{0}$ (for example the rest state at the very start of a segment) is rejected with an explicit error: the tangent is not defined there. The direction of travel is the direction of increasing $t$ ($t_e > t_s$).
 
 ### Arc-Length Derivatives Of The Path
 
-Let $D$ be the operator "derivative with respect to arc length", $D f = \dot f / \sigma$. The geometric derivatives of the path are
+Let $D$ be the operator "derivative with respect to arc length", $D f = \dot f / \nu$. The geometric derivatives of the path are
 
 $$
 \mathbf{p}_s = D\mathbf{p}, \quad \mathbf{p}_{ss} = D^2\mathbf{p}, \quad \mathbf{p}_{sss} = D^3\mathbf{p}, \quad \mathbf{p}_{ssss} = D^4\mathbf{p}.
@@ -640,12 +642,12 @@ $$
 The first two have closed forms:
 
 $$
-\mathbf{p}_s = \hat{\mathbf{T}} = \frac{\dot{\mathbf{p}}}{\sigma},
+\mathbf{p}_s = \hat{\mathbf{T}} = \frac{\dot{\mathbf{p}}}{\nu},
 \qquad
-\mathbf{p}_{ss} = \kappa\,\hat{\mathbf{N}} = \frac{1}{\sigma^{2}}\left( \ddot{\mathbf{p}} - \frac{\dot{\mathbf{p}}\cdot\ddot{\mathbf{p}}}{\sigma^{2}}\,\dot{\mathbf{p}} \right),
+\mathbf{p}_{ss} = \kappa\,\hat{\mathbf{N}} = \frac{1}{\nu^{2}}\left( \ddot{\mathbf{p}} - \frac{\dot{\mathbf{p}}\cdot\ddot{\mathbf{p}}}{\nu^{2}}\,\dot{\mathbf{p}} \right),
 $$
 
-with $\hat{\mathbf{T}}$ the unit tangent, $\kappa$ the curvature and $\hat{\mathbf{N}}$ the unit principal normal. $\mathbf{p}_{sss}$ and $\mathbf{p}_{ssss}$ have no short closed form and are obtained by **truncated Taylor-series (jet) arithmetic** at the point of interest: expand each component of $\mathbf{p}$ to order $4$ around $t_0$; compute the series of $\sigma^2 = \dot{\mathbf{p}}\cdot\dot{\mathbf{p}}$, of $\sigma$ (series square root) and of $1/\sigma$; then apply $D$ four times, each time differentiating the series and multiplying by the series of $1/\sigma$ (the series of $\sigma$ is computed once from the original path and not recomputed). Each application costs one order of accuracy of the series, so a series of order $4$ is exactly enough to reach $D^4\mathbf{p}$ at order $0$. Only the derivatives up to order $4$ of $\mathbf{p}$ at $t_0$ are used; for a degree below $9$ only the orders the degree needs are required ($p - 1$ with $p = (d+1)/2$).
+with $\hat{\mathbf{T}}$ the unit tangent, $\kappa$ the curvature and $\hat{\mathbf{N}}$ the unit principal normal. $\mathbf{p}_{sss}$ and $\mathbf{p}_{ssss}$ have no short closed form and are obtained by **truncated Taylor-series (jet) arithmetic** at the point of interest: expand each component of $\mathbf{p}$ to order $4$ around $t_0$; compute the series of $\nu^2 = \dot{\mathbf{p}}\cdot\dot{\mathbf{p}}$, of $\nu$ (series square root) and of $1/\nu$; then apply $D$ four times, each time differentiating the series and multiplying by the series of $1/\nu$ (the series of $\nu$ is computed once from the original path and not recomputed). Each application costs one order of accuracy of the series, so a series of order $4$ is exactly enough to reach $D^4\mathbf{p}$ at order $0$. Only the derivatives up to order $4$ of $\mathbf{p}$ at $t_0$ are used; for a degree below $9$ only the orders the degree needs are required ($p - 1$ with $p = (d+1)/2$).
 
 ### States Of The Stretch In Time
 
@@ -670,8 +672,8 @@ The entry transition is an ordinary 3D polynomial segment (component-wise coeffi
 
 ### Evaluation Of The Stretch
 
-- **Arc length**: $\ell(t) = \int_{t_s}^{t}\sigma(u)\,du$ by composite Gauss–Legendre quadrature (for example $16$ nodes per panel), doubling the number of panels until two successive values agree to a relative $10^{-13}$. $\sigma$ is smooth and bounded away from zero on the subpath, so convergence is fast. The total length is $L_{cv} = \ell(t_e)$ and $T_{cv} = L_{cv}/v_{cv}$.
-- **Inversion**: given the target length $\ell_\star = v_{cv}(t - t_{cv}^{start})$, solve $\ell(t^*) = \ell_\star$ by a safeguarded Newton iteration (bracket $[t_s, t_e]$, derivative $\sigma > 0$), falling back to bisection when a Newton step leaves the bracket, until $\lvert\ell(t^*) - \ell_\star\rvert \le 10^{-13} L_{cv}$.
+- **Arc length**: $\ell(t) = \int_{t_s}^{t}\nu(u)\,du$ by composite Gauss–Legendre quadrature (for example $16$ nodes per panel), doubling the number of panels until two successive values agree to a relative $10^{-13}$. $\nu$ is smooth and bounded away from zero on the subpath, so convergence is fast. The total length is $L_{cv} = \ell(t_e)$ and $T_{cv} = L_{cv}/v_{cv}$.
+- **Inversion**: given the target length $\ell_\star = v_{cv}(t - t_{cv}^{start})$, solve $\ell(t^*) = \ell_\star$ by a safeguarded Newton iteration (bracket $[t_s, t_e]$, derivative $\nu > 0$), falling back to bisection when a Newton step leaves the bracket, until $\lvert\ell(t^*) - \ell_\star\rvert \le 10^{-13} L_{cv}$.
 - **State at time $t$**: $t^*$ from the inversion, then $v_{cv}^{k} D^{k}\mathbf{p}(t^*)$ for the needed orders (the jets of the previous paragraph at $t^*$).
 - **Consistency check**: at $t = T_{cv}$ the inversion returns $t_e$.
 
@@ -706,7 +708,7 @@ The path $\mathbf{p}(t) = (t,\ t^2,\ 0)$ on $t \in [0, 1]$ (computed by Cowork w
 
 ### Baseline Algorithm For The Curved Case
 
-1. Check $\sigma > 0$ on $[t_s, t_e]$; recover $t_s, t_e$ from the specification.
+1. Check $\nu > 0$ on $[t_s, t_e]$; recover $t_s, t_e$ from the specification.
 2. Compute $L_{cv}$ and $T_{cv} = L_{cv}/v_{cv}$.
 3. Compute $P_k$ and $v_{adm}$ if limits are active; fail explicitly if $v_{cv} > v_{adm}$.
 4. Compute the boundary states $\mathcal{S}_{cv}^{start}$ and $\mathcal{S}_{cv}^{end}$ from the jets.
