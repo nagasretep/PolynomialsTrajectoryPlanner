@@ -25,8 +25,11 @@ Owner: Cowork. Milestone status (M1–M8) is in `coordination/STATUS.md`; the th
 | R10c ✅ | UI: pass-through in 3D (fourth mode; design/08 *3D Pass-Through Mode*) | Code | R9c, R10b | request 0020 closed; 586 tests |
 | R10b ✅ | UI: 3D mode (vector input; design/08 *3D Mode*) | Code | R9, R10a | requests 0017 (Core) and 0018 (App) closed; 551 tests |
 | R11 ✅ | Pass-through with kinematic limits: common scale factor λ, closed form for rest ends, search otherwise | Code | R7b | request 0011 closed; 394/394 |
-| R12 | Measurable success criteria (suggestion in `spec/05-success-criteria.md`) | Cowork, author decides | – | proposed |
-| R13 | Theory library from Draft v1 to reviewed; PDF build into `build/` | Cowork | R3 | proposed |
+| R12 ✅ | Measurable success criteria (`spec/05-success-criteria.md`, decided 2026-10-18) | Cowork, author decided | – | written; author sign-off of the understanding checklist pending (D4) |
+| R13 | Theory library from Draft v1 to reviewed (criterion D1) and PDF build into `build/` (D2) | Cowork | R3 | proposed |
+| R14 | Save and load projects (inputs of all four modes) | Code | R10c | proposed; criterion A3 |
+| R15 | Speed tests (timing tests for S1-S3, run on the author's laptop) | Code | R10c | proposed; criteria S1-S3 |
+| R16 | Short user manual (one page per mode, worked examples) | Cowork | R10c | proposed; criterion A4 |
 
 ## Decisions taken by the author
 
