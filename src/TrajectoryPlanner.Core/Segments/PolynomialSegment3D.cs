@@ -5,7 +5,7 @@ using TrajectoryPlanner.Core.States;
 
 namespace TrajectoryPlanner.Core.Segments;
 
-public class PolynomialSegment3D
+public class PolynomialSegment3D : ISegment3D
 {
     public int Degree { get; }
     public double Duration { get; }

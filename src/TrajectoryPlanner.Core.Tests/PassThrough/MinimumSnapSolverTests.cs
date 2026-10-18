@@ -355,7 +355,8 @@ public class MinimumSnapSolverTests
 
         for (int k = 0; k < durations.Length; k++)
         {
-            var axes = new[] { trajectory.Segments[k].XAxis, trajectory.Segments[k].YAxis, trajectory.Segments[k].ZAxis };
+            var segment = (TrajectoryPlanner.Core.Segments.PolynomialSegment3D)trajectory.Segments[k];
+            var axes = new[] { segment.XAxis, segment.YAxis, segment.ZAxis };
             for (int axis = 0; axis < 3; axis++)
                 for (int i = 0; i <= 9; i++)
                     Assert.Equal(expected[axis][k].Coefficients[i], axes[axis].Coefficients[i], 9);
