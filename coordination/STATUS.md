@@ -21,7 +21,7 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## In progress
 
-- (none; next for Code: R9, R10 as issued)
+- 0013 UI pass-through mode in 1D (Code) — issued
 
 ## Done
 
@@ -52,4 +52,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-R9 (3D constant velocity and blending) and R10 (UI), see `roadmap/ROADMAP.md`; R10 needs UI decisions from the author first.
+`coordination/inbox-code/0013-ui-passthrough-mode.md`; afterwards R9 (3D constant velocity and blending) and R10b (3D UI), see `roadmap/ROADMAP.md`.
