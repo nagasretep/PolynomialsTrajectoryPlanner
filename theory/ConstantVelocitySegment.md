@@ -619,7 +619,99 @@ For the arc-length-reparameterized path-preserving option, the velocity directio
 - the reparameterized curve state at the beginning of the constant-speed interval;
 - the corresponding state at the end.
 
-This may lead to dedicated blending/reparameterization design choices in later documents.
+The curved case is completed in *Curved 3D Constant-Speed Stretch: Boundary States, Evaluation And Limits*.
+
+## Curved 3D Constant-Speed Stretch: Boundary States, Evaluation And Limits
+
+This section completes the path-preserving 3D option (*3D Path-Preserving Strategy: Arc-Length Reparameterization*) for a genuinely curved subpath: what states the stretch has at its two ends, how the transitions connect to it, how it is evaluated, and what the limits imply. For a straight subpath everything below reduces to the straight-chord construction (see *Consistency With The Straight Case*).
+
+### Regularity
+
+Let $\mathbf{p}(t)$ be the polynomial path of the original segment and $\sigma(t) = \lVert \dot{\mathbf{p}}(t) \rVert$ its speed in the original time. The selected subpath $[t_s, t_e]$ must satisfy $\sigma(t) > 0$ on the whole closed interval, so that the arc length $\ell$ is a strictly increasing function of $t$. A subpath that touches a point where $\dot{\mathbf{p}} = \mathbf{0}$ (for example the rest state at the very start of a segment) is rejected with an explicit error: the tangent is not defined there. The direction of travel is the direction of increasing $t$ ($t_e > t_s$).
+
+### Arc-Length Derivatives Of The Path
+
+Let $D$ be the operator "derivative with respect to arc length", $D f = \dot f / \sigma$. The geometric derivatives of the path are
+
+$$
+\mathbf{p}_s = D\mathbf{p}, \quad \mathbf{p}_{ss} = D^2\mathbf{p}, \quad \mathbf{p}_{sss} = D^3\mathbf{p}, \quad \mathbf{p}_{ssss} = D^4\mathbf{p}.
+$$
+
+The first two have closed forms:
+
+$$
+\mathbf{p}_s = \hat{\mathbf{T}} = \frac{\dot{\mathbf{p}}}{\sigma},
+\qquad
+\mathbf{p}_{ss} = \kappa\,\hat{\mathbf{N}} = \frac{1}{\sigma^{2}}\left( \ddot{\mathbf{p}} - \frac{\dot{\mathbf{p}}\cdot\ddot{\mathbf{p}}}{\sigma^{2}}\,\dot{\mathbf{p}} \right),
+$$
+
+with $\hat{\mathbf{T}}$ the unit tangent, $\kappa$ the curvature and $\hat{\mathbf{N}}$ the unit principal normal. $\mathbf{p}_{sss}$ and $\mathbf{p}_{ssss}$ have no short closed form and are obtained by **truncated Taylor-series (jet) arithmetic** at the point of interest: expand each component of $\mathbf{p}$ to order $4$ around $t_0$; compute the series of $\sigma^2 = \dot{\mathbf{p}}\cdot\dot{\mathbf{p}}$, of $\sigma$ (series square root) and of $1/\sigma$; then apply $D$ four times, each time differentiating the series and multiplying by the series of $1/\sigma$ (the series of $\sigma$ is computed once from the original path and not recomputed). Each application costs one order of accuracy of the series, so a series of order $4$ is exactly enough to reach $D^4\mathbf{p}$ at order $0$. Only the derivatives up to order $4$ of $\mathbf{p}$ at $t_0$ are used; for a degree below $9$ only the orders the degree needs are required ($p - 1$ with $p = (d+1)/2$).
+
+### States Of The Stretch In Time
+
+On the stretch the speed magnitude is the constant $v_{cv}$, so the arc length is $\ell = v_{cv}\,(t - t_{cv}^{start})$ and $d\ell/dt = v_{cv}$ exactly. Therefore the derivative of order $k$ in time is
+
+$$
+\frac{d^{k}\mathbf{p}_{cv}}{dt^{k}} = v_{cv}^{\,k}\; D^{k}\mathbf{p}\big|_{t^{*}},
+\qquad t^{*} = \ell^{-1}\!\left(v_{cv}\,(t - t_{cv}^{start})\right).
+$$
+
+Unlike the 1D (or straight) case, the acceleration, jerk and snap of the stretch are **not zero** on a curved path: for example the acceleration is $v_{cv}^2\,\kappa\,\hat{\mathbf{N}}$ (centripetal), of constant magnitude only if the curvature is constant. The boundary states of the stretch are
+
+$$
+\mathcal{S}_{cv}^{start} = \left( \mathbf{p}(t_s),\; v_{cv}\mathbf{p}_s,\; v_{cv}^2\mathbf{p}_{ss},\; v_{cv}^3\mathbf{p}_{sss},\; v_{cv}^4\mathbf{p}_{ssss} \right)_{t_s},
+$$
+
+and the same at $t_e$ for $\mathcal{S}_{cv}^{end}$ (as many entries as the degree of the transitions uses).
+
+### Transitions
+
+The entry transition is an ordinary 3D polynomial segment (component-wise coefficients, one common duration) from the state at the start of the trajectory to $\mathcal{S}_{cv}^{start}$; the exit transition from $\mathcal{S}_{cv}^{end}$ to the state at the end. Because their end states are exactly the derivatives of the stretch, position, velocity, acceleration, jerk and snap are continuous at both junctions. The path is preserved **on the stretch only**; the transitions are new polynomial pieces that connect the same end states and do not follow the original path. Their durations follow Rules 1–3 of *Durations Of The Entry And Exit Transitions In 1D* with two changes: feasibility is the maximum over the three components and the active limits, and the distance in Rule 2 is the Euclidean distance between the end positions of the transition.
+
+### Evaluation Of The Stretch
+
+- **Arc length**: $\ell(t) = \int_{t_s}^{t}\sigma(u)\,du$ by composite Gauss–Legendre quadrature (for example $16$ nodes per panel), doubling the number of panels until two successive values agree to a relative $10^{-13}$. $\sigma$ is smooth and bounded away from zero on the subpath, so convergence is fast. The total length is $L_{cv} = \ell(t_e)$ and $T_{cv} = L_{cv}/v_{cv}$.
+- **Inversion**: given the target length $\ell_\star = v_{cv}(t - t_{cv}^{start})$, solve $\ell(t^*) = \ell_\star$ by a safeguarded Newton iteration (bracket $[t_s, t_e]$, derivative $\sigma > 0$), falling back to bisection when a Newton step leaves the bracket, until $\lvert\ell(t^*) - \ell_\star\rvert \le 10^{-13} L_{cv}$.
+- **State at time $t$**: $t^*$ from the inversion, then $v_{cv}^{k} D^{k}\mathbf{p}(t^*)$ for the needed orders (the jets of the previous paragraph at $t^*$).
+- **Consistency check**: at $t = T_{cv}$ the inversion returns $t_e$.
+
+### Limits On The Stretch
+
+The transitions can adapt their durations to the limits; the stretch cannot, because its time law is fixed by $v_{cv}$ and the geometry. Writing $P_k$ for the peak over the subpath of a component of $D^{k}\mathbf{p}$ (component-wise treatment, as in `TrajectoryConstraints.md`), the peak of the $k$-th time derivative on the stretch is $v_{cv}^{k} P_k$. With the limits $L_k$ ($k = 1,\dots,4$ for velocity, acceleration, jerk, snap):
+
+$$
+v_{cv} \le v_{adm} = \min_{k\ \text{active}} \left( \frac{L_k}{P_k} \right)^{1/k}.
+$$
+
+This is the same structure as the scaling laws of the other chapters. $P_1$ is at most $1$ (a component of the unit tangent), so the velocity condition is $v_{cv}\max_i\lvert T_i\rvert \le v_{max}$ per axis. If $v_{cv} > v_{adm}$ the construction fails explicitly and the message states $v_{adm}$ and the limit that binds. The peaks $P_k$ are found by sampling $t$ on a fine grid over $[t_s, t_e]$ followed by local refinement (golden-section or Newton on the derivative of the component), because the components of $D^k\mathbf{p}$ are not polynomial.
+
+### Specifying The Stretch
+
+The Core accepts any of three equivalent specifications of $t_s$ and $t_e$ on a given segment: (a) two points on the path, recovered as the parameter of the closest point (rejected if the distance exceeds a tolerance, as for blending); (b) two fractions of the normalized parameter $\tau \in (0,1)$; (c) two fractions of the total arc length of the segment (by the inversion above). Which of them the user interface offers is a decision for the UI work.
+
+### Consistency With The Straight Case
+
+If the subpath is a straight line, then $\kappa = 0$ and $\mathbf{p}_{ss} = \mathbf{p}_{sss} = \mathbf{p}_{ssss} = \mathbf{0}$ on it, $\hat{\mathbf{T}}$ is constant, and the construction coincides exactly with the straight-chord one: constant velocity vector, zero acceleration, jerk and snap at the junctions. This is the test that the general code must pass on a straight segment, and the reason a single code path is enough.
+
+### Reference Values
+
+The path $\mathbf{p}(t) = (t,\ t^2,\ 0)$ on $t \in [0, 1]$ (computed by Cowork with series arithmetic; independent of the application code):
+
+- Length $L = (2\sqrt{5} + \operatorname{asinh} 2)/4 = 1.478943$.
+- At $t = 0$: $\mathbf{p}_s = (1, 0, 0)$, $\mathbf{p}_{ss} = (0, 2, 0)$, $\mathbf{p}_{sss} = (-4, 0, 0)$, $\mathbf{p}_{ssss} = (0, -32, 0)$.
+- At $t = 1$: $\mathbf{p}_s = (0.447214, 0.894427, 0)$, $\mathbf{p}_{ss} = (-0.16, 0.08, 0)$, $\mathbf{p}_{sss} = (0.157419, -0.114487, 0)$, $\mathbf{p}_{ssss} = (-0.24064, 0.23552, 0)$.
+- Component peaks over $[0,1]$ (sampling, $2001$ points): $P_1 = (1, 0.894427)$, $P_2 = (0.649519, 2)$, $P_3 = (4, 3.808294)$, $P_4 = (18.187075, 32)$ for the $(x, y)$ components; the maxima over components are $1, 2, 4, 32$.
+- Admissible speed with $a_{max} = 8$ and $j_{max} = 20$ per axis: $\min\{(8/2)^{1/2}, (20/4)^{1/3}\} = \min\{2, 1.709976\} = 1.709976$ (jerk binds).
+- With $v_{cv} = 1$ on this path the stretch lasts $T_{cv} = 1.478943$ s, and at $t = T_{cv}/2$ the parameter is the solution of $\ell(t^*) = L/2$.
+
+### Baseline Algorithm For The Curved Case
+
+1. Check $\sigma > 0$ on $[t_s, t_e]$; recover $t_s, t_e$ from the specification.
+2. Compute $L_{cv}$ and $T_{cv} = L_{cv}/v_{cv}$.
+3. Compute $P_k$ and $v_{adm}$ if limits are active; fail explicitly if $v_{cv} > v_{adm}$.
+4. Compute the boundary states $\mathcal{S}_{cv}^{start}$ and $\mathcal{S}_{cv}^{end}$ from the jets.
+5. Build the entry and exit transitions as 3D polynomial segments with durations from Rules 1–3.
+6. Verify continuity at the junctions and the limits on the three pieces; the stretch is verified by sampling.
 
 ## Baseline Algorithm For Requirement 12
 
@@ -736,8 +828,8 @@ This makes the trade-off explicit:
 ## Open Questions
 
 - **Open — to resolve if/when a concrete need arises**: the straight-chord alternative for a genuinely curved multi-axis subpath is deliberately not part of the current baseline (see *Decided 3D Interpretation*); should it be added later as an explicit user-facing option, and what would trigger that need?
-- **Open — to resolve during data-format design**: when users specify the interval in percentages, which convention should be standardized in 3D: parameter percentage, arc-length percentage, or both?
-- **Open — to resolve together with the later blending documents**: should the transition segments around the constant-speed part always enforce zero acceleration, jerk, and snap at the junctions, or should the continuity order be configurable?
+- **Resolved (2026-10-18)**: the Core supports points, parameter fractions and arc-length fractions (see *Specifying The Stretch*); the choice offered by the user interface is a UI decision.
+- **Resolved (2026-10-18)**: the transitions match the full boundary state of the stretch (zero acceleration, jerk and snap on a straight stretch, the arc-length derivatives on a curved one) up to the order of the polynomial degree; the continuity order is the degree's, not configurable.
 - **Resolved (2026-10-17)**: durations of the entry and exit transitions: Rule 1 (limits active), Rule 2 (mean-velocity rule without limits) and Rule 3 (prescribed total, proportional split); see *Durations Of The Entry And Exit Transitions In 1D*.
 - **Resolved**: the 3D arc-length section reused $\sigma$ for the local normalized time, colliding with the 1D travel-direction sign $\sigma$ defined earlier in this same document, and named the traveled-arc-length function $s(\cdot)$, colliding with $s$/$\mathbf{s}$ (reserved for snap). The local normalized time is now $\tau_{cv}$ and the traveled-arc-length function is now $\ell_{cv}(\cdot)$; see *3D Path-Preserving Strategy: Arc-Length Reparameterization*.
 
