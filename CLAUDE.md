@@ -24,6 +24,7 @@ Rule: one owner per file. Never edit a file owned by the other role; write a req
 1. **Cowork → Code**: a request file in `coordination/inbox-code/`, named `NNNN-short-title.md` (template: `_TEMPLATE-request.md`). It states the goal, the theory documents to follow, acceptance criteria and expected tests.
 2. **Code → Cowork**: when a task is done or blocked, a note in `coordination/inbox-docs/`, named after the request (`NNNN-short-title.md`, template: `_TEMPLATE-note.md`). It states what was done and why, any choice not covered by the theory, any discrepancy between theory and code, and open questions.
 3. Update `coordination/STATUS.md` (current milestone, in progress / blocked / to review) when closing a task.
+   **Editing shared files.** `STATUS.md` is edited with small targeted edits (never rewritten as a whole from memory), after re-reading it just before the edit, because both roles update it. Files under `roadmap/`, `theory/`, `design/` and `spec/` belong to Cowork: Code never rewrites them, even to refresh them; what should change there goes into the return note.
 4. A processed request or note gets `Status: closed` at the top and stays in place; nothing is deleted.
 5. Decisions that change design go to `roadmap/decisions/` (one file each, `ADR-NNNN-title.md`).
 
