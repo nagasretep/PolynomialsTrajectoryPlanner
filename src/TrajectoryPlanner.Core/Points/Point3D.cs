@@ -43,18 +43,7 @@ public readonly struct Point3D : IEquatable<Point3D>
         return Math.Sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    public Point3D Normalize()
-    {
-        double len = Length;
-        if (len < 1e-15) return Zero;
-        return this / len;
-    }
-
     public double Dot(Point3D other) => X * other.X + Y * other.Y + Z * other.Z;
-    public Point3D Cross(Point3D other) => new(
-        Y * other.Z - Z * other.Y,
-        Z * other.X - X * other.Z,
-        X * other.Y - Y * other.X);
 
     public bool Equals(Point3D other) =>
         Math.Abs(X - other.X) < 1e-12 &&

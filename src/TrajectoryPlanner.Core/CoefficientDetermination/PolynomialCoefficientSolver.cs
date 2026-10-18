@@ -31,7 +31,7 @@ public static class PolynomialCoefficientSolver
         return result.ToArray();
     }
 
-    public static PolynomialCoefficients SolveFromBoundaryValues(
+    internal static PolynomialCoefficients SolveFromBoundaryValues(
         int degree,
         double x0, double xf,
         double v0, double vf,
@@ -45,23 +45,18 @@ public static class PolynomialCoefficientSolver
         return SolveNormalized(degree, startState, endState, durationT);
     }
 
-    public static PolynomialCoefficients SolveDegree3(double x0, double xf, double v0, double vf, double T)
+    internal static PolynomialCoefficients SolveDegree3(double x0, double xf, double v0, double vf, double T)
     {
         return SolveFromBoundaryValues(3, x0, xf, v0, vf, 0, 0, 0, 0, 0, 0, T);
     }
 
-    public static PolynomialCoefficients SolveDegree5(double x0, double xf, double v0, double vf, double a0, double af, double T)
+    internal static PolynomialCoefficients SolveDegree5(double x0, double xf, double v0, double vf, double a0, double af, double T)
     {
         return SolveFromBoundaryValues(5, x0, xf, v0, vf, a0, af, 0, 0, 0, 0, T);
     }
 
-    public static PolynomialCoefficients SolveDegree7(double x0, double xf, double v0, double vf, double a0, double af, double j0, double jf, double T)
+    internal static PolynomialCoefficients SolveDegree7(double x0, double xf, double v0, double vf, double a0, double af, double j0, double jf, double T)
     {
         return SolveFromBoundaryValues(7, x0, xf, v0, vf, a0, af, j0, jf, 0, 0, T);
-    }
-
-    public static PolynomialCoefficients SolveDegree9(double x0, double xf, double v0, double vf, double a0, double af, double j0, double jf, double s0, double sf, double T)
-    {
-        return SolveFromBoundaryValues(9, x0, xf, v0, vf, a0, af, j0, jf, s0, sf, T);
     }
 }

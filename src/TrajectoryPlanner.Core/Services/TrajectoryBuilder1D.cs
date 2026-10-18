@@ -40,13 +40,6 @@ public class TrajectoryBuilder1D
         return this;
     }
 
-    public TrajectoryBuilder1D AddSegmentSimple(double x0, double xf, double v0, double vf, double duration, int? degree = null)
-    {
-        var start = new State1D(x0, v0, 0, 0, 0);
-        var end = new State1D(xf, vf, 0, 0, 0);
-        return AddSegment(start, end, duration, degree);
-    }
-
     public TrajectoryBuilder1D AddRestToRest(double x0, double xf, double duration, int? degree = null)
     {
         var start = State1D.FromPositionOnly(x0);

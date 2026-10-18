@@ -61,24 +61,10 @@ public class PolynomialSegment1D
         return new PolynomialSegment1D(3, start, end, T);
     }
 
-    public static PolynomialSegment1D CreateDegree5(double x0, double xf, double v0, double vf, double a0, double af, double T)
+    internal static PolynomialSegment1D CreateDegree5(double x0, double xf, double v0, double vf, double a0, double af, double T)
     {
         var start = new State1D(x0, v0, a0, 0, 0);
         var end = new State1D(xf, vf, af, 0, 0);
         return new PolynomialSegment1D(5, start, end, T);
-    }
-
-    public static PolynomialSegment1D CreateDegree7(double x0, double xf, double v0, double vf, double a0, double af, double j0, double jf, double T)
-    {
-        var start = new State1D(x0, v0, a0, j0, 0);
-        var end = new State1D(xf, vf, af, jf, 0);
-        return new PolynomialSegment1D(7, start, end, T);
-    }
-
-    public static PolynomialSegment1D CreateDegree9(double x0, double xf, double v0, double vf, double a0, double af, double j0, double jf, double s0, double sf, double T)
-    {
-        var start = new State1D(x0, v0, a0, j0, s0);
-        var end = new State1D(xf, vf, af, jf, sf);
-        return new PolynomialSegment1D(9, start, end, T);
     }
 }

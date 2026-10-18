@@ -188,7 +188,7 @@ public sealed class PassThroughProblem1D
     /// Meant for the optimality tests (comparing J at nearby points). For a cost to report use
     /// <see cref="SmoothnessCost.Of"/>, which integrates the segments directly.
     /// </summary>
-    public double Cost(Vector<double> y)
+    internal double Cost(Vector<double> y)
     {
         if (UnknownCount == 0)
             return Constant;
@@ -197,7 +197,7 @@ public sealed class PassThroughProblem1D
     }
 
     /// <summary>Gradient of J, 2 (H y + f).</summary>
-    public Vector<double> Gradient(Vector<double> y) => 2.0 * (H * y + F);
+    internal Vector<double> Gradient(Vector<double> y) => 2.0 * (H * y + F);
 
     /// <summary>
     /// Derivatives of order 0 .. p-1 at every waypoint: [node][order]. Position is taken from

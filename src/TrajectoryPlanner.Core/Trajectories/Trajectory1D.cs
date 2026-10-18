@@ -71,8 +71,6 @@ public class Trajectory1D
         return _segments[idx].EvaluateState(localT);
     }
 
-    public Point1D EvaluatePoint(double t) => new(EvaluatePosition(t));
-
     /// <summary>
     /// Uniform samples over [0, TotalDuration] (first and last included) of position and its derivatives
     /// up to <paramref name="maxDerivativeOrder"/>.
@@ -99,7 +97,7 @@ public class Trajectory1D
         return new TrajectorySamples(times, values);
     }
 
-    public IEnumerable<double> SampleTimes(int samplesPerSegment = 50)
+    internal IEnumerable<double> SampleTimes(int samplesPerSegment = 50)
     {
         if (samplesPerSegment < 2)
             throw new ArgumentOutOfRangeException(nameof(samplesPerSegment), "At least 2 samples per segment are required (start and end).");

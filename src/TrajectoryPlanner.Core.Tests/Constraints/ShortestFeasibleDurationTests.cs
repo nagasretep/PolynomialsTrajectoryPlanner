@@ -282,17 +282,6 @@ public class ShortestFeasibleDurationTests
     }
 
     [Fact]
-    public void ConstraintAwareDuration_ReturnsTheShortestFeasibleDuration()
-    {
-        var limits = KinematicLimits.FromValues(vMax: 1.0);
-        var strategy = new ConstraintAwareDuration(limits);
-
-        double t = strategy.ComputeDuration(9, State1D.FromPositionOnly(0), State1D.FromPositionOnly(1));
-
-        AssertRelative(315.0 / 128, t, 1e-6);
-    }
-
-    [Fact]
     public void LooseLimit_GivesAShortDurationNotTheDefaultSecond()
     {
         // A first guess of 1 s would be feasible here, but the shortest feasible duration is much shorter:

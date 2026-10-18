@@ -78,15 +78,6 @@ public class DurationSearchFailureTests
     }
 
     [Fact]
-    public void ConstraintAwareDuration_PropagatesTheFailure()
-    {
-        var strategy = new ConstraintAwareDuration(KinematicLimits.FromValues(vMax: 1.0));
-
-        Assert.Throws<DurationSearchFailedException>(
-            () => strategy.ComputeDuration(3, new State1D(0, 10, 0, 0, 0), State1D.FromPositionOnly(1)));
-    }
-
-    [Fact]
     public void AchievableLimits_ReturnTheDegree3ClosedFormDuration()
     {
         var limits = KinematicLimits.FromValues(vMax: 1.0);
