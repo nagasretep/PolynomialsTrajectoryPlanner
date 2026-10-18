@@ -71,12 +71,12 @@ Exact pass-through (Requirement 14) is exposed as a **separate mode** selected a
 - **Durations**: either all segment durations are filled (prescribed: kept and only verified against the limits) or all blank. A partly filled column is reported as an input error.
 - **Total duration** (optional): if given with blank segment durations, the proportional rule of A8 distributes it and it is only verified against the limits.
 - **Limits** (global, optional): maximum velocity, acceleration, jerk, snap (those the degree supports), as in blending mode.
-- With blank durations, no total and **no active limit**, each segment takes $1$ s (the same fallback as an ordinary segment). With blank durations and active limits, the shortest feasible sequence is computed with the common scale factor $\lambda$ (*Pass-Through With Kinematic Limits* in `TrajectoryPassingThroughConstraintPoints.md`).
+- With blank durations and no total, the reference durations are always the **proportional rule of A8 with a total of one second per segment** (decided 2026-10-18; it avoids equal durations on unequally spaced waypoints). Without active limits these are the durations used; with active limits, they are scaled to the shortest feasible sequence with the common scale factor $\lambda$ (*Pass-Through With Kinematic Limits* in `TrajectoryPassingThroughConstraintPoints.md`).
 
 **Outputs in pass-through mode**
 
 - One continuous trajectory over all segments in the same stacked plots as blending mode, with the waypoints marked on the position plot.
-- Numeric report: segment durations $T_k$ and the total, the factor $\lambda$ when it was computed, the states $(v, a, j, s)$ at every waypoint, the smoothness cost (exact integral, `SmoothnessCost.Of`), the extrema of every quantity over the whole trajectory, and the coefficients of every segment.
+- Numeric report: segment durations $T_k$ and the total; when limits are active, for each active limit the peak over the whole trajectory, the limit and the segment where the peak occurs (the binding limit is the one at 100 %); the factor $\lambda$ when it was computed, the states $(v, a, j, s)$ at every waypoint, the smoothness cost (exact integral, `SmoothnessCost.Of`), the extrema of every quantity over the whole trajectory, and the coefficients of every segment.
 - Notices (status bar) for: $\lambda$ applied, a duration or total only verified and violating a limit (error), infeasible limits (error).
 
 **Out of scope for this step**: saving and loading, editing waypoints on the plot, 3D.
