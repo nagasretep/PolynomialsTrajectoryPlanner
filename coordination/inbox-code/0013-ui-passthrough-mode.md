@@ -1,6 +1,6 @@
 # 0013 — UI: pass-through mode in 1D
 
-Status: open · From: Cowork · To: Code · Date: 2026-10-17
+Status: closed · From: Cowork · To: Code · Date: 2026-10-17
 
 ## Goal
 

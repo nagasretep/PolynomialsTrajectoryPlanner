@@ -1,10 +1,10 @@
 # Project status
 
-Owner: whoever closes a task. Last updated: 2026-10-17.
+Owner: whoever closes a task. Last updated: 2026-10-18.
 
 ## Current phase
 
-Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, duration fixes) and 0007 (constant-velocity transitions and tests) done by Code and reviewed by Cowork (committed by the author). 0008 (constant-velocity duration rules 2 and 3) done by Code and reviewed by Cowork. 0009 (R7 consolidation) done by Code and reviewed by Cowork. 0010 (blend duration rule, number parsing) done by Code and reviewed by Cowork. Next: 0011 (pass-through with limits), 0012 (report polish), then R9 and R10.
+Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, duration fixes) and 0007 (constant-velocity transitions and tests) done by Code and reviewed by Cowork (committed by the author). 0008 (constant-velocity duration rules 2 and 3) done by Code and reviewed by Cowork. 0009 (R7 consolidation) done by Code and reviewed by Cowork. 0010 (blend duration rule, number parsing) done by Code and reviewed by Cowork. 0011, 0012 and 0013 (UI pass-through mode) done by Code. Next: R9 and R10b.
 
 ## Milestones (from `design/07-implementation-plan.md` and `design/08-ui-first-prototype.md`)
 
@@ -21,9 +21,11 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## In progress
 
-- 0013 UI pass-through mode in 1D (Code) — issued
+- 0014 pass-through defaults and peaks report (Code) — issued
 
 ## Done
+
+- 0013 UI pass-through mode in 1D (Code) — closed 2026-10-18; note `coordination/inbox-docs/0013-ui-passthrough-mode.md`. 428 tests (336 Core + 92 App). Mode selector `Blending | Pass-through`, service entry point `ComputePassThrough`, Summary and Waypoints report tabs, waypoint markers, λ notice; Core violation message numbers segments from 1. Hand-check list for the author in the note.
 
 - 0012 report polish (Code) — closed 2026-10-17; note `coordination/inbox-docs/0012-report-polish.md`. 404 tests (336 Core + 68 App). Blend result exposes inherited duration and `AdjustedByLimits`; status bar shows the adjustment notice; WPF default Language set to the current culture so tables, status bar and cursor use one format (ScottPlot tick labels not checked).
 - 0011 pass-through with kinematic limits (Code) — closed 2026-10-17; note `coordination/inbox-docs/0011-passthrough-with-limits.md`. 394 tests at that point. `PassThroughPlanner1D`: common scale λ on reference durations (closed form + second solve for rest ends, search for non-zero boundary derivatives), prescribed durations verified with segment index; solver accepts non-zero boundary derivatives; `ExtremaAnalyzer.PeakAbsolute`.
@@ -52,4 +54,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-`coordination/inbox-code/0013-ui-passthrough-mode.md`; afterwards R9 (3D constant velocity and blending) and R10b (3D UI), see `roadmap/ROADMAP.md`.
+`coordination/inbox-code/0014-passthrough-defaults-and-peaks.md`; afterwards R9 (3D constant velocity and blending) and R10b (3D UI), see `roadmap/ROADMAP.md`.
