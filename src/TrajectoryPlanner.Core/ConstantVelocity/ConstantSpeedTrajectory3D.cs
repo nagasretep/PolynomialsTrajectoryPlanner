@@ -13,7 +13,7 @@ namespace TrajectoryPlanner.Core.ConstantVelocity;
 /// magnitude exactly v_cv (<c>theory/ConstantVelocitySegment.md</c>, "Curved 3D Constant-Speed Stretch"). It is not a
 /// polynomial in time: the position is p(t*) with t* = ℓ⁻¹(v_cv t), and the time derivative of order k is v_cv^k D^k p(t*).
 /// </summary>
-public sealed class CurvedConstantSpeedStretch3D
+public sealed class CurvedConstantSpeedStretch3D : ISegment3D
 {
     /// <summary>Intervals of the grid on which the peaks of D^k p are searched.</summary>
     private const int PeakGrid = 1000;
@@ -123,6 +123,76 @@ public sealed class CurvedConstantSpeedStretch3D
 
         _componentPeaks = peaks;
         return peaks;
+    }
+
+    /// <summary>
+    /// Minimum and maximum, per axis, of the position (order 0) or of the time derivative of the given order (1 .. 4)
+    /// over the stretch, each with the time (from the start of the stretch) where it occurs. The extrema are not
+    /// polynomial: a grid of 1000 intervals of the path parameter, then golden-section refinement around the best sample.
+    /// </summary>
+    public (double Minimum, double MinimumTime, double Maximum, double MaximumTime)[] ComponentExtrema(int order)
+    {
+        if (order < 0 || order > ArcLengthDerivatives.MaxOrder)
+            throw new ArgumentOutOfRangeException(nameof(order));
+
+        double t0 = Subpath.StartTime, t1 = Subpath.EndTime;
+        double scale = Math.Pow(Speed, order);
+
+        double[] Values(double parameter)
+        {
+            if (order == 0)
+            {
+                Point3D p = Subpath.Path.EvaluatePosition(parameter);
+                return [p.X, p.Y, p.Z];
+            }
+
+            Point3D d = ArcLengthDerivatives.Compute(Subpath.Path, parameter).Derivatives[order - 1];
+            return [d.X * scale, d.Y * scale, d.Z * scale];
+        }
+
+        var minValue = new double[] { double.MaxValue, double.MaxValue, double.MaxValue };
+        var maxValue = new double[] { double.MinValue, double.MinValue, double.MinValue };
+        var minIndex = new int[3];
+        var maxIndex = new int[3];
+        for (int i = 0; i <= PeakGrid; i++)
+        {
+            double[] v = Values(t0 + (t1 - t0) * i / PeakGrid);
+            for (int axis = 0; axis < 3; axis++)
+            {
+                if (v[axis] < minValue[axis]) { minValue[axis] = v[axis]; minIndex[axis] = i; }
+                if (v[axis] > maxValue[axis]) { maxValue[axis] = v[axis]; maxIndex[axis] = i; }
+            }
+        }
+
+        // Golden-section search of the best parameter near a grid index, for the function sign * value.
+        (double Value, double Parameter) Refine(int axis, int index, double sign)
+        {
+            const double invPhi = 0.6180339887498949;
+            double lo = t0 + (t1 - t0) * Math.Max(index - 1, 0) / PeakGrid;
+            double hi = t0 + (t1 - t0) * Math.Min(index + 1, PeakGrid) / PeakGrid;
+            double bestParameter = t0 + (t1 - t0) * index / PeakGrid;
+            double bestValue = sign * Values(bestParameter)[axis];
+            for (int k = 0; k < 60; k++)
+            {
+                double c = hi - invPhi * (hi - lo), d = lo + invPhi * (hi - lo);
+                double fc = sign * Values(c)[axis], fd = sign * Values(d)[axis];
+                if (fc > bestValue) { bestValue = fc; bestParameter = c; }
+                if (fd > bestValue) { bestValue = fd; bestParameter = d; }
+                if (fc > fd) hi = d; else lo = c;
+            }
+
+            return (sign * bestValue, bestParameter);
+        }
+
+        var result = new (double, double, double, double)[3];
+        for (int axis = 0; axis < 3; axis++)
+        {
+            var (minimum, minParameter) = Refine(axis, minIndex[axis], -1.0);
+            var (maximum, maxParameter) = Refine(axis, maxIndex[axis], +1.0);
+            result[axis] = (minimum, Subpath.LengthAt(minParameter) / Speed, maximum, Subpath.LengthAt(maxParameter) / Speed);
+        }
+
+        return result;
     }
 
     /// <summary>P_k = the largest component peak of D^k p, k = 1 .. 4 (element k - 1).</summary>
