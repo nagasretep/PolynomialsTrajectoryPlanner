@@ -17,13 +17,17 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 | M5 Constant velocity | partial | 1D, 3D straight and 3D curved (0015, 0016); no Trajectory3D-level builder; Rules 1-3 for the transition durations implemented in Core, App uses the Core class (0007, 0008); 3D missing |
 | M6 Blending | partial | 1D only; selectable degree, limit verification and input validation in the Core (0009); duration rule with limits to adjust (0010) |
 | M7 Exact pass-through | implemented | exact global solve (m = 4 snap default for degree 9), 67/67 tests; reviewed by Cowork 2026-10-17 (reference values and code consistent) |
-| M8 3D extension | partial | Core: 3D blending, straight and curved constant speed done (0015, 0016); no 3D builder or UI |
+| M8 3D extension | partial | Core and UI: 3D blending, straight and curved constant speed, 3D builder and analysis, 3D mode in the App (0015-0018); 3D pass-through missing (R9c) |
 
 ## In progress
 
-- 0018 UI 3D mode in the App (Code) — issued
+- 0020 UI pass-through in 3D (Code) — issued
 
 ## Done
+
+- 0019 Core 3D pass-through (Code) — closed 2026-10-18; note `coordination/inbox-docs/0019-core-3d-pass-through.md`. 572 tests (450 Core + 122 App). `PassThroughPlanner3D` (chord rule, common λ, binding quantity and axis); the algorithm of `PassThroughPlanner1D` moved into one shared `PassThroughEngine` (1D tests unchanged); `TrajectoryBuilder3D.AddSegmentsFromWaypointsPassThrough` uses it (default now 1 s per segment instead of a 1 s total).
+
+- 0018 UI 3D mode (Code) — closed 2026-10-18; note `coordination/inbox-docs/0018-ui-3d-mode.md`. 551 tests (429 Core + 122 App). Third mode `Blending | Pass-through | 3D` with vector inputs, blends, constant-speed stretch; `Prototype3DTrajectoryService`; time plots with X/Y/Z (+ norm) and part boundaries, Path tab with XY/XZ/YZ projections; Parts, Extrema 3D, Peaks vs limits tabs. Core: violation messages name axis and quantity; an end-of-piece rounding bug in the 0017 analysis fixed. Hand checks for the author in the note.
 
 - 0017 Core 3D trajectory level (Code) — closed 2026-10-18; note `coordination/inbox-docs/0017-core-3d-trajectory-level.md`. 529 tests (428 Core + 101 App). `ISegment3D` (polynomial segment and curved stretch), `Trajectory3D` with `Parts` and `Sample`, `TrajectoryBuilder3D` (segment, blend, constant speed, part descriptors), `TrajectoryAnalyzer3D` (extrema, limit report/verification, path length).
 
@@ -61,4 +65,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-`coordination/inbox-code/0018-ui-3d-mode.md`. R9c (3D pass-through) is proposed after that. See `roadmap/ROADMAP.md`.
+`coordination/inbox-code/0020-ui-3d-pass-through.md`. Afterwards: R12 success criteria and R13 theory library review (Cowork), cleanup of unused public members (Code). See `roadmap/ROADMAP.md`.
