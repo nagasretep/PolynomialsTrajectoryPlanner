@@ -21,7 +21,7 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## In progress
 
-- None. Next request for Code to be written (R14, R15, cleanup).
+- 0021 Save/load, speed tests, unused public members (Code) — issued
 
 ## Done
 
@@ -67,4 +67,4 @@ Reorganization done; requests 0001-0005 done and reviewed; 0006 (numerics, durat
 
 ## Next requests for Code
 
-R12 (success criteria) and R13 (theory library review, PDF build script) done by Cowork. Next request for Code: R14 save/load, R15 speed tests and cleanup of unused public members (to be written). Afterwards R16 user manual (Cowork). See `roadmap/ROADMAP.md`.
+R12 (success criteria) and R13 (theory library review, PDF build script) done by Cowork. `coordination/inbox-code/0021-save-load-speed-cleanup.md` (R14 save/load, R15 speed tests, cleanup of unused public members). Afterwards R16 user manual (Cowork). See `roadmap/ROADMAP.md`.
